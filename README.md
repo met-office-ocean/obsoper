@@ -22,7 +22,7 @@ Or with pip
 :> pip install dist/obsoper-0.0.2-cp27-none-linux_x86_64.whl
 ```
 
-If installation is successfull it should be possible to import the package without error.
+If installation was successful it should be possible to import the package without error.
 
 ```python
 >>> import obsoper
