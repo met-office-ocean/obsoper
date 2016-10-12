@@ -58,8 +58,10 @@ Tri-polar ORCA grids are more complicated than regular grids in a number of ways
 Typical usage involves a fixed set of observations with multiple diagnostic fields being compared against iteratively. To speed computation giving the tri-polar operator as much information as possible up front reduces repetitive computation later in the process.
 
 ```python
->>> operator = obsoper.Tripolar(grid_longitudes, grid_latitudes, obs_longitudes, obs_latitudes)
+>>> operator = obsoper.Tripolar(grid_longitudes.T, grid_latitudes.T, obs_longitudes, obs_latitudes)
 ```
+
+**Note:** Grid longitude and latitude arrays must be shaped (x, y), where x represents longitude and y represent latitude directions. NEMO diagnostics are typically stored (t, z, y, x) appropriate transpose operations should be made prior to interpolation.
 
 Once the operator has been trained on a set of data, it is then possible to iteratively interpolate a collection of forecasts.
 
