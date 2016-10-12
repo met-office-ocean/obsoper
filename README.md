@@ -22,13 +22,18 @@ Or with pip
 :> pip install dist/obsoper-0.0.2-cp27-none-linux_x86_64.whl
 ```
 
+If installation was successful it should be possible to import the package without error.
+
+```python
+>>> import obsoper
+```
+
 Basic usage
 -----------
 
 Regular latitude/longitude grids can be specified by 1 dimensional arrays.
 
 ```python
->>> import obsoper
 >>> nlon, nlat = 13, 10
 >>> grid_longitudes = np.linspace(-180, 180, nlon)
 >>> grid_latitudes = np.linspace(-90, 90, nlat)
@@ -48,5 +53,20 @@ masked_array(data = [28.76232843679889],
        fill_value = 1e+20)
 ```
 
-Tri-polar ORCA grids are more complicated than regular grids in a number of ways.
+Tri-polar ORCA grids are more complicated than regular grids in a number of ways. As well as having irregularly shaped cells there is also a fold joining the two northern poles. Efficiently searching and interpolating on these grids can be problematic.
+
+Typical usage involves a fixed set of observations with multiple diagnostic fields being compared against iteratively. To speed computation giving the TripolarOperator as much information as possible up front reduces repetitive computation later in the process.
+
+```python
+>>> operator = obsoper.TripolarOperator(grid_longitudes, grid_latitudes, obs_longitudes, obs_latitudes)
+```
+
+Once the operator has been trained on a set of data, it is then possible to iteratively interpolate a collection of forecasts.
+
+```python
+>>> for forecast in forecasts:
+...     counterparts = operator.interpolate(forecast)
+```
+
+Interpolated model counterparts can then be written to a file or analysed further to generate plots.
 
