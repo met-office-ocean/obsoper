@@ -8,7 +8,13 @@ from . import (grid,
 
 
 class Curvilinear(object):
-    """Interpolator"""
+    """Tri-polar interpolator
+
+    Handles grids that are composed of quadrilaterals but may
+    not be easily searchable.
+
+    ..note:: At present it handles tri-polar ORCA grids
+    """
     def __init__(self,
                  grid_longitudes,
                  grid_latitudes,
