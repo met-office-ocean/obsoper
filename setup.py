@@ -3,6 +3,7 @@ import os
 from Cython.Build import cythonize
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
+import numpy
 
 NAME = "obsoper"
 
@@ -22,4 +23,5 @@ setup(name=NAME,
               "data/*.nc"
           ]
       },
-      ext_modules=cythonize(extensions))
+      ext_modules=cythonize(extensions),
+      include_dirs=[numpy.get_include()])
