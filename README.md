@@ -48,5 +48,20 @@ masked_array(data = [28.76232843679889],
        fill_value = 1e+20)
 ```
 
-Tri-polar ORCA grids are more complicated than regular grids in a number of ways.
+Tri-polar ORCA grids are more complicated than regular grids in a number of ways. As well as having irregularly shaped cells there is also a fold joining the two northern poles. Efficiently searching and interpolating on these grids can be problematic.
+
+Typical usage involves a fixed set of observations with multiple diagnostic fields being compared against iteratively. To speed computation giving the TripolarOperator as much information as possible up front reduces repetitive computation later in the process.
+
+```python
+>>> operator = obsoper.TripolarOperator(grid_longitudes, grid_latitudes, obs_longitudes, obs_latitudes)
+```
+
+Once the operator has been trained on a set of data, it is then possible to iteratively interpolate a collection of forecasts.
+
+```python
+>>> for forecast in forecasts:
+...     counterparts = operator.interpolate(forecast)
+```
+
+Interpolated model counterparts can then be written to a file or analysed further to generate plots.
 
