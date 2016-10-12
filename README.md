@@ -21,3 +21,32 @@ Or with pip
 :> python setup.py bdist_wheel
 :> pip install dist/obsoper-0.0.2-cp27-none-linux_x86_64.whl
 ```
+
+Basic usage
+-----------
+
+Regular latitude/longitude grids can be specified by 1 dimensional arrays.
+
+```python
+>>> import obsoper
+>>> nlon, nlat = 13, 10
+>>> grid_longitudes = np.linspace(-180, 180, nlon)
+>>> grid_latitudes = np.linspace(-90, 90, nlat)
+>>> operator = obsoper.ObservationOperator(grid_longitudes, grid_latitudes)
+```
+
+Once the default observation operator has seen the 1 dimensional grid definition it knows
+the grid extent and how to select indices surrounding a point in space.
+
+```python
+>>> grid_sst = np.full((nlon, nlat), 30) + np.random.randn(130).reshape((nlon, nlat))
+>>> observed_lons = np.array([100])
+>>> observed_lats = np.array([10])
+>>> operator.interpolate(grid_sst, observed_lons, observed_lats)
+masked_array(data = [28.76232843679889],
+             mask = [False],
+       fill_value = 1e+20)
+```
+
+Tri-polar ORCA grids are more complicated than regular grids in a number of ways.
+
