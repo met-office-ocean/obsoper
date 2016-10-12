@@ -1,10 +1,8 @@
-Python observation operator
-===========================
+# Python observation operator
 
 Maps ocean forecasts from model space to observation space
 
-Installation
-------------
+## Installation
 
 Python package distributed with setuptools. Requires Cython to build
 extension modules.
@@ -28,8 +26,9 @@ If installation was successful it should be possible to import the package witho
 >>> import obsoper
 ```
 
-Basic usage
------------
+## Basic usage
+
+### Regular lat/lon grids
 
 Regular latitude/longitude grids can be specified by 1 dimensional arrays.
 
@@ -52,6 +51,8 @@ masked_array(data = [28.76232843679889],
              mask = [False],
        fill_value = 1e+20)
 ```
+
+### Tri-polar grids
 
 Tri-polar ORCA grids are more complicated than regular grids in a number of ways. As well as having irregularly shaped cells there is also a fold joining the two northern poles. Efficiently searching and interpolating on these grids can be problematic.
 
