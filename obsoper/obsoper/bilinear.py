@@ -1,0 +1,109 @@
+"""
+Bilinear interpolators
+========================
+"""
+# pylint: disable=invalid-name
+import numpy as np
+
+
+class BilinearTransform(object):
+    """Bilinear interpolator
+
+    Maps from general quadrilateral to unit square.
+
+    Corners are chosen anti-clockwise starting from lower left.
+
+    .. note:: Corner ordering is highly important.
+
+    """
+    def __init__(self, corners, x, y):
+        self.corners = np.asarray(corners, dtype="d")
+
+        # Calculate alpha, beta coefficients
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = self.corners
+        self.alpha = np.array([x1,
+                               x2 - x1,
+                               x4 - x1,
+                               x1 - x2 + x3 - x4], dtype="d")
+        self.beta = np.array([y1,
+                              y2 - y1,
+                              y4 - y1,
+                              y1 - y2 + y3 - y4], dtype="d")
+
+        # Calculate weights
+        self.weights = self._weights(x, y)
+
+    def _weights(self, x, y):
+        di, dj = self.to_unit_square(x, y)
+        return np.array([(1 - di) * (1 - dj),
+                         di * (1 - dj),
+                         di * dj,
+                         (1 - di) * dj])
+
+    def to_unit_square(self, x, y):
+        """Transform from x, y coordinates to unit-square coordinates"""
+        x, y = np.asarray(x, dtype="d"), np.asarray(y, dtype="d")
+
+        a1, a2, a3, a4 = self.alpha
+        b1, b2, b3, b4 = self.beta
+
+        coefficient_1 = (a4 * b3) - (a3 * b4)
+        coefficient_2 = ((a4 * b1) - (a1 * b4) +
+                         (a2 * b3) - (a3 * b2) +
+                         (x * b4) - (y * a4))
+        coefficient_3 = ((a2 * b1) - (a1 * b2) +
+                         (x * b2) - (y * a2))
+
+        m = self.quadratic_root(coefficient_1,
+                                coefficient_2,
+                                coefficient_3)
+        l = (x - a1 - a3 * m) / (a2 + a4 * m)
+        return l, m
+
+    @staticmethod
+    def quadratic_root(a, b, c):
+        """Simple quadratic positive root solution"""
+        return quadratic_root(a, b, c)
+
+    def __call__(self, values):
+        # Handle weights/values broadcasting
+        values = np.ma.asarray(values, dtype="d")
+        if (self.weights.ndim == 2) and (values.ndim == 1):
+            values = values[:, None]
+        return np.ma.sum(self.weights * values, axis=0)
+
+
+def quadratic_root(a, b, c):
+    """Simple quadratic positive root solution"""
+    if (np.size(a) == 0) or (np.size(b) == 0) or (np.size(c) == 0):
+        return np.array([], dtype="d")
+
+    if np.all(a == 0):
+        return _linear(b, c)
+
+    if np.any(a == 0):
+        # Handle linear and quadratic systems of equations
+        linear = a == 0
+        quadratic = ~linear
+
+        result = np.empty_like(b)
+
+        result[linear] = _linear(b[linear],
+                                 c[linear])
+
+        result[quadratic] = _quadratic(a[quadratic],
+                                       b[quadratic],
+                                       c[quadratic])
+        return result
+
+    return _quadratic(a, b, c)
+
+
+def _quadratic(a, b, c):
+    """Simple quadratic positive root solution"""
+    return (-b + np.sqrt(b*b - 4*a*c)) / (2 * a)
+
+
+def _linear(b, c):
+    """Simple linear root solution"""
+    return -c / b
