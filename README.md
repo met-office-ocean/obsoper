@@ -22,13 +22,18 @@ Or with pip
 :> pip install dist/obsoper-0.0.2-cp27-none-linux_x86_64.whl
 ```
 
+If installation is successfull it should be possible to import the package without error.
+
+```python
+>>> import obsoper
+```
+
 Basic usage
 -----------
 
 Regular latitude/longitude grids can be specified by 1 dimensional arrays.
 
 ```python
->>> import obsoper
 >>> nlon, nlat = 13, 10
 >>> grid_longitudes = np.linspace(-180, 180, nlon)
 >>> grid_latitudes = np.linspace(-90, 90, nlat)
