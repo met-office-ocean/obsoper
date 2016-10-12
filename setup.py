@@ -17,4 +17,9 @@ setup(name=NAME,
       author="Andrew Ryan",
       author_email="andrew.ryan@metoffice.gov.uk",
       packages=find_packages(),
+      package_data={
+          "obsoper.test": [
+              "data/*.nc"
+          ]
+      },
       ext_modules=cythonize(extensions))
