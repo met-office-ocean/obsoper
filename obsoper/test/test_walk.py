@@ -15,7 +15,6 @@ class TestWalk(unittest.TestCase):
         self.fixture = walk.Walk.from_lonlats(longitudes,
                                               latitudes)
 
-    @unittest.skip("numpy C-API issue")
     def test_query_given_multiple_locations_and_starting_indices(self):
         longitudes, latitudes = np.array([100, 106.1]), np.array([80, 83])
         i, j = np.array([1, 1]), np.array([1, 1])
@@ -23,27 +22,21 @@ class TestWalk(unittest.TestCase):
         expect = np.array([0, 2]), np.array([0, 1])
         np.testing.assert_array_equal(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_given_point_in_maximum_grid_cell(self):
         self.check_walk((106.9, 83.9), i=0, j=0, expect=(2, 1))
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_given_point_one_grid_cell_north(self):
         self.check_walk((100.1, 83.9), i=0, j=0, expect=(0, 1))
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_given_point_two_grid_cells_east(self):
         self.check_walk((106.9, 80), i=0, j=0, expect=(2, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_starting_at_north_east_corner_travelling_south(self):
         self.check_walk((100, 80), i=2, j=1, expect=(0, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_given_i_maximum_performs_search(self):
         self.check_walk((100, 80), i=3, j=0, expect=(0, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_grid_walk_given_j_maximum_performs_search(self):
         self.check_walk((100, 80), i=0, j=2, expect=(0, 0))
 
@@ -51,7 +44,6 @@ class TestWalk(unittest.TestCase):
         result = self.fixture.query_one(point, i, j)
         np.testing.assert_array_almost_equal(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_walk_across_northfold(self):
         # North fold along 100th meridian
         lon0, dlon = 100, 0.5
@@ -78,7 +70,6 @@ class TestWalk(unittest.TestCase):
         expect = (2, 0)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_walk_across_dateline(self):
         """Stepping algorithms should walk in direction of point"""
         longitudes, latitudes = np.meshgrid([178, 179, -179, -178],
@@ -92,7 +83,6 @@ class TestWalk(unittest.TestCase):
         expect = (2, 1)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_diagonal_stepping_edge_case(self):
         """Extremely rare edge case consisting of diagonal neighbours
         neither of which contain the point. And whose displacement vectors
@@ -113,7 +103,6 @@ class TestWalk(unittest.TestCase):
         expect = (1, 0)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_point_above_line_edge_case(self):
         """Simple edge case taken from real data that produces an infinite loop
 
@@ -134,7 +123,6 @@ class TestWalk(unittest.TestCase):
         expect = (0, 1)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_point_inside_great_circle_and_lonlat_line(self):
         """Great circle segments are not straight lines in longitude/latitude
         space.
@@ -169,19 +157,15 @@ class TestWalkStep(unittest.TestCase):
     def test_query_one_given_point_in_cell_0_0(self):
         self.check_query_one((100, 80), (0, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_query_one_given_point_in_cell_1_0(self):
         self.check_query_one((104.1, 80), (1, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_query_one_given_point_in_cell_0_1(self):
         self.check_query_one((100, 83.1), (0, 1))
 
-    @unittest.skip("numpy C-API issue")
     def test_query_one_given_point_in_northernmost_cell(self):
         self.check_query_one((100, 84), (0, 1))
 
-    @unittest.skip("numpy C-API issue")
     def test_query_one_given_point_in_easternmost_cell(self):
         self.check_query_one((107, 80), (2, 0))
 
@@ -189,19 +173,15 @@ class TestWalkStep(unittest.TestCase):
         result = self.fixture.query_one(point)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_direction_given_east_point(self):
         self.check_direction(0, 0, (107, 80), (1, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_direction_given_north_point(self):
         self.check_direction(0, 0, (100, 84), (0, 1))
 
-    @unittest.skip("numpy C-API issue")
     def test_direction_given_west_point(self):
         self.check_direction(1, 0, (100, 80), (-1, 0))
 
-    @unittest.skip("numpy C-API issue")
     def test_direction_given_south_point(self):
         self.check_direction(1, 1, (104, 80), (0, -1))
 
@@ -209,7 +189,6 @@ class TestWalkStep(unittest.TestCase):
         result = self.fixture.direction(self.cells[i, j], point)
         self.assertEqual(expect, result)
 
-    @unittest.skip("numpy C-API issue")
     def test_direction_given_parallelogram_cell_intersecting_0E(self):
         longitudes = np.array([[-0.12521362, 0.27581787],
                                [0.95932007, 1.37954712]])
@@ -248,28 +227,22 @@ class TestNextStep(unittest.TestCase):
         self.inside_arc = (0.5, 1.00001)
         self.inside_box = (0.5, 0.5)
 
-    @unittest.skip("numpy C-API issue")
     def test_next_step_given_point_north_returns_north(self):
         self.check_next_step(self.due_north, self.north)
 
-    @unittest.skip("numpy C-API issue")
     def test_next_step_given_point_south_returns_south(self):
         self.check_next_step(self.due_south, self.south)
 
-    @unittest.skip("numpy C-API issue")
     def test_next_step_given_point_east_returns_east(self):
         self.check_next_step(self.due_east, self.east)
 
-    @unittest.skip("numpy C-API issue")
     def test_next_step_given_point_west_returns_west(self):
         self.check_next_step(self.due_west, self.west)
 
-    @unittest.skip("numpy C-API issue II")
     def test_next_step_given_point_inside_great_circle_raises_exception(self):
         with self.assertRaises(StepNotFound):
             walk.next_step(self.vertices, self.center, self.inside_arc)
 
-    @unittest.skip("numpy C-API issue II")
     def test_next_step_given_point_inside_box_raises_exception(self):
         with self.assertRaises(StepNotFound):
             walk.next_step(self.vertices, self.center, self.inside_box)
