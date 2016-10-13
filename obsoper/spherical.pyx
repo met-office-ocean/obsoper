@@ -114,6 +114,7 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
         int n = 4
         double[4] scalars
         Cartesian point_1, point_2, point_3, point_4
+        Cartesian vector_p, vector_q, vector_t
 
     point_1 = _to_cartesian({"longitude": line_1[0, 0],
                              "latitude": line_1[0, 1]})
@@ -124,12 +125,19 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     point_4 = _to_cartesian({"longitude": line_2[1, 0],
                              "latitude": line_2[1, 1]})
 
-    print dict(point_1)
-    print dict(point_2)
-    print dict(point_3)
-    print dict(point_4)
+    # Expicit scalar calculation
+    vector_p = cross(point_1, point_2)
+    vector_q = cross(point_3, point_4)
+    vector_t = cross(vector_p, vector_q)
 
-    scalars = c_scalars(point_1, point_2, point_3, point_4)
+    # Calculate projections onto t vector
+    scalars[0] = -1. * dot(cross(point_1, vector_p), vector_t)
+    scalars[1] = +1. * dot(cross(point_2, vector_p), vector_t)
+    scalars[2] = -1. * dot(cross(point_3, vector_q), vector_t)
+    scalars[3] = +1. * dot(cross(point_4, vector_q), vector_t)
+
+    for i in range(4):
+        print scalars[i]
 
     return all_positive(scalars, n) or all_negative(scalars, n)
 
