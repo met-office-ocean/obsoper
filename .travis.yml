@@ -9,4 +9,4 @@ before_install:
 install: "pip install -r requirements.txt"
 before_script: python2.7 setup.py develop
 # command to run tests
-script: nosetests
+script: python2.7 -m unittest discover -b
