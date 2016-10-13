@@ -15,13 +15,11 @@ class TestIntersect(unittest.TestCase):
         line_2 = [(20, -10), (20, 10)]
         self.check_intersect(equator, line_2, False)
 
-    @unittest.skip("numpy C-API issue II")
     def test_intersect_given_segments_parallel_to_equator_returns_false(self):
         self.check_intersect([(0, 10), (100, 10)],
                              [(0, -10), (100, -10)],
                              False)
 
-    @unittest.skip("numpy C-API issue")
     def test_intersect_given_diagonal_arcs(self):
         self.check_intersect([(104, 80), (106, 83)],
                              [(106, 80), (104, 83)],

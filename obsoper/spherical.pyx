@@ -136,9 +136,6 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     scalars[2] = -1. * dot(cross(point_3, vector_q), vector_t)
     scalars[3] = +1. * dot(cross(point_4, vector_q), vector_t)
 
-    for i in range(4):
-        print scalars[i]
-
     return all_positive(scalars, n) or all_negative(scalars, n)
 
 
