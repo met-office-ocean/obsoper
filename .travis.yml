@@ -5,9 +5,10 @@ sudo: required
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libhdf5-serial-dev netcdf-bin libnetcdf-dev
-  - sudo apt-get install python-numpy python-scipy
 # command to install dependencies
-install: "pip install -r requirements.txt"
+install:
+  - "pip install --only-binary=numpy,scipy numpy scipy"
+  - "pip install -r requirements.txt"
 before_script: python2.7 setup.py develop
 # command to run tests
 script: python2.7 -m unittest discover -b
