@@ -8,6 +8,9 @@ from libc.math cimport (sin,
                         sqrt,
                         M_PI)
 
+# Needed to access C-API
+np.import_array()
+
 
 cdef struct Cartesian:
     double x
