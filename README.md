@@ -4,6 +4,8 @@ Maps ocean forecasts from model space to observation space
 
 ## Installation
 
+[![Build Status](https://travis-ci.org/met-office-ocean/obsoper.svg?branch=master)](https://travis-ci.org/met-office-ocean/obsoper)
+
 Python package distributed with setuptools. Requires Cython to build
 extension modules.
 
