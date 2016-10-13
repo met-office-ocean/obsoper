@@ -7,6 +7,6 @@ before_install:
   - sudo apt-get install libhdf5-serial-dev netcdf-bin libnetcdf-dev
 # command to install dependencies
 install: "pip install -r requirements.txt"
-before_script: python setup.py develop
+before_script: python2.7 setup.py develop
 # command to run tests
 script: nosetests
