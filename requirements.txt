@@ -2,5 +2,3 @@ Cython==0.22
 mock==2.0.0
 h5py
 netCDF4
-numpy
-scipy
