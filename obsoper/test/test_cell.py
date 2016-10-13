@@ -121,21 +121,17 @@ class TestCellCenter(unittest.TestCase):
                                               (-0.5, +0.5)])
         self.translated_unit_square = self.unit_square + [1, 0]
 
-    @unittest.skip("numpy C-API issue")
     def test_center_given_unit_square_returns_adjusted_center(self):
         self.check_center(self.unit_square,
                           (0.5, 0.500057))
 
-    @unittest.skip("numpy C-API issue")
     def test_center_given_translated_unit_square_returns_adjusted_center(self):
         self.check_center(self.translated_unit_square,
                           (1.5, 0.500057))
 
-    @unittest.skip("numpy C-API issue")
     def test_center_given_centered_unit_square(self):
         self.check_center(self.centered_unit_square, (0., 0.))
 
-    @unittest.skip("numpy C-API issue")
     def test_center_given_great_circle_center_at_north_pole(self):
         points = np.array([(0, 0),
                            (90, 45),
@@ -143,7 +139,6 @@ class TestCellCenter(unittest.TestCase):
                            (-90, 45)])
         self.check_center(points, (0, 90))
 
-    @unittest.skip("numpy C-API issue")
     def test_center_given_general_case(self):
         points = [(100, 80),
                   (104, 80),
