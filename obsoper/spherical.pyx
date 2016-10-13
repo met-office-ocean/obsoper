@@ -105,13 +105,18 @@ cdef Spherical _intercept(double[:, :] line_1,
     if all_positive(scalars, n):
         return _to_spherical(vector_t)
     if all_negative(scalars, n):
-        return _to_spherical({"x": -vector_t.x,
-                              "y": -vector_t.y,
-                              "z": -vector_t.z})
+        return _to_spherical(negate(vector_t))
     else:
         message = "Great circle arcs do not intersect:\n{}\n{}".format(line_1,
                                                                        line_2)
         raise Exception(message)
+
+
+cdef Cartesian negate(Cartesian vector):
+    """multiply cartesian position by minus one"""
+    return {"x": -vector.x,
+            "y": -vector.y,
+            "z": -vector.z}
 
 
 @cython.boundscheck(False)
