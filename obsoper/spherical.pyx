@@ -29,8 +29,7 @@ cpdef bint intersect(double[:, :] line_1, double[:, :] line_2):
 
     :returns: Logical indicating segments intersect
     """
-    return _intersect(np.asarray(line_1, dtype="d"),
-                      np.asarray(line_2, dtype="d"))
+    return _intersect(line_1, line_2)
 
 
 cpdef tuple intercept(double[:, :] line_1, double[:, :] line_2):
