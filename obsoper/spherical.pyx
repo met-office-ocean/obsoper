@@ -76,7 +76,8 @@ cdef Spherical _intercept(double[:, :] line_1,
         int n = 4
         double[4] scalars
         Spherical coordinate
-        Cartesian point_1, point_2, point_3, point_4, vector_t
+        Cartesian point_1, point_2, point_3, point_4
+        Cartesian vector_p, vector_q, vector_t
 
     point_1 = _to_cartesian({"longitude": line_1[0, 0],
                              "latitude": line_1[0, 1]})
@@ -87,8 +88,18 @@ cdef Spherical _intercept(double[:, :] line_1,
     point_4 = _to_cartesian({"longitude": line_2[1, 0],
                              "latitude": line_2[1, 1]})
 
-    scalars = c_scalars(point_1, point_2, point_3, point_4)
-    vector_t = c_vector_t(point_1, point_2, point_3, point_4)
+    # Calculate vectors perpendicular to great circles
+    vector_p = cross(point_1, point_2)
+    vector_q = cross(point_3, point_4)
+
+    # Calculate vector in direction of great circle intersection
+    vector_t = cross(vector_p, vector_q)
+
+    # Calculate projections onto t vector
+    scalars[0] = -1. * dot(cross(point_1, vector_p), vector_t)
+    scalars[1] = +1. * dot(cross(point_2, vector_p), vector_t)
+    scalars[2] = -1. * dot(cross(point_3, vector_q), vector_t)
+    scalars[3] = +1. * dot(cross(point_4, vector_q), vector_t)
 
     # Check sign convention
     if all_positive(scalars, n):
@@ -110,7 +121,6 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     :returns: Logical indicating segments intersect
     """
     cdef:
-        int i
         int n = 4
         double[4] scalars
         Cartesian point_1, point_2, point_3, point_4
@@ -125,9 +135,11 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     point_4 = _to_cartesian({"longitude": line_2[1, 0],
                              "latitude": line_2[1, 1]})
 
-    # Expicit scalar calculation
+    # Calculate vectors perpendicular to great circles
     vector_p = cross(point_1, point_2)
     vector_q = cross(point_3, point_4)
+
+    # Calculate vector in direction of great circle intersection
     vector_t = cross(vector_p, vector_q)
 
     # Calculate projections onto t vector
@@ -137,25 +149,6 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     scalars[3] = +1. * dot(cross(point_4, vector_q), vector_t)
 
     return all_positive(scalars, n) or all_negative(scalars, n)
-
-
-cdef double* c_scalars(Cartesian point_1,
-                       Cartesian point_2,
-                       Cartesian point_3,
-                       Cartesian point_4):
-    """Define scalar values that determine great circle intersection"""
-    cdef:
-        double[4] scalars
-        Cartesian vector_p = cross(point_1, point_2)
-        Cartesian vector_q = cross(point_3, point_4)
-        Cartesian vector_t = cross(vector_p, vector_q)
-
-    # Calculate projections onto t vector
-    scalars[0] = -1. * dot(cross(point_1, vector_p), vector_t)
-    scalars[1] = +1. * dot(cross(point_2, vector_p), vector_t)
-    scalars[2] = -1. * dot(cross(point_3, vector_q), vector_t)
-    scalars[3] = +1. * dot(cross(point_4, vector_q), vector_t)
-    return scalars
 
 
 cdef bint all_positive(double* values, int n):
@@ -174,16 +167,6 @@ cdef bint all_negative(double* values, int n):
         if values[i] >= 0:
             return False
     return True
-
-
-cdef Cartesian  c_vector_t(Cartesian point_1,
-                           Cartesian point_2,
-                           Cartesian point_3,
-                           Cartesian point_4):
-    """Calculate vector t needed to determine great circle overlap"""
-    cdef Cartesian vector_p = cross(point_1, point_2)
-    cdef Cartesian vector_q = cross(point_3, point_4)
-    return normalise(cross(vector_p, vector_q))
 
 
 cdef Spherical _to_spherical(Cartesian point):

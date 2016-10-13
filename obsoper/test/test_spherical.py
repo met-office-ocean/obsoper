@@ -32,7 +32,6 @@ class TestIntersect(unittest.TestCase):
 
 
 class TestIntercept(unittest.TestCase):
-    @unittest.skip("numpy C-API issue")
     def test_intercept_given_intersecting_segments_returns_point(self):
         equator = np.array([(-10, 0), (10, 0)], dtype="d")
         greenwich = np.array([(0, -10), (0, 10)], dtype="d")
