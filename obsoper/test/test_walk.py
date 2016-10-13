@@ -264,10 +264,12 @@ class TestNextStep(unittest.TestCase):
     def test_next_step_given_point_west_returns_west(self):
         self.check_next_step(self.due_west, self.west)
 
+    @unittest.skip("numpy C-API issue II")
     def test_next_step_given_point_inside_great_circle_raises_exception(self):
         with self.assertRaises(StepNotFound):
             walk.next_step(self.vertices, self.center, self.inside_arc)
 
+    @unittest.skip("numpy C-API issue II")
     def test_next_step_given_point_inside_box_raises_exception(self):
         with self.assertRaises(StepNotFound):
             walk.next_step(self.vertices, self.center, self.inside_box)

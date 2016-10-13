@@ -29,6 +29,10 @@ cpdef bint intersect(double[:, :] line_1, double[:, :] line_2):
 
     :returns: Logical indicating segments intersect
     """
+    print line_1[0, 0], line_1[0, 1]
+    print line_1[1, 0], line_1[1, 1]
+    print line_2[0, 0], line_2[0, 1]
+    print line_2[1, 0], line_2[1, 1]
     return _intersect(line_1, line_2)
 
 
