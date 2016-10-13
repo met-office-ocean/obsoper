@@ -5,6 +5,7 @@ from obsoper import spherical
 
 
 class TestIntersect(unittest.TestCase):
+    @unittest.skip("numpy C-API issue")
     def test_intersect_given_intersecting_segments_returns_true(self):
         equator = [(-10, 0), (10, 0)]
         greenwich = [(0, -10), (0, 10)]
@@ -20,6 +21,7 @@ class TestIntersect(unittest.TestCase):
                              [(0, -10), (100, -10)],
                              False)
 
+    @unittest.skip("numpy C-API issue")
     def test_intersect_given_diagonal_arcs(self):
         self.check_intersect([(104, 80), (106, 83)],
                              [(106, 80), (104, 83)],
@@ -32,6 +34,7 @@ class TestIntersect(unittest.TestCase):
 
 
 class TestIntercept(unittest.TestCase):
+    @unittest.skip("numpy C-API issue")
     def test_intercept_given_intersecting_segments_returns_point(self):
         equator = np.array([(-10, 0), (10, 0)], dtype="d")
         greenwich = np.array([(0, -10), (0, 10)], dtype="d")

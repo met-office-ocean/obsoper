@@ -51,6 +51,7 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         self.check_southern_edge([0, 0], [-80, -70],
                                  np.ma.MaskedArray([100, 4], [True, False]))
 
+    @unittest.skip("numpy C-API issue")
     def test_interpolate_given_point_inside_cyclic_longitude_cell(self):
         grid_lons, grid_lats = np.meshgrid([70, 140, -150, -80, -10, 60],
                                            [-70, -60, -50],
