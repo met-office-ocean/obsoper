@@ -1,7 +1,10 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import pkg_resources
-import netCDF4
+try:
+    import netCDF4
+except ImportError:
+    pass
 import numpy as np
 import obsoper
 

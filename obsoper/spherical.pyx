@@ -122,13 +122,7 @@ cdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
 
     scalars = c_scalars(point_1, point_2, point_3, point_4)
 
-    # Check sign convention
-    if all_positive(scalars, n):
-        return True
-    elif all_negative(scalars, n):
-        return True
-    else:
-        return False
+    return all_positive(scalars, n) or all_negative(scalars, n)
 
 
 cdef double* c_scalars(Cartesian point_1,
