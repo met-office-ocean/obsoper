@@ -75,3 +75,7 @@ Once the operator has been trained on a set of data, it is then possible to iter
 
 Interpolated model counterparts can then be written to a file or analysed further to generate plots.
 
+## Full documentation
+
+More comprehensive documentation can be found at [obsoper.readthedocs.io](http://obsoper.readthedocs.io).
+
