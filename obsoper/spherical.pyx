@@ -124,10 +124,12 @@ cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     point_4 = _to_cartesian({"longitude": line_2[1, 0],
                              "latitude": line_2[1, 1]})
 
-    scalars = c_scalars(point_1, point_2, point_3, point_4)
+    print dict(point_1)
+    print dict(point_2)
+    print dict(point_3)
+    print dict(point_4)
 
-    for i in range(4):
-        print scalars[i]
+    scalars = c_scalars(point_1, point_2, point_3, point_4)
 
     return all_positive(scalars, n) or all_negative(scalars, n)
 
