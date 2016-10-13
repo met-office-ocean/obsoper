@@ -5,7 +5,6 @@ from obsoper import spherical
 
 
 class TestIntersect(unittest.TestCase):
-    @unittest.skip("numpy C-API issue")
     def test_intersect_given_intersecting_segments_returns_true(self):
         equator = [(-10, 0), (10, 0)]
         greenwich = [(0, -10), (0, 10)]
