@@ -29,10 +29,6 @@ cpdef bint intersect(double[:, :] line_1, double[:, :] line_2):
 
     :returns: Logical indicating segments intersect
     """
-    print line_1[0, 0], line_1[0, 1]
-    print line_1[1, 0], line_1[1, 1]
-    print line_2[0, 0], line_2[0, 1]
-    print line_2[1, 0], line_2[1, 1]
     return _intersect(line_1, line_2)
 
 
@@ -108,12 +104,13 @@ cdef Spherical _intercept(double[:, :] line_1,
 
 
 @cython.boundscheck(False)
-cdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
+cpdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
     """Check that two great circles intersect
 
     :returns: Logical indicating segments intersect
     """
     cdef:
+        int i
         int n = 4
         double[4] scalars
         Cartesian point_1, point_2, point_3, point_4
@@ -128,6 +125,9 @@ cdef bint _intersect(double[:, :] line_1, double[:, :] line_2):
                              "latitude": line_2[1, 1]})
 
     scalars = c_scalars(point_1, point_2, point_3, point_4)
+
+    for i in range(4):
+        print scalars[i]
 
     return all_positive(scalars, n) or all_negative(scalars, n)
 
