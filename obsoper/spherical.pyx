@@ -1,6 +1,9 @@
 """Cython extension of spherical geometry functions"""
 import numpy as np
 cimport numpy as np
+# Needed to access C-API
+np.import_array()
+
 cimport cython
 from libc.math cimport (sin,
                         cos,
@@ -8,8 +11,6 @@ from libc.math cimport (sin,
                         sqrt,
                         M_PI)
 
-# Needed to access C-API
-np.import_array()
 
 
 cdef struct Cartesian:
