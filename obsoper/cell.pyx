@@ -40,10 +40,7 @@ cdef class Cell:
 
     cpdef bint contains(self, double x, double y):
         """Detects coordinates that lie inside the grid cell"""
-        if self.bounding_box.inside(x, y):
-            return self.same_side_test(x, y)
-        else:
-            return False
+        return self.bounding_box.inside(x, y) and self.same_side_test(x, y)
 
     cdef bint same_side_test(self, double x, double y):
         """Detects coordinates that lie inside a polygon"""
