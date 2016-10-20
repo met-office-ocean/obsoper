@@ -1,14 +1,15 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
-from obsoper import cursors
+from obsoper import (cursors,
+                     orca)
 
 
 class TestNorthFold(unittest.TestCase):
     def test_getitem_given_point_returns_point_on_opposite_side(self):
         longitudes = [0, 0]
         latitudes = [0, 0]
-        fixture = cursors.NorthFold(longitudes,
-                                    latitudes)
+        fixture = orca.north_fold(longitudes,
+                                  latitudes)
         result = fixture[0]
         expect = 1
         self.assertEqual(expect, result)
@@ -16,8 +17,8 @@ class TestNorthFold(unittest.TestCase):
     def test_getitem_given_multiple_pairs_of_points(self):
         longitudes = [0, 1, 2, 2, 1, 0]
         latitudes = [1, 2, 0, 0, 2, 1]
-        fixture = cursors.NorthFold(longitudes,
-                                    latitudes)
+        fixture = orca.north_fold(longitudes,
+                                  latitudes)
         result = fixture[1]
         expect = 4
         self.assertEqual(expect, result)
@@ -26,8 +27,8 @@ class TestNorthFold(unittest.TestCase):
 class TestTripolar(unittest.TestCase):
     def setUp(self):
         self.ni, self.nj = 4, 10
-        fold = cursors.NorthFold(longitudes=[10, 20, 10, 20],
-                                 latitudes=[85, 85, 85, 85])
+        fold = orca.north_fold(longitudes=[10, 20, 10, 20],
+                               latitudes=[85, 85, 85, 85])
         self.fixture = cursors.Tripolar(self.ni, self.nj, fold)
 
     def test_move_given_null_move(self):

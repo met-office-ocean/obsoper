@@ -4,7 +4,7 @@ cdef class Cursor:
 
 
 cdef class Tripolar(Cursor):
-    cdef NorthFold fold
+    cdef dict fold
     cpdef tuple move(self, int i, int j, int di, int dj)
     cpdef tuple index(self, int i, int j)
     cpdef bint on_fold(self, int j)
