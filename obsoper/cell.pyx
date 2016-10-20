@@ -4,6 +4,7 @@ Grid cells
 import numpy as np
 cimport numpy as np
 cimport cython
+from libc.math cimport abs
 from . import spherical
 from . import box
 from . cimport (box,
@@ -235,3 +236,21 @@ cdef class Collection:
         ni = self.positions.shape[0]
         nj = self.positions.shape[1]
         return ni, nj
+
+
+@cython.boundscheck(False)
+cpdef bint same(Cell cell_1, Cell cell_2):
+    """Determine if two cell objects refer to the same grid cell in space
+
+    :returns: True if both cells represent same cell
+    """
+    cdef:
+        int i, j, n = cell_1.vertices.shape[0]
+        double x, y, tolerance = 1e-6
+    for i in range(n):
+        for j in range(2):
+            x = cell_1.vertices[i, j]
+            y = cell_2.vertices[i, j]
+            if abs(x - y) > tolerance:
+                return False
+    return True

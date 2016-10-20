@@ -219,3 +219,31 @@ class TestSplitCell(unittest.TestCase):
         west_expect, east_expect = expect
         np.testing.assert_array_equal(west_expect, west_result)
         np.testing.assert_array_equal(east_expect, east_result)
+
+
+class TestSameCell(unittest.TestCase):
+    def test_same_cell_given_cells_with_same_vertices_returns_true(self):
+        cell_1 = cell.Cell(np.asarray([(0, 0),
+                                       (0, 1),
+                                       (1, 1),
+                                       (1, 0)], dtype="d"))
+        cell_2 = cell.Cell(np.asarray([(0, 0),
+                                       (0, 1),
+                                       (1, 1),
+                                       (1, 0)], dtype="d"))
+        result = cell.same(cell_1, cell_2)
+        expect = True
+        self.assertEqual(expect, result)
+
+    def test_same_cell_given_cells_with_different_vertices_returns_false(self):
+        cell_1 = cell.Cell(np.asarray([(0, 0),
+                                       (0, 1),
+                                       (1, 1),
+                                       (1, 0)], dtype="d"))
+        cell_2 = cell.Cell(np.asarray([(0, 0),
+                                       (0, 1),
+                                       (1, 1),
+                                       (1, 0.1)], dtype="d"))
+        result = cell.same(cell_1, cell_2)
+        expect = False
+        self.assertEqual(expect, result)
