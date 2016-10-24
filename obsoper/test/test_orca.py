@@ -26,3 +26,20 @@ class TestNorthFold(unittest.TestCase):
         result = orca.north_fold(np.array([]), np.array([]))
         expect = {}
         self.assertEqual(expect, result)
+
+
+class TestRemoveHalo(unittest.TestCase):
+    def test_remove_halo_given_empty_array_returns_empty_array(self):
+        self.check_remove_halo([], [])
+
+    def test_remove_halo_given_2_by_2_returns_empty_array(self):
+        self.check_remove_halo([[1, 1], [1, 1]], [])
+
+    def test_remove_halo_given_3_by_3_returns_1_by_2_array(self):
+        self.check_remove_halo([[1, 1, 1],
+                                [0, 0, 1],
+                                [1, 1, 1]], [[0, 0]])
+
+    def check_remove_halo(self, given, expect):
+        result = orca.remove_halo(given)
+        np.testing.assert_array_equal(expect, result)
