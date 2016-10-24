@@ -134,6 +134,49 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         expect = [1.3]
         np.testing.assert_array_equal(expect, result)
 
+    def test_interpolate_given_halo_flag_ignores_halo_locations(self):
+        """should only consider non-halo grid cells during interpolation
+
+        .. note:: Halo refers to extra columns East/West of the grid
+                  and an extra row North of the grid.
+
+        In the contrived example below, only longitudes [1, 2] and
+        latitudes [0, 1] are considered inside the halo. Cyclic east/west
+        interpolation should not see ones in halo cells.
+        """
+        grid_lons, grid_lats = np.meshgrid([0, 1, 2, 0, 1],
+                                           [0, 1, 2], indexing="ij")
+        obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
+        operator = interpolate.Curvilinear(grid_lons,
+                                           grid_lats,
+                                           obs_lons,
+                                           obs_lats,
+                                           has_halo=True)
+        field = np.ma.masked_array([[1, 1, 1],
+                                    [0, 0, 1],
+                                    [0, 0, 1],
+                                    [0, 0, 1],
+                                    [1, 1, 1]], dtype="d")
+        result = operator.interpolate(field)
+        expect = [0]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_cyclic_longitude_simple_case(self):
+        """should consider [n-1, 0] cell as a continuous cell in longitude"""
+        grid_lons, grid_lats = np.meshgrid([1, 2, 0],
+                                           [0, 1], indexing="ij")
+        obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
+        operator = interpolate.Curvilinear(grid_lons,
+                                           grid_lats,
+                                           obs_lons,
+                                           obs_lats)
+        field = np.ma.masked_array([[1, 1],
+                                    [7, 7],
+                                    [3, 3]], dtype="d")
+        result = operator.interpolate(field)
+        expect = [2]
+        np.testing.assert_array_equal(expect, result)
+
 
 class TestSelectCorners(unittest.TestCase):
     def setUp(self):

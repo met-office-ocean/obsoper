@@ -4,7 +4,8 @@ Interpolators
 """
 import numpy as np
 from . import (grid,
-               bilinear)
+               bilinear,
+               orca)
 
 
 class Curvilinear(object):
@@ -13,16 +14,30 @@ class Curvilinear(object):
     Handles grids that are composed of quadrilaterals but may
     not be easily searchable.
 
-    ..note:: At present it handles tri-polar ORCA grids
+    :param grid_longitudes: 2D array of longitudes shapes (x, y)
+    :param grid_latitudes: 2D array of latitudes shapes (x, y)
+    :param observed_longitudes: 1D array of longitudes
+    :param observed_latitudes: 1D array of latitudes
+    :param has_halo: flag indicating whether diagnostics have redundant halo
+                     columns and row.
     """
     def __init__(self,
                  grid_longitudes,
                  grid_latitudes,
                  observed_longitudes,
-                 observed_latitudes):
+                 observed_latitudes,
+                 has_halo=False):
         # Cast positional information as doubles
         self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
         self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
+
+        self.has_halo = has_halo
+
+        # Screen grid cells inside halo
+        if self.has_halo:
+            grid_longitudes = orca.remove_halo(grid_longitudes)
+            grid_latitudes = orca.remove_halo(grid_latitudes)
+
         self._grid = np.dstack((grid_longitudes,
                                 grid_latitudes)).astype("d")
 
@@ -58,7 +73,18 @@ class Curvilinear(object):
         return latitudes >= self.minimum_latitude
 
     def interpolate(self, field):
-        """Perform vectorised interpolation"""
+        """Perform vectorised interpolation
+
+        .. note:: `has_halo` flag specified during construction trims field
+                  appropriately
+
+        :param field: 2D array same shape as grid_longitudes/grid_latitudes
+        :returns: 1D array of interpolated field values
+        """
+        if self.has_halo:
+            field = orca.remove_halo(field)
+
+        # Interpolate field to observed positions
         result = np.ma.masked_all(self.n_observations, dtype="d")
         if self.included.any():
             corner_values = self.select_field(field)
