@@ -8,7 +8,7 @@ from . import (grid,
                orca)
 
 
-class Curvilinear(object):
+class Tripolar(object):
     """Tri-polar interpolator
 
     Handles grids that are composed of quadrilaterals but may

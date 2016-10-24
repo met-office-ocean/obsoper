@@ -29,4 +29,4 @@ performs the 2D/3D interpolation from model space to observation space.
 from .version import __version__
 from .core import ObservationOperator
 from .window import TimeWindow
-from .interpolate import Curvilinear as Tripolar
+from .interpolate import Tripolar

@@ -4,7 +4,7 @@ import numpy as np
 from obsoper import interpolate
 
 
-class TestCurvilinearInterpolator(unittest.TestCase):
+class TestTripolarInterpolator(unittest.TestCase):
     def setUp(self):
         self.grid_lons = np.array([[10, 10],
                                    [20, 20]])
@@ -16,10 +16,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
     def test_interpolate_given_two_points(self):
         observed_longitudes = np.array([11, 19])
         observed_latitudes = np.array([31, 39])
-        interpolator = interpolate.Curvilinear(self.grid_lons,
-                                               self.grid_lats,
-                                               observed_longitudes,
-                                               observed_latitudes)
+        interpolator = interpolate.Tripolar(self.grid_lons,
+                                            self.grid_lats,
+                                            observed_longitudes,
+                                            observed_latitudes)
         result = interpolator.interpolate(self.field)
         expect = np.array([1.3, 3.7])
         np.testing.assert_array_almost_equal(expect, result)
@@ -31,10 +31,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
 
         observed_lons = np.array([179.2])
         observed_lats = np.array([10.2])
-        interpolator = interpolate.Curvilinear(grid_lons,
-                                               grid_lats,
-                                               observed_lons,
-                                               observed_lats)
+        interpolator = interpolate.Tripolar(grid_lons,
+                                            grid_lats,
+                                            observed_lons,
+                                            observed_lats)
 
         result = interpolator.interpolate(self.field)
 
@@ -59,10 +59,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         field = np.zeros((6, 3))
         field[[0, -1], :] = 1
 
-        fixture = interpolate.Curvilinear(grid_lons,
-                                          grid_lats,
-                                          lons,
-                                          lats)
+        fixture = interpolate.Tripolar(grid_lons,
+                                       grid_lats,
+                                       lons,
+                                       lats)
 
         result = fixture.interpolate(field)
         expect = [1]
@@ -75,10 +75,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
 
         observed_lons = np.array([0.5])
         observed_lats = np.array([0.5])
-        interpolator = interpolate.Curvilinear(grid_lons,
-                                               grid_lats,
-                                               observed_lons,
-                                               observed_lats)
+        interpolator = interpolate.Tripolar(grid_lons,
+                                            grid_lats,
+                                            observed_lons,
+                                            observed_lats)
 
         field = np.ma.MaskedArray([[1, 2], [2, 1]],
                                   [[False, False], [True, False]])
@@ -93,10 +93,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
                                            [0, 1],
                                            indexing="ij")
         observed_lons, observed_lats = [0.5], [0.5]
-        fixture = interpolate.Curvilinear(grid_lons,
-                                          grid_lats,
-                                          observed_lons,
-                                          observed_lats)
+        fixture = interpolate.Tripolar(grid_lons,
+                                       grid_lats,
+                                       observed_lons,
+                                       observed_lats)
         result = fixture.interpolate(self.field)
         expect = [2.5]
         self.assertMaskedArrayAlmostEqual(expect, result)
@@ -108,10 +108,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         field = np.array([[1, 2, 3],
                           [4, 5, 6],
                           [7, 8, 9]])
-        fixture = interpolate.Curvilinear(grid_lons,
-                                          grid_lats,
-                                          lons,
-                                          lats)
+        fixture = interpolate.Tripolar(grid_lons,
+                                       grid_lats,
+                                       lons,
+                                       lats)
         result = fixture.interpolate(field)
         self.assertMaskedArrayAlmostEqual(expect, result)
 
@@ -125,10 +125,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
     def test_interpolate_given_unmasked_masked_array(self):
         grid_lons, grid_lats = np.meshgrid([0, 1], [0, 1], indexing="ij")
         obs_lons, obs_lats = np.array([0.1]), np.array([0.1])
-        operator = interpolate.Curvilinear(grid_lons,
-                                           grid_lats,
-                                           obs_lons,
-                                           obs_lats)
+        operator = interpolate.Tripolar(grid_lons,
+                                        grid_lats,
+                                        obs_lons,
+                                        obs_lats)
         field = np.ma.masked_array([[1, 2], [3, 4]], dtype="d")
         result = operator.interpolate(field)
         expect = [1.3]
@@ -147,11 +147,11 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         grid_lons, grid_lats = np.meshgrid([0, 1, 2, 0, 1],
                                            [0, 1, 2], indexing="ij")
         obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
-        operator = interpolate.Curvilinear(grid_lons,
-                                           grid_lats,
-                                           obs_lons,
-                                           obs_lats,
-                                           has_halo=True)
+        operator = interpolate.Tripolar(grid_lons,
+                                        grid_lats,
+                                        obs_lons,
+                                        obs_lats,
+                                        has_halo=True)
         field = np.ma.masked_array([[1, 1, 1],
                                     [0, 0, 1],
                                     [0, 0, 1],
@@ -166,10 +166,10 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         grid_lons, grid_lats = np.meshgrid([1, 2, 0],
                                            [0, 1], indexing="ij")
         obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
-        operator = interpolate.Curvilinear(grid_lons,
-                                           grid_lats,
-                                           obs_lons,
-                                           obs_lats)
+        operator = interpolate.Tripolar(grid_lons,
+                                        grid_lats,
+                                        obs_lons,
+                                        obs_lats)
         field = np.ma.masked_array([[1, 1],
                                     [7, 7],
                                     [3, 3]], dtype="d")
