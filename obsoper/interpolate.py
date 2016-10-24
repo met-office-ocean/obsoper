@@ -62,7 +62,7 @@ class Curvilinear(object):
         result = np.ma.masked_all(self.n_observations, dtype="d")
         if self.included.any():
             corner_values = self.select_field(field)
-            if hasattr(corner_values, "mask"):
+            if hasattr(corner_values, "mask") and (corner_values.mask.any()):
                 invalid = corner_values.mask.any(axis=0)
                 corner_values[:, invalid] = np.ma.masked
             result[self.included] = self.interpolator(corner_values)

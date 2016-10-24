@@ -122,6 +122,18 @@ class TestCurvilinearInterpolator(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect.compressed(),
                                              result.compressed())
 
+    def test_interpolate_given_unmasked_masked_array(self):
+        grid_lons, grid_lats = np.meshgrid([0, 1], [0, 1], indexing="ij")
+        obs_lons, obs_lats = np.array([0.1]), np.array([0.1])
+        operator = interpolate.Curvilinear(grid_lons,
+                                           grid_lats,
+                                           obs_lons,
+                                           obs_lats)
+        field = np.ma.masked_array([[1, 2], [3, 4]], dtype="d")
+        result = operator.interpolate(field)
+        expect = [1.3]
+        np.testing.assert_array_equal(expect, result)
+
 
 class TestSelectCorners(unittest.TestCase):
     def setUp(self):
