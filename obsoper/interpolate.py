@@ -20,23 +20,33 @@ class Tripolar(object):
     :param observed_latitudes: 1D array of latitudes
     :param has_halo: flag indicating whether diagnostics have redundant halo
                      columns and row.
+    :param dimension_order: describe grid dimensions "xy" or "yx", interpolator
+                            transposes arrays to "xy"
     """
     def __init__(self,
                  grid_longitudes,
                  grid_latitudes,
                  observed_longitudes,
                  observed_latitudes,
-                 has_halo=False):
-        # Cast positional information as doubles
+                 has_halo=False,
+                 dimension_order="xy"):
+        # Cast positions as doubles
         self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
         self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
+        self.grid_longitudes = np.asarray(grid_longitudes, dtype="d")
+        self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
 
         self.has_halo = has_halo
 
+        # Transpose coordinates
+        if dimension_order.lower() == "yx":
+            self.grid_longitudes = self.grid_longitudes.T
+            self.grid_latitudes = self.grid_latitudes.T
+
         # Screen grid cells inside halo
         if self.has_halo:
-            grid_longitudes = orca.remove_halo(grid_longitudes)
-            grid_latitudes = orca.remove_halo(grid_latitudes)
+            self.grid_longitudes = orca.remove_halo(self.grid_longitudes)
+            self.grid_latitudes = orca.remove_halo(self.grid_latitudes)
 
         self._grid = np.dstack((grid_longitudes,
                                 grid_latitudes)).astype("d")
