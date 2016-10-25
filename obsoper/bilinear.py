@@ -15,6 +15,9 @@ class BilinearTransform(object):
 
     .. note:: Corner ordering is highly important.
 
+    :param corners: positions of corners of grid cells
+    :param x: x positions used to estimate field
+    :param y: y positions used to estimate field
     """
     def __init__(self, corners, x, y):
         self.corners = np.asarray(corners, dtype="d")
@@ -66,11 +69,46 @@ class BilinearTransform(object):
         return quadratic_root(a, b, c)
 
     def __call__(self, values):
-        # Handle weights/values broadcasting
+        # Note: Transpose could be eliminated if rest of library updated
+        # to handle ([[Z], N], 4) shapes
+
         values = np.ma.asarray(values, dtype="d")
-        if (self.weights.ndim == 2) and (values.ndim == 1):
-            values = values[:, None]
-        return np.ma.sum(self.weights * values, axis=0)
+        weights = self.weights
+
+        if values.ndim == 2:
+            values = values.T
+
+        if weights.ndim == 2:
+            weights = weights.T
+
+        return interpolate(values, weights).T
+
+
+def interpolate(values, weights):
+    """Apply interpolation weights to estimate field
+
+     Applies interpolation weights across corner values. Surface and 3D
+     data can be interpolated as one-to-many or many-to-one. Both arrays
+     must have their last dimension length equal to 4.
+
+     Takes advantage of numpy's broadcasting rules to multiply and
+     sum values with weights.
+
+    :param values: array shaped ([[Z], N], 4) where N is number
+                   of observations and Z is model levels. Square brackets
+                   indicate optional dimensions.
+    :param weights: array shaped ([N], 4) where N is number of
+                    observations
+    :returns: scalar/array shaped ([[Z], N]) representing the field value
+              at location interior to the cell
+    """
+    values, weights = np.ma.asarray(values), np.asarray(weights)
+    return np.ma.sum(weights * values, axis=-1)
+
+
+def interpolation_weights(corners, x, y):
+    """calculate interpolation weights"""
+    return BilinearTransform(corners, x, y).weights
 
 
 def quadratic_root(a, b, c):

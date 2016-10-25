@@ -102,6 +102,117 @@ class TestBilinearTransform(unittest.TestCase):
         self.assertAlmostEqual(expect, result)
 
 
+class TestInterpolate(unittest.TestCase):
+    def setUp(self):
+        self.values1d = [1, 2, 3, 4]
+        self.values2d = [[1, 2, 3, 4],
+                         [1, 2, 3, 4]]
+        self.values3d = [[[1, 2, 3, 4],
+                          [1, 2, 3, 4]],
+                         [[1, 2, 3, 4],
+                          [1, 2, 3, 4]]]
+        self.weights1d = [0.25, 0.25, 0.25, 0.25]
+        self.weights2d = [[0.25, 0.25, 0.25, 0.25],
+                          [1, 0, 0, 0]]
+
+        # Various configurations of 3D values
+        # Depth varying
+        self.values_3d_z = [[[0, 0, 0, 0],
+                             [0, 0, 0, 0]],
+                            [[1, 1, 1, 1],
+                             [1, 1, 1, 1]],
+                            [[2, 2, 2, 2],
+                             [2, 2, 2, 2]]]
+        # Corner varying
+        self.values_3d_c = [[[1, 2, 3, 4],
+                             [1, 2, 3, 4]],
+                            [[1, 2, 3, 4],
+                             [1, 2, 3, 4]],
+                            [[1, 2, 3, 4],
+                             [1, 2, 3, 4]]]
+        # Observation varying
+        self.values_3d_o = [[[0, 0, 0, 0],
+                             [1, 1, 1, 1]],
+                            [[0, 0, 0, 0],
+                             [1, 1, 1, 1]],
+                            [[0, 0, 0, 0],
+                             [1, 1, 1, 1]]]
+
+    def test_interpolate_given_1d_values_1d_weights(self):
+        result = bilinear.interpolate(self.values1d, self.weights1d)
+        expect = 2.5
+        self.assertEqual(expect, result)
+
+    def test_interpolate_given_2d_values_1d_weights(self):
+        result = bilinear.interpolate(self.values2d, self.weights1d)
+        expect = [2.5, 2.5]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_1d_values_2d_weights(self):
+        result = bilinear.interpolate(self.values1d, self.weights2d)
+        expect = [2.5, 1]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_2d_values_2d_weights(self):
+        values = [[1, 2, 3, 4],
+                  [9, 9, 9, 9]]
+        result = bilinear.interpolate(values, self.weights2d)
+        expect = [2.5, 9]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_3d_values_1d_weights(self):
+        result = bilinear.interpolate(self.values3d, self.weights1d)
+        expect = [[2.5, 2.5],
+                  [2.5, 2.5]]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_depth_varying_3d_values_2d_weights(self):
+        result = bilinear.interpolate(self.values_3d_z, self.weights2d)
+        expect = [[0, 0],
+                  [1, 1],
+                  [2, 2]]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_corner_varying_3d_values_2d_weights(self):
+        result = bilinear.interpolate(self.values_3d_c, self.weights2d)
+        expect = [[2.5, 1],
+                  [2.5, 1],
+                  [2.5, 1]]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_obs_varying_3d_values_2d_weights(self):
+        result = bilinear.interpolate(self.values_3d_o, self.weights2d)
+        expect = [[0, 1],
+                  [0, 1],
+                  [0, 1]]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_depth_varying_3d_values_3d_weights(self):
+        weights = [[[1, 0, 0, 0],
+                    [0, 1, 0, 0]],
+                   [[0, 0, 1, 0],
+                    [0, 0, 0, 1]],
+                   [[0, 0, 0, 0],
+                    [0.25, 0.25, 0.25, 0.25]]]
+        result = bilinear.interpolate(self.values_3d_z, weights)
+        expect = [[0, 0],
+                  [1, 1],
+                  [0, 2]]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_masked_values(self):
+        N = 10
+        result = bilinear.interpolate(np.ma.masked_all((N, 4)),
+                                      self.weights1d)
+        expect = np.ma.masked_all(N)
+        self.assertMaskedArrayEqual(expect, result)
+
+    def assertMaskedArrayEqual(self, expect, result):
+        self.assertEqual(expect.shape, result.shape)
+        np.testing.assert_array_equal(expect.compressed(),
+                                      result.compressed())
+
+
 class TestBeta(unittest.TestCase):
     def setUp(self):
         # General quadrilateral
