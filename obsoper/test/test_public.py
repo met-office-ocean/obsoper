@@ -39,3 +39,11 @@ if HAS_NETCDF4:
             result = fixture.interpolate(self.constant_field)
             expect = np.array([self.constant])
             np.testing.assert_array_equal(expect, result)
+
+
+class TestPublicInterface(unittest.TestCase):
+    def test_remove_halo_is_accessible_from_library_import(self):
+        self.assertEqual(obsoper.orca.remove_halo, obsoper.remove_halo)
+
+    def test_north_fold_is_accessible_from_library_import(self):
+        self.assertEqual(obsoper.orca.north_fold, obsoper.north_fold)

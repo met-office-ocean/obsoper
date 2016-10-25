@@ -30,3 +30,5 @@ from .version import __version__
 from .core import ObservationOperator
 from .window import TimeWindow
 from .interpolate import Tripolar
+from .orca import (remove_halo,
+                   north_fold)
