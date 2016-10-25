@@ -125,13 +125,15 @@ cdef class Walk:
 
     def brute_force(self, int i, int j, point):
         """Brute force search of four nearest grid boxes"""
+        x, y = point
         for di, dj in self.extra_steps:
             inear, jnear = self.cursor.move(i, j, di, dj)
             grid_cell = self.cells.find(inear, jnear)
-            x, y = point
             if grid_cell.contains(x, y):
                 return inear, jnear
-        raise Exception("Radial algorithm exhausted list of steps")
+        message = ("Radial algorithm exhausted list of steps: "
+                   "({}, {}) ({}, {})").format(i, j, x, y)
+        raise Exception(message)
 
     cpdef direction(self, cell.Cell grid_cell, point):
         """Calculate grid step from grid location and point"""
