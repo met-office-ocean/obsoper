@@ -213,6 +213,47 @@ class TestInterpolate(unittest.TestCase):
                                       result.compressed())
 
 
+class TestInterpolationWeights(unittest.TestCase):
+    def setUp(self):
+        self.unit_square = [[0, 0],
+                            [1, 0],
+                            [1, 1],
+                            [0, 1]]
+
+    def test_interpolation_weights(self):
+        result = bilinear.interpolation_weights(self.unit_square,
+                                                [0.5],
+                                                [0.5])
+        expect = [[0.25, 0.25, 0.25, 0.25]]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_interpolation_weights_given_multiple_cells(self):
+        result = bilinear.interpolation_weights([self.unit_square,
+                                                 self.unit_square],
+                                                [0.5],
+                                                [0.5])
+        expect = [[0.25, 0.25, 0.25, 0.25],
+                  [0.25, 0.25, 0.25, 0.25]]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_interpolation_weights_given_multiple_points(self):
+        result = bilinear.interpolation_weights(self.unit_square,
+                                                [0.5, 0.1],
+                                                [0.5, 0.1])
+        expect = [[0.25, 0.25, 0.25, 0.25],
+                  [0.81, 0.09, 0.01, 0.09]]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_interpolation_weights_given_multiple_points_and_cells(self):
+        result = bilinear.interpolation_weights([self.unit_square,
+                                                 self.unit_square],
+                                                [0.5, 0.1],
+                                                [0.5, 0.1])
+        expect = [[0.25, 0.25, 0.25, 0.25],
+                  [0.81, 0.09, 0.01, 0.09]]
+        np.testing.assert_array_almost_equal(expect, result)
+
+
 class TestBeta(unittest.TestCase):
     def setUp(self):
         # General quadrilateral

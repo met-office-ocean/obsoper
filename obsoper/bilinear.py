@@ -87,12 +87,12 @@ class BilinearTransform(object):
 def interpolate(values, weights):
     """Apply interpolation weights to estimate field
 
-     Applies interpolation weights across corner values. Surface and 3D
-     data can be interpolated as one-to-many or many-to-one. Both arrays
-     must have their last dimension length equal to 4.
+    Applies interpolation weights across corner values. Surface and 3D
+    data can be interpolated as one-to-many or many-to-one. Both arrays
+    must have their last dimension length equal to 4.
 
-     Takes advantage of numpy's broadcasting rules to multiply and
-     sum values with weights.
+    Takes advantage of numpy's broadcasting rules to multiply and
+    sum values with weights.
 
     :param values: array shaped ([[Z], N], 4) where N is number
                    of observations and Z is model levels. Square brackets
@@ -107,8 +107,21 @@ def interpolate(values, weights):
 
 
 def interpolation_weights(corners, x, y):
-    """calculate interpolation weights"""
-    return BilinearTransform(corners, x, y).weights
+    """Calculate interpolation weights
+
+    General purpose 2D quadrilateral interpolation weights.
+
+    :param corners: array shaped ([N,] 4, 2) where N is the number of
+                    observations
+    :param x: scalar/1D array of x-axis positions
+    :param y: scalar/1D array of y-axis positions
+    :returns: array shapes ([N,] 4) weights for each corner and
+              optionally each observation
+    """
+    corners = np.asarray(corners)
+    if corners.ndim == 3:
+        corners = np.transpose(corners, (1, 2, 0))
+    return BilinearTransform(corners, x, y).weights.T
 
 
 def quadratic_root(a, b, c):
