@@ -48,14 +48,14 @@ class Tripolar(object):
             self.grid_longitudes = orca.remove_halo(self.grid_longitudes)
             self.grid_latitudes = orca.remove_halo(self.grid_latitudes)
 
-        self._grid = np.dstack((grid_longitudes,
-                                grid_latitudes)).astype("d")
+        self._grid = np.dstack((self.grid_longitudes,
+                                self.grid_latitudes)).astype("d")
 
         self.n_observations = len(self.observed_longitudes)
 
         # Filter observations that are enclosed by grid
-        self.minimum_latitude = np.ma.min(grid_latitudes)
-        self.maximum_latitude = np.ma.max(grid_latitudes)
+        self.minimum_latitude = np.ma.min(self.grid_latitudes)
+        self.maximum_latitude = np.ma.max(self.grid_latitudes)
         self.included = self.inside_grid(self.observed_latitudes)
 
         if self.included.any():
@@ -63,8 +63,8 @@ class Tripolar(object):
             included_latitudes = self.observed_latitudes[self.included]
 
             # Locate relevant grid cells
-            search = grid.Search(grid_longitudes,
-                                 grid_latitudes)
+            search = grid.Search(self.grid_longitudes,
+                                 self.grid_latitudes)
             self.i, self.j = search.lower_left(included_longitudes,
                                                included_latitudes)
             self.i = np.asarray(self.i, dtype="i")
