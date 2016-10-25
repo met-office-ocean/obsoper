@@ -55,6 +55,7 @@ class Tripolar(object):
 
         # Filter observations that are enclosed by grid
         self.minimum_latitude = np.ma.min(grid_latitudes)
+        self.maximum_latitude = np.ma.max(grid_latitudes)
         self.included = self.inside_grid(self.observed_latitudes)
 
         if self.included.any():
@@ -80,7 +81,8 @@ class Tripolar(object):
 
     def inside_grid(self, latitudes):
         """Determine observations inside grid"""
-        return latitudes >= self.minimum_latitude
+        return ((latitudes >= self.minimum_latitude) &
+                (latitudes <= self.maximum_latitude))
 
     def interpolate(self, field):
         """Perform vectorised interpolation
