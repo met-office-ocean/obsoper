@@ -260,10 +260,20 @@ class TestSelectCorners(unittest.TestCase):
                                  (10, 55)])
 
         # Vector fixture
-        self.i = np.array([0, 1])
-        self.j = np.array([0, 0])
-        self.cells = np.dstack([self.cell_00,
-                                self.cell_10])
+        self.i = np.array([0, 1, 0])
+        self.j = np.array([0, 0, 1])
+        self.cells = np.transpose(np.array([self.cell_00,
+                                            self.cell_10,
+                                            self.cell_01]),
+                                  (1, 2, 0))
+
+    def test_grid_shape(self):
+        x, y, dims = 4, 3, 2
+        self.assertEqual((x, y, dims), self.grid.shape)
+
+    def test_cells_shape(self):
+        corners, cells, dims = 4, 2, 3
+        self.assertEqual((corners, cells, dims), self.cells.shape)
 
     def test_select_corners_given_i_0_j_0(self):
         self.check_select_corners(i=0, j=0, expect=self.cell_00)
@@ -283,6 +293,29 @@ class TestSelectCorners(unittest.TestCase):
     def check_select_corners(self, i, j, expect):
         result = interpolate.select_corners(self.grid, i, j)
         np.testing.assert_array_almost_equal(expect, result)
+
+
+class TestSelectCornersShape(unittest.TestCase):
+    def setUp(self):
+        self.nz = 5
+        self.surface = np.ones((2, 2))
+        self.full_depths = np.ones((2, 2, self.nz))
+
+    def test_select_corners_given_surface_and_scalar_returns_1d_shape(self):
+        self.check_shape(self.surface, 0, 0, (4,))
+
+    def test_select_corners_given_surface_and_vector_returns_2d_shape(self):
+        self.check_shape(self.surface, [0], [0], (4, 1))
+
+    def test_select_corners_given_full_depth_and_scalar_returns_2d_shape(self):
+        self.check_shape(self.full_depths, 0, 0, (4, self.nz))
+
+    def test_select_corners_given_full_depth_and_vector_returns_3d_shape(self):
+        self.check_shape(self.full_depths, [0], [0], (4, self.nz, 1))
+
+    def check_shape(self, values, i, j, expect):
+        result = interpolate.select_corners(values, i, j).shape
+        self.assertEqual(expect, result)
 
 
 class TestSelectField(unittest.TestCase):
