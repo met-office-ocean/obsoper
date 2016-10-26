@@ -65,7 +65,7 @@ class Vertical1DInterpolator(object):
     """
     def __init__(self, depths, field):
         depths, field = self.match(depths, field)
-        self.interpolator = self.select_interpolator(depths, field)
+        self._interpolator = self.select_interpolator(depths, field)
         self.window = self.select_window(depths)
 
     @staticmethod
@@ -124,7 +124,7 @@ class Vertical1DInterpolator(object):
         if observed_depths.mask.any():
             return self.masked_interpolate(observed_depths)
         else:
-            return self.interpolator(observed_depths)
+            return self._interpolator(observed_depths)
 
     def screen_depths(self, observed_depths):
         """mask depths outside model water column"""
@@ -137,5 +137,69 @@ class Vertical1DInterpolator(object):
         result = np.ma.masked_all(observed_depths.shape)
         points, values = (~observed_depths.mask,
                           observed_depths.compressed())
-        result[points] = self.interpolator(values)
+        result[points] = self._interpolator(values)
         return result
+
+
+class Section(Vertical2DInterpolator):
+    """Vertical section interpolator
+
+    Interpolates model grid section to observed section depths.
+    Both sections should be 2D arrays whose first dimension represents
+    the number of water columns. The second dimension of each section
+    should be the depth dimension.
+
+    .. note:: S-level and Z-level models are processed by this interpolator
+
+    :param values: array shaped (N, Z) containing model values
+    :param depths: array shaped ([N,] Z) where N is the number of profiles
+                   and Z represents the model levels
+    """
+    def __init__(self, values, depths):
+        assert values.shape[-1] == depths.shape[-1], \
+            "values and depths must have same levels"
+        # Note: changed interface from (depths, values) to (values, depths)
+        super(Section, self).__init__(depths, values)
+
+    def __repr__(self):
+        return "{}(values={},\ndepths={})".format(self.__class__.__name__,
+                                                  repr(self.field),
+                                                  repr(self.depths))
+
+    def interpolate(self, observed_depths):
+        """Apply vertical interpolation to estimate model values at observed
+        depths
+
+        :param observed_depths: array shaped (N, M)
+        :returns: array shaped (N, M) where N is the number of profiles
+                  and M is the number of observed levels
+        """
+        message = ("observed depths has incorrect first dimension: "
+                   "{} != {}").format(observed_depths.shape[0],
+                                      self.field.shape[0])
+        assert observed_depths.shape[0] == self.field.shape[0], message
+        return self(observed_depths)
+
+
+class Column(Vertical1DInterpolator):
+    """Vertical column interpolator
+
+    Interpolates a single model water column to an observed profile.
+    Masked data points are excluded from the interpolation but included
+    in the result.
+
+    :param field: array shaped (N,) representing the water column values
+    :param depths: array shaped (N,) representing the water column depths
+    """
+    def __init__(self, values, depths):
+        # Note: changed interface from (depths, values) to (values, depths)
+        super(Column, self).__init__(depths, values)
+
+    def interpolate(self, observed_depths):
+        """Apply vertical interpolation to estimate model values at observed
+        depths
+
+        :param observed_depths: array shaped (M,)
+        :returns: array shaped (M,) where M is the number of observed levels
+        """
+        return self(observed_depths)
