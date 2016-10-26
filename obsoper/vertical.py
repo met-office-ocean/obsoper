@@ -20,8 +20,11 @@ class Vertical2DInterpolator(object):
     the number of water columns. The second dimension of each section
     should be the depth dimension.
 
-    :param depths: 2D array (N, Z)
-    :param field: 2D array (N, Z)
+    .. note:: S-level and Z-level models are processed by this interpolator
+
+    :param depths: array shaped ([N,] Z) where N is the number of profiles
+                   and Z represents the model levels
+    :param field: array shaped (N, Z)
 
     :returns: interpolator function
     """
@@ -30,11 +33,23 @@ class Vertical2DInterpolator(object):
         self.field = field
 
     def __call__(self, observed_depths):
+        """Apply vertical interpolation to estimate model values at observed
+        depths
+
+        :param observed_depths: array shaped (N, M)
+        :returns: array shaped (N, M) where N is the number of profiles
+                  and M is the number of observed levels
+        """
         result = []
-        for depths_1d, field_1d, observed_1d in zip(self.depths, self.field,
-                                                    observed_depths):
-            interpolator = Vertical1DInterpolator(depths_1d, field_1d)
-            result.append(interpolator(observed_1d))
+        for iprofile, observed_levels in enumerate(observed_depths):
+            model_values = self.field[iprofile]
+            if self.depths.ndim == 1:
+                model_levels = self.depths
+            else:
+                model_levels = self.depths[iprofile]
+            interpolator = Vertical1DInterpolator(model_levels,
+                                                  model_values)
+            result.append(interpolator(observed_levels))
         return np.ma.MaskedArray(result)
 
 

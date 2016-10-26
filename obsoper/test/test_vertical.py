@@ -1,7 +1,6 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
-from obsoper.exceptions import TooFewKnots
 from obsoper.vertical import (Vertical2DInterpolator,
                               Vertical1DInterpolator)
 
@@ -125,14 +124,31 @@ class TestVertical2DInterpolator(unittest.TestCase):
     def setUp(self):
         depths = np.array([[0, 1, 2, 3, 4],
                            [0, 1, 2, 3, 4]])
-        field = np.array([[0, 10, 20, 30, 40],
-                          [0, 10, 20, 30, 40]])
-        self.fixture = Vertical2DInterpolator(depths, field)
+        self.field = np.array([[0, 10, 20, 30, 40],
+                               [0, 10, 20, 30, 40]])
+        self.fixture = Vertical2DInterpolator(depths, self.field)
+        self.observed_depths = np.array([[1.5],
+                                         [1.5]])
 
     def test_multiple_water_columns(self):
-        observed_depths = np.array([[1.5],
-                                    [1.5]])
-        result = self.fixture(observed_depths)
+        result = self.fixture(self.observed_depths)
+        expect = np.array([[15],
+                           [15]])
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_call_given_s_levels_returns_smaller_value(self):
+        s_levels = np.array([[0, 1, 2, 3, 4],
+                             [0, 1.2, 2.4, 3.6, 4.8]])
+        fixture = Vertical2DInterpolator(s_levels, self.field)
+        result = fixture(self.observed_depths)
+        expect = np.array([[15],
+                           [12.5]])
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_call_given_z_levels_reuses_levels(self):
+        z_levels = np.array([0, 1, 2, 3, 4])
+        fixture = Vertical2DInterpolator(z_levels, self.field)
+        result = fixture(self.observed_depths)
         expect = np.array([[15],
                            [15]])
         np.testing.assert_array_almost_equal(expect, result)
