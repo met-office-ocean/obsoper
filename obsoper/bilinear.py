@@ -15,9 +15,14 @@ class BilinearTransform(object):
 
     .. note:: Corner ordering is highly important.
 
-    :param corners: positions of corners of grid cells
-    :param x: x positions used to estimate field
-    :param y: y positions used to estimate field
+    .. note:: If evaluating multiple cells and multiple positions, the
+              number of cells must form a 1-2-1 correspondence with
+              (x, y) positions.
+
+    :param corners: array shaped (4, 2, [N]) representing 4 corners, 2
+                    coordinates and optionally N cells
+    :param x: array shapes ([N],) representing multiple positions
+    :param y: array shapes ([N],) representing multiple positions
     """
     def __init__(self, corners, x, y):
         self.corners = np.asarray(corners, dtype="d")

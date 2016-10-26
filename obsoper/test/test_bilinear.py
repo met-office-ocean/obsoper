@@ -253,6 +253,13 @@ class TestInterpolationWeights(unittest.TestCase):
                   [0.81, 0.09, 0.01, 0.09]]
         np.testing.assert_array_almost_equal(expect, result)
 
+    def test_interpolation_weights_asserts_number_cells_equals_points(self):
+        with self.assertRaises(ValueError):
+            bilinear.interpolation_weights([self.unit_square,
+                                            self.unit_square],
+                                           [0.5, 0.1, 0.6],
+                                           [0.5, 0.1, 0.6])
+
 
 class TestBeta(unittest.TestCase):
     def setUp(self):
