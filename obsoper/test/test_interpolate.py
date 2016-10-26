@@ -426,6 +426,66 @@ class TestCorrectCorners(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result)
 
 
+class TestMaskCorners(unittest.TestCase):
+    def setUp(self):
+        self.ndarray = np.arange(4)
+        self.all_masked = np.ma.masked_all(4)
+        self.single_masked = np.ma.masked_array([1, 2, 3, 4],
+                                                mask=[True, False, False, False])
+
+        # 2D array (N, 4)
+        values = [[1, 2, 3, 4],
+                  [5, 6, 7, 8]]
+        mask_before = [[True, False, False, False],
+                       [False, False, False, False]]
+        mask_after = [[True, True, True, True],
+                      [False, False, False, False]]
+        self.mask2d = np.ma.masked_array(values, mask_before)
+        self.mask2dfill = np.ma.masked_array(values, mask_after)
+
+        # 3D array (Z, N, 4)
+        values = [[[1, 2, 3, 4],
+                   [5, 6, 7, 8]],
+                  [[1, 2, 3, 4],
+                   [5, 6, 7, 8]]]
+        mask_before = [[[True, False, False, False],
+                        [False, False, False, False]],
+                       [[False, False, False, False],
+                        [True, False, False, False]]]
+        mask_after = [[[True, True, True, True],
+                       [False, False, False, False]],
+                      [[False, False, False, False],
+                       [True, True, True, True]]]
+        self.mask3d = np.ma.masked_array(values, mask_before)
+        self.mask3dfill = np.ma.masked_array(values, mask_after)
+
+    def test_mask_corners_given_ndarray_returns_ndarray(self):
+        result = interpolate.mask_corners(self.ndarray)
+        expect = self.ndarray
+        np.testing.assert_array_equal(expect, result)
+
+    def test_mask_corners_given_all_masked_returns_all_masked(self):
+        self.check_mask_corners(self.all_masked, self.all_masked)
+
+    def test_mask_corners_given_single_masked_value_returns_all_masked(self):
+        self.check_mask_corners(self.single_masked, self.all_masked)
+
+    def test_mask_corners_given_masked_2d_returns_masks_axis_zero(self):
+        self.check_mask_corners(self.mask2d, self.mask2dfill)
+
+    def test_mask_corners_given_masked_3d_returns_masks_axis_zero(self):
+        self.check_mask_corners(self.mask3d, self.mask3dfill)
+
+    def check_mask_corners(self, given, expect):
+        result = interpolate.mask_corners(given)
+        self.assertMaskedArrayEqual(expect, result)
+
+    def assertMaskedArrayEqual(self, expect, result):
+        self.assertEqual(expect.shape, result.shape)
+        np.testing.assert_array_equal(expect.compressed(),
+                                      result.compressed())
+
+
 class TestIsDateline(unittest.TestCase):
     def setUp(self):
         self.dateline_corners = [(+179, 0),

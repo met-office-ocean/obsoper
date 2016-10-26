@@ -99,16 +99,45 @@ class Tripolar(object):
         # Interpolate field to observed positions
         result = np.ma.masked_all(self.n_observations, dtype="d")
         if self.included.any():
+
             corner_values = self.select_field(field)
-            if hasattr(corner_values, "mask") and (corner_values.mask.any()):
-                invalid = corner_values.mask.any(axis=0)
-                corner_values[:, invalid] = np.ma.masked
+
+            # Corner values shape (4, [Z, [N]]) --> (Z, N, 4)
+            if corner_values.ndim == 2:
+                corner_values = corner_values.T
+            elif corner_values.ndim == 3:
+                corner_values = np.transpose(corner_values, (1, 2, 0))
+
+            corner_values = mask_corners(corner_values)
+
+            # Corner values shape (Z, N, 4) --> (4, [Z, [N]])
+            if corner_values.ndim == 2:
+                corner_values = corner_values.T
+            elif corner_values.ndim == 3:
+                corner_values = np.transpose(corner_values, (2, 0, 1))
+
             result[self.included] = self.interpolator(corner_values)
         return result
 
     def select_field(self, field):
         """Select grid cell corner values corresponding to observations"""
         return select_field(field, self.i, self.j)
+
+
+def mask_corners(corner_values):
+    """Masks cells which have 1 or more masked corner values
+
+    :param corner_values: array shaped ([[N], M], 4)
+    :returns: array with corner dimension partially masked cells fully masked
+    """
+    if hasattr(corner_values, "mask") and (corner_values.mask.any()):
+        if corner_values.ndim == 1:
+            return np.ma.masked_all_like(corner_values)
+
+        # Multidimensional arrays
+        invalid = corner_values.mask.any(axis=-1)
+        corner_values[invalid] = np.ma.masked
+    return corner_values
 
 
 # Vectorised algorithm
