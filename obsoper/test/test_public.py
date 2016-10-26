@@ -47,3 +47,6 @@ class TestPublicInterface(unittest.TestCase):
 
     def test_north_fold_is_accessible_from_library_import(self):
         self.assertEqual(obsoper.orca.north_fold, obsoper.north_fold)
+
+    def test_section_is_accessible_from_library_import(self):
+        self.assertEqual(obsoper.vertical.Section, obsoper.Section)

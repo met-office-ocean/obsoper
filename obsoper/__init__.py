@@ -10,6 +10,9 @@ performs the 2D/3D interpolation from model space to observation space.
 .. autoclass:: ObservationOperator
    :members:
 
+.. automodule:: obsoper.interpolate
+   :members:
+
 .. automodule:: obsoper.horizontal
    :members:
 
@@ -30,5 +33,6 @@ from .version import __version__
 from .core import ObservationOperator
 from .window import TimeWindow
 from .interpolate import Tripolar
+from .vertical import Section
 from .orca import (remove_halo,
                    north_fold)
