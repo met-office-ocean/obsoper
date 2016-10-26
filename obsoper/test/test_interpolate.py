@@ -221,21 +221,26 @@ class TestTripolarGridDimensions(unittest.TestCase):
 
 
 class TestTripolar3D(unittest.TestCase):
-    @unittest.skip("implementing bilinear interpolator")
     def test_interpolate_3d_data(self):
-        nx, ny, nz = 2, 2, 3
-        no = 10
+        no = 5
         grid_lons, grid_lats = np.meshgrid([0, 1],
                                            [0, 1],
                                            indexing="ij")
         lons, lats = np.zeros(no), np.zeros(no)
-        field = np.arange(nx*ny*nz).reshape((nx, ny, nz))
+        field = np.array([[[0, 1, 2],
+                           [0, 1, 2]],
+                          [[0, 1, 2],
+                           [0, 1, 2]]])
         fixture = interpolate.Tripolar(grid_lons,
                                        grid_lats,
                                        lons,
                                        lats)
         result = fixture.interpolate(field)
-        expect = np.zeros((no, nz))
+        expect = np.array([[0, 1, 2],
+                           [0, 1, 2],
+                           [0, 1, 2],
+                           [0, 1, 2],
+                           [0, 1, 2]])
         np.testing.assert_array_equal(expect, result)
 
 

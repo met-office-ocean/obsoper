@@ -93,14 +93,20 @@ class Tripolar(object):
         .. note:: `has_halo` flag specified during construction trims field
                   appropriately
 
-        :param field: 2D array same shape as grid_longitudes/grid_latitudes
-        :returns: 1D array of interpolated field values
+        :param field: array shaped (I, J, [K]) same shape as model domain
+        :returns: array shaped (N, [K]) of interpolated field values
+                  where N represents the number of observed positions
         """
         if self.has_halo:
             field = orca.remove_halo(field)
 
         # Interpolate field to observed positions
-        result = np.ma.masked_all(self.n_observations, dtype="d")
+        if field.ndim == 3:
+            shape = (self.n_observations, field.shape[2])
+        else:
+            shape = (self.n_observations,)
+        result = np.ma.masked_all(shape, dtype="d")
+
         if self.included.any():
 
             corner_values = self.select_field(field)
@@ -114,7 +120,7 @@ class Tripolar(object):
             corner_values = mask_corners(corner_values)
 
             result[self.included] = bilinear.interpolate(corner_values,
-                                                         self.weights)
+                                                         self.weights).T
         return result
 
     def select_field(self, field):
