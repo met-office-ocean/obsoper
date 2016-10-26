@@ -144,31 +144,6 @@ def select_corners(values, i, j):
         return array_constructor([vector.T for vector in vectors], dtype="d")
 
 
-def _select_corners(values, i, j):
-    """Select array of grid cell corner positions/columns
-
-    Selects positions/water columns representing four corners by
-    choosing (i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)
-
-    .. note:: periodic in i coordinate
-
-    :param values: 2D/3D array dimension (X, Y, [Z])
-    :param i: array of integers shaped ([N],) representing lower left corner
-    :param j: array of integers shaped ([N],) representing lower left corner
-    :returns: array shaped (4, [N, [Z]]) representing values/columns
-              for each cell whose lower left corner is (i, j)
-    """
-    #pylint: disable=invalid-name
-    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
-    if isinstance(values, np.ma.MaskedArray):
-        array_constructor = np.ma.MaskedArray
-    else:
-        array_constructor = np.array
-    i_corners = np.array([i, i+1, i+1, i]) % len(values)
-    j_corners = np.array([j, j, j+1, j+1])
-    return array_constructor(values[i_corners, j_corners], dtype="d")
-
-
 def select_field(field, i, j):
     """Select array of grid cell corner values"""
     return select_corners(field, i, j)
