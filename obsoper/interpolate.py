@@ -74,10 +74,13 @@ class Tripolar(object):
             corners = select_corners(self._grid, self.i, self.j)
             corners = correct_corners(corners, included_longitudes)
 
-            # Train interpolator on coordinates
-            self.interpolator = bilinear.BilinearTransform(corners,
-                                                           included_longitudes,
-                                                           included_latitudes)
+            # Estimate interpolation weights from coordinates
+            # Corner position shape (4, 2, [N]) --> (N, 4, 2)
+            if corners.ndim == 3:
+                corners = np.transpose(corners, (2, 0, 1))
+            self.weights = bilinear.interpolation_weights(corners,
+                                                          included_longitudes,
+                                                          included_latitudes)
 
     def inside_grid(self, latitudes):
         """Determine observations inside grid"""
@@ -110,13 +113,8 @@ class Tripolar(object):
 
             corner_values = mask_corners(corner_values)
 
-            # Corner values shape (Z, N, 4) --> (4, [Z, [N]])
-            if corner_values.ndim == 2:
-                corner_values = corner_values.T
-            elif corner_values.ndim == 3:
-                corner_values = np.transpose(corner_values, (2, 0, 1))
-
-            result[self.included] = self.interpolator(corner_values)
+            result[self.included] = bilinear.interpolate(corner_values,
+                                                         self.weights)
         return result
 
     def select_field(self, field):
