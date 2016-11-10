@@ -14,21 +14,10 @@ def cartesian(longitudes, latitudes):
     :returns: (x, y, z) tuple of Cartesian coordinates arrays
     """
     # pylint: disable=invalid-name
-    longitudes = radians(longitudes)
-    latitudes = radians(latitudes)
+    longitudes = np.deg2rad(longitudes)
+    latitudes = np.deg2rad(latitudes)
 
     x = np.cos(longitudes) * np.cos(latitudes)
     y = np.sin(longitudes) * np.cos(latitudes)
     z = np.sin(latitudes)
     return x, y, z
-
-
-def radians(angles):
-    """Radian converter
-
-    radians = degrees * (pi / 180)
-
-    :param angles: array of angles specified in degrees
-    :returns: array of angles converted to radians
-    """
-    return np.asarray(angles, dtype="d") * (np.pi / 180.)
