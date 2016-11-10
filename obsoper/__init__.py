@@ -37,3 +37,4 @@ from .vertical import Section
 from .orca import (remove_halo,
                    north_fold)
 from .coordinates import cartesian
+from .domain import Domain
