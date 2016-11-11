@@ -14,17 +14,133 @@ class TestPointInPolygon(unittest.TestCase):
                                  (-0.5, +1.0),
                                  (-1.0, +0.5),
                                  (-1.0, -0.5)], dtype="d")
+        self.concave = np.array([(0, 0),
+                                 (1, 0),
+                                 (1, 1),
+                                 (2, 1),
+                                 (2, 0),
+                                 (3, 0),
+                                 (3, 3),
+                                 (0, 3)], dtype="d")
 
     def test_point_in_polygon_given_octagon_center_returns_true(self):
-        self.check_point_in_octagon(0, 0, True)
+        self.check_point_in_polygon(self.octagon, 0, 0, True)
 
     def test_point_in_polygon_given_each_vertex_returns_true(self):
         for x, y in self.octagon:
-            self.check_point_in_octagon(x, y, True)
+            print x, y
+            self.check_point_in_polygon(self.octagon, x, y, True)
 
     def test_point_in_polygon_bottom_left_corner_returns_false(self):
-        self.check_point_in_octagon(-0.8, -0.8, False)
+        self.check_point_in_polygon(self.octagon, -0.8, -0.8, False)
 
-    def check_point_in_octagon(self, x, y, expect):
-        result = obsoper.point_in_polygon(self.octagon, x, y)
+    def test_point_in_polygon_concave_outside_returns_false(self):
+        self.check_point_in_polygon(self.concave, 1.5, 0.5, False)
+
+    def test_point_in_polygon_concave_inside_returns_true(self):
+        self.check_point_in_polygon(self.concave, 1.5, 1.5, True)
+
+    def check_point_in_polygon(self, vertices, x, y, expect):
+        result = obsoper.point_in_polygon(vertices, (x, y))
         self.assertEqual(expect, result)
+
+
+class TestCountIntersects(unittest.TestCase):
+    def setUp(self):
+        self.polygon = [(0, 0),
+                        (1, 0),
+                        (1, 1),
+                        (0, 1)]
+        self.ray = [(-0.5, -0.5), (0.5, 0.5)]
+
+    def test_count_intersects_given_ray_through_vertex_returns_one(self):
+        result = obsoper.domain.count_intersects(self.polygon, self.ray)
+        expect = 1
+        self.assertEqual(expect, result)
+
+
+class TestLineSegmentsIntersect(unittest.TestCase):
+    def test_segments_intersect_given_unit_i_unit_j_returns_true(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(0, 0), (0, 1)],
+                                      True)
+
+    def test_segments_intersect_given_touching_lines_returns_true(self):
+        self.check_segments_intersect([(0, 0), (5, 5)],
+                                      [(2, 2), (3, 8)],
+                                      True)
+
+    def test_segments_intersect_given_negative_touching_lines_returns_true(self):
+        self.check_segments_intersect([(-2, -2), (-2, 2)],
+                                      [(-2, 0), (0, 0)],
+                                      True)
+
+    def test_segments_intersect_given_line_to_right_returns_false(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(2, 0), (3, 0)],
+                                      False)
+
+    def test_segments_intersect_given_intersecting_lines_returns_true(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(0.5, -1), (0.5, 1)],
+                                      True)
+
+    def test_segments_intersect_given_line_to_left_returns_false(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(-2, 0), (-1, 0)],
+                                      False)
+
+    def test_segments_intersect_given_short_line_above_returns_false(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(0.1, 1), (1, 1)],
+                                      False)
+
+    def test_segments_intersect_given_short_line_below_returns_false(self):
+        self.check_segments_intersect([(0, 0), (1, 0)],
+                                      [(0.1, -1), (1, -1)],
+                                      False)
+
+    def test_segments_intersect_given_interior_bounding_box_no_overlap(self):
+        self.check_segments_intersect([(0, 0), (1, 1)],
+                                      [(0.5, 0.25), (0.75, 0.5)],
+                                      False)
+
+    def test_segments_intersect_given_colinear_disjoint_lines_returns_false(self):
+        self.check_segments_intersect([(-2, -2), (4, 4)],
+                                      [(6, 6), (10, 10)],
+                                      False)
+
+    def test_segments_intersect_given_colinear_interior_line_returns_true(self):
+        self.check_segments_intersect([(0, 0), (10, 10)],
+                                      [(2, 2), (6, 6)],
+                                      True)
+
+    def test_segments_intersect_given_reversed_line_returns_true(self):
+        self.check_segments_intersect([(6, 8), (10, -2)],
+                                      [(10, -2), (6, 8)],
+                                      True)
+
+    def check_segments_intersect(self, line_1, line_2, expect):
+        result = obsoper.domain.segments_intersect(line_1, line_2)
+        self.assertEqual(expect, result)
+
+
+class TestSide(unittest.TestCase):
+    def setUp(self):
+        self.line = [(0, 1), (1, 1)]
+        self.right_point = (0, 0)
+        self.on_line = (0.5, 1)
+        self.left_point = (0, 2)
+
+    def test_side_given_point_on_right(self):
+        self.check_side(self.line, self.right_point, -1)
+
+    def test_side_given_point_on_left(self):
+        self.check_side(self.line, self.left_point, +1)
+
+    def test_side_given_point_on_line(self):
+        self.check_side(self.line, self.on_line, 0)
+
+    def check_side(self, line, point, expect):
+        result = obsoper.domain.side(line, point)
+        self.assertAlmostEqual(expect, result)

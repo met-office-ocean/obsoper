@@ -37,5 +37,4 @@ from .vertical import Section
 from .orca import (remove_halo,
                    north_fold)
 from .coordinates import cartesian
-from .domain import Domain
-from .cell import same_side_test as point_in_polygon
+from .domain import Domain, point_in_polygon
