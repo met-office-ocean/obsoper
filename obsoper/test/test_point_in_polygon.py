@@ -45,6 +45,25 @@ class TestPointInPolygon(unittest.TestCase):
         self.assertEqual(expect, result)
 
 
+class TestPolygon(unittest.TestCase):
+    def test_polygon_from_grid(self):
+        longitudes, latitudes = np.meshgrid([0, 1, 2],
+                                            [0, 1, 2],
+                                            indexing="ij")
+        result = obsoper.domain.polygon_from_grid(longitudes,
+                                                  latitudes)
+        expect = [(0, 0),
+                  (1, 0),
+                  (2, 0),
+                  (2, 1),
+                  (2, 2),
+                  (1, 2),
+                  (0, 2),
+                  (0, 1)]
+        print result
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestCountIntersects(unittest.TestCase):
     def setUp(self):
         self.polygon = [(0, 0),

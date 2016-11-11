@@ -39,6 +39,13 @@ class Domain(object):
         return self.bounding_box.inside(longitudes, latitudes)
 
 
+def polygon_from_grid(longitudes, latitudes):
+    return np.asarray(zip(longitudes[:, 0], latitudes[:, 0]) +
+                      zip(longitudes[-1, 1:-1], latitudes[-1, 1:-1]) +
+                      zip(longitudes[::-1, -1], latitudes[::-1, -1]) +
+                      zip(longitudes[0, -2:0:-1], latitudes[0, -2:0:-1]), dtype="d")
+
+
 def point_in_polygon(polygon, point):
     """Determine if points lie inside polygon"""
     for vertex in polygon:
