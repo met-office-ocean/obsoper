@@ -13,6 +13,7 @@ import obsoper
 
 
 if HAS_NETCDF4:
+    @unittest.skip("slow test")
     class TestTripolar(unittest.TestCase):
         def setUp(self):
             orca025_grid = pkg_resources.resource_filename("obsoper.test",
