@@ -63,6 +63,28 @@ class TestBoundary(unittest.TestCase):
         np.testing.assert_array_equal(expect, result)
 
 
+class TestSolve(unittest.TestCase):
+    def test_solve_given_y_equal_x_returns_x(self):
+        self.check_solve(x1=0, y1=0, x2=1, y2=1, x=0.1, expect=0.1)
+
+    def test_solve_given_y_equal_minus_x_returns_minus_x(self):
+        self.check_solve(x1=-1, y1=1, x2=0, y2=0, x=0.1, expect=-0.1)
+
+    def test_solve_given_y_equal_x_plus_constant_returns_x_minus_c(self):
+        self.check_solve(x1=0, y1=1, x2=1, y2=2, x=-1, expect=0)
+
+    def test_solve_given_zero_slope_returns_y(self):
+        self.check_solve(x1=0, y1=1, x2=2, y2=1, x=1.5, expect=1)
+
+    def test_solve_given_vertical_line_raises_exception(self):
+        with self.assertRaises(ZeroDivisionError):
+            obsoper.domain.solve(x1=0, y1=1, x2=0, y2=2, x=0)
+
+    def check_solve(self, x1, y1, x2, y2, x, expect):
+        result = obsoper.domain.solve(x1, y1, x2, y2, x)
+        self.assertAlmostEqual(expect, result)
+
+
 class TestCountIntersects(unittest.TestCase):
     def setUp(self):
         self.polygon = [(0, 0),

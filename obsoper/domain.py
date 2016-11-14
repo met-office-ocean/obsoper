@@ -57,6 +57,15 @@ def boundary(longitudes, latitudes):
                       dtype="d")
 
 
+def solve(x1, y1, x2, y2, x):
+    """solve line for y given x
+
+    :returns: value of y that satisfies line defined by (x1, y1), (x2, y2)
+    """
+    dydx = (y2 - y1) / (x2 - x1)
+    return  y1 + (dydx * (x - x1))
+
+
 def point_in_polygon(polygon, point):
     """Determine if points lie inside polygon"""
     for vertex in polygon:
