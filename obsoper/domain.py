@@ -57,8 +57,13 @@ def boundary(longitudes, latitudes):
                       dtype="d")
 
 
+def interval_contains(x1, x2, x):
+    """Determine if interval contains point"""
+    return x1 < x < x2
+
+
 def solve(x1, y1, x2, y2, x):
-    """solve line for y given x
+    """Solve equation of line for y given x
 
     :returns: value of y that satisfies line defined by (x1, y1), (x2, y2)
     """

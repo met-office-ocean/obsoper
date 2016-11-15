@@ -85,6 +85,21 @@ class TestSolve(unittest.TestCase):
         self.assertAlmostEqual(expect, result)
 
 
+class TestIntervalContains(unittest.TestCase):
+    def test_interval_contains_given_point_inside_interval_returns_true(self):
+        self.check_interval_contains(0, 1, 0.5, True)
+
+    def test_interval_contains_given_less_than_interval_returns_false(self):
+        self.check_interval_contains(0, 1, -0.1, False)
+
+    def test_interval_contains_given_greater_than_interval_returns_false(self):
+        self.check_interval_contains(0, 1, 1.1, False)
+
+    def check_interval_contains(self, x1, x2, x, expect):
+        result = obsoper.domain.interval_contains(x1, x2, x)
+        self.assertEqual(expect, result)
+
+
 class TestCountIntersects(unittest.TestCase):
     def setUp(self):
         self.polygon = [(0, 0),
