@@ -96,8 +96,12 @@ class PolygonSearch(object):
         return result
 
     def _scalar_inside(self, xp, yp):
+        # Apply algorithm to points at top of domain
         if yp == self.y_limit:
-            return True
+            nodes = self.x[self.y == self.y_limit]
+            if xp in nodes:
+                return True
+            return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
 
         # Detect intervals containing f(x) = yp
         points = interval_contains(self.y_min, self.y_max, yp)
@@ -176,7 +180,7 @@ def solve(x1, y1, x2, y2, y):
     :returns: value that satisfies line defined by (x1, y1), (x2, y2)
     """
     dxdy = (x2 - x1) / (y2 - y1)
-    return  x1 + (dxdy * (y - y1))
+    return x1 + (dxdy * (y - y1))
 
 
 def count_below(values, threshold):

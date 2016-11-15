@@ -104,6 +104,32 @@ class TestAlgorithm(unittest.TestCase):
                           +1.0,
                           +0.5,
                           -0.5]
+        self.letter_h_x = [-1.0,
+                           -0.5,
+                           -0.5,
+                           +0.5,
+                           +0.5,
+                           +1.0,
+                           +1.0,
+                           +0.5,
+                           +0.5,
+                           -0.5,
+                           -0.5,
+                           -1.0]
+        self.letter_h_y = [-1.0,
+                           -1.0,
+                           -0.5,
+                           -0.5,
+                           -1.0,
+                           -1.0,
+                           +1.0,
+                           +1.0,
+                           +0.5,
+                           +0.5,
+                           +1.0,
+                           +1.0]
+        self.triangle_x = [0, 1, 0.5]
+        self.triangle_y = [0, 0, 1]
 
     def test_algorithm_given_point_inside_unit_square(self):
         result = domain.algorithm([0, 1, 1, 0], [0, 0, 1, 1], 0.5, 0.5)
@@ -125,6 +151,31 @@ class TestAlgorithm(unittest.TestCase):
                                   [0.4, -0.8], [0.4, -0.8])
         expect = [True, False]
         np.testing.assert_array_equal(expect, result)
+
+    def test_algorithm_given_point_inside_top_returns_true(self):
+        result = domain.algorithm(self.letter_h_x, self.letter_h_y, 0.75, 1.)
+        expect = True
+        self.assertEqual(expect, result)
+
+    def test_algorithm_given_point_outside_right_top_returns_false(self):
+        result = domain.algorithm(self.letter_h_x, self.letter_h_y, 100., 1.)
+        expect = False
+        self.assertEqual(expect, result)
+
+    def test_algorithm_given_point_outside_left_top_returns_false(self):
+        result = domain.algorithm(self.letter_h_x, self.letter_h_y, -100., 1.)
+        expect = False
+        self.assertEqual(expect, result)
+
+    def test_algorithm_given_point_left_of_peak_returns_false(self):
+        result = domain.algorithm(self.triangle_x, self.triangle_y, -100., 1.)
+        expect = False
+        self.assertEqual(expect, result)
+
+    def test_algorithm_given_point_right_of_peak_returns_false(self):
+        result = domain.algorithm(self.triangle_x, self.triangle_y, +100., 1.)
+        expect = False
+        self.assertEqual(expect, result)
 
 
 class TestIntervalContains(unittest.TestCase):
