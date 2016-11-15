@@ -79,6 +79,9 @@ class PolygonSearch(object):
         # Detect intervals containing f(x) = yp
         self.y_min, self.y_max = order_intervals(self.y1, self.y2)
 
+        # Determine y-axis grid limit
+        self.y_limit = np.max([self.y1, self.y2])
+
     def inside(self, xp, yp):
         """Check point(s) lie inside polygon"""
         xp, yp = np.asarray(xp), np.asarray(yp)
@@ -93,8 +96,7 @@ class PolygonSearch(object):
         return result
 
     def _scalar_inside(self, xp, yp):
-        # Include vertices
-        if self.at_vertex(xp, yp):
+        if yp == self.y_limit:
             return True
 
         # Detect intervals containing f(x) = yp
@@ -110,6 +112,10 @@ class PolygonSearch(object):
                       self.x2[points],
                       self.y2[points],
                       yp)
+
+        # Include solutions on boundary
+        if xp in nodes:
+            return True
 
         # Count nodes left/right of xp
         return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))

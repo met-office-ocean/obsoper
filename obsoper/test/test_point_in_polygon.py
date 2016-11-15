@@ -29,7 +29,6 @@ class TestPointInPolygon(unittest.TestCase):
 
     def test_point_in_polygon_given_each_vertex_returns_true(self):
         for x, y in self.octagon:
-            print x, y
             self.check_point_in_polygon(self.octagon, x, y, True)
 
     def test_point_in_polygon_bottom_left_corner_returns_false(self):
@@ -43,7 +42,8 @@ class TestPointInPolygon(unittest.TestCase):
 
     def check_point_in_polygon(self, vertices, x, y, expect):
         result = obsoper.point_in_polygon(vertices, (x, y))
-        self.assertEqual(expect, result)
+        message = "{} != {} for point ({}, {})".format(result, expect, x, y)
+        self.assertEqual(expect, result, message)
 
 
 class TestBoundary(unittest.TestCase):
