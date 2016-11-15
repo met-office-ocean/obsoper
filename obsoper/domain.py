@@ -99,9 +99,7 @@ class PolygonSearch(object):
         # Apply algorithm to points at top of domain
         if yp == self.y_limit:
             nodes = self.x[self.y == self.y_limit]
-            if xp in nodes:
-                return True
-            return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
+            return self.inside_nodes(nodes, xp)
 
         # Detect intervals containing f(x) = yp
         points = interval_contains(self.y_min, self.y_max, yp)
@@ -116,13 +114,24 @@ class PolygonSearch(object):
                       self.x2[points],
                       self.y2[points],
                       yp)
+        return self.inside_nodes(nodes, xp)
 
+    @staticmethod
+    def inside_nodes(nodes, position):
+        """Check position in relation to node positions
+
+        A point is inside the domain for one of two reasons, either:
+           - there are an odd number of nodes on either side of the point
+           - the point is on the boundary (is a node position)
+
+        :returns: True if position is in domain
+        """
         # Include solutions on boundary
-        if xp in nodes:
+        if position in nodes:
             return True
-
         # Count nodes left/right of xp
-        return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
+        return (odd(count_below(nodes, position)) and
+                odd(count_above(nodes, position)))
 
 
 def valid_segments(x, y):
