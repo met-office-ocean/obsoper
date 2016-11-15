@@ -59,9 +59,6 @@ def boundary(longitudes, latitudes):
 
 def point_in_polygon(polygon, point):
     """Determine if points lie inside polygon"""
-    for vertex in polygon:
-        if np.allclose(vertex, point):
-            return True
     return algorithm(polygon[:, 0], polygon[:, 1], point[0], point[1])
 
 
@@ -100,7 +97,10 @@ def order_intervals(left, right):
 
 
 def interval_contains(minimum, maximum, value):
-    """Determine if interval contains point"""
+    """Determine if interval contains point
+
+    .. note:: zero sized intervals do not contain points
+    """
     minimum, maximum = np.asarray(minimum), np.asarray(maximum)
     return (minimum < value) & (value < maximum)
 

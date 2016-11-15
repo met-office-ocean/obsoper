@@ -86,24 +86,6 @@ class TestSolve(unittest.TestCase):
         self.assertAlmostEqual(expect, result)
 
 
-class TestIntervalContains(unittest.TestCase):
-    def test_interval_contains_given_point_inside_interval_returns_true(self):
-        self.check_interval_contains(0, 1, 0.5, True)
-
-    def test_interval_contains_given_less_than_interval_returns_false(self):
-        self.check_interval_contains(0, 1, -0.1, False)
-
-    def test_interval_contains_given_greater_than_interval_returns_false(self):
-        self.check_interval_contains(0, 1, 1.1, False)
-
-    def test_interval_contains_given_vector_intervals(self):
-        self.check_interval_contains([0, 2], [1, 3], 0.5, [True, False])
-
-    def check_interval_contains(self, x1, x2, x, expect):
-        result = obsoper.domain.interval_contains(x1, x2, x)
-        np.testing.assert_array_equal(expect, result)
-
-
 class TestAlgorithm(unittest.TestCase):
     def setUp(self):
         self.octagon_x = [-0.5,
@@ -132,6 +114,34 @@ class TestAlgorithm(unittest.TestCase):
         result = domain.algorithm(self.octagon_x, self.octagon_y, -0.8, -0.8)
         expect = False
         self.assertEqual(expect, result)
+
+    @unittest.skip("implementing more fundamental feature")
+    def test_algorithm_given_vector_of_points(self):
+        result = domain.algorithm(self.octagon_x, self.octagon_y,
+                                  [0.5, -0.8], [0.5, -0.8])
+        expect = [True, False]
+        self.assertEqual(expect, result)
+
+
+class TestIntervalContains(unittest.TestCase):
+    def test_interval_contains_given_point_inside_interval_returns_true(self):
+        self.check_interval_contains(0, 1, 0.5, True)
+
+    def test_interval_contains_given_less_than_interval_returns_false(self):
+        self.check_interval_contains(0, 1, -0.1, False)
+
+    def test_interval_contains_given_greater_than_interval_returns_false(self):
+        self.check_interval_contains(0, 1, 1.1, False)
+
+    def test_interval_contains_given_vector_intervals(self):
+        self.check_interval_contains([0, 2], [1, 3], 0.5, [True, False])
+
+    def test_interval_contains_given_point_defining_zero_sized_interval(self):
+        self.check_interval_contains(0.5, 0.5, 0.5, False)
+
+    def check_interval_contains(self, x1, x2, x, expect):
+        result = obsoper.domain.interval_contains(x1, x2, x)
+        np.testing.assert_array_equal(expect, result)
 
 
 class TestOrderIntervals(unittest.TestCase):
