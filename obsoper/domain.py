@@ -120,10 +120,6 @@ class PolygonSearch(object):
         # Count nodes left/right of xp
         return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
 
-    def at_vertex(self, xp, yp):
-        """Decide if test point is at a vertex"""
-        return (((self.x - xp) == 0) & ((self.y - yp) == 0)).any()
-
 
 def valid_segments(x, y):
     """Convert coordinates representing polygon to segments used by algorithm
