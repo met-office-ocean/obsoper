@@ -64,21 +64,73 @@ def point_in_polygon(polygon, point):
 
 def algorithm(x, y, xp, yp):
     """Point in polygon algorithm"""
-    x, y = np.asarray(x), np.asarray(y)
+    search = PolygonSearch(x, y)
+    return search.inside(xp, yp)
 
-    # Detect intervals containing f(x) = yp
-    ymin, ymax = order_intervals(y, cycle(y))
-    points = interval_contains(ymin, ymax, yp)
 
-    # Check that nodes exist
-    if not points.any():
-        return False
+class PolygonSearch(object):
+    """Point in polygon search algorithm"""
+    def __init__(self, x, y):
+        self.x, self.y = np.asarray(x), np.asarray(y)
 
-    # Find x-values corresponding to yp for each segment
-    nodes = solve(x[points], y[points], cycle(x)[points], cycle(y)[points], yp)
+        # Define valid line segments
+        self.x1, self.y1, self.x2, self.y2 = valid_segments(self.x, self.y)
 
-    # Count nodes left/right of xp
-    return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
+        # Detect intervals containing f(x) = yp
+        self.y_min, self.y_max = order_intervals(self.y1, self.y2)
+
+    def inside(self, xp, yp):
+        """Check point(s) lie inside polygon"""
+        xp, yp = np.asarray(xp), np.asarray(yp)
+        if xp.ndim == 0:
+            return self._scalar_inside(xp, yp)
+        return self._vector_inside(xp, yp)
+
+    def _vector_inside(self, xp, yp):
+        result = np.zeros_like(xp, dtype=np.bool)
+        for i, (x, y) in enumerate(zip(xp, yp)):
+            result[i] = self._scalar_inside(x, y)
+        return result
+
+    def _scalar_inside(self, xp, yp):
+        # Include vertices
+        if (((self.x - xp) == 0) & ((self.y - yp) == 0)).any():
+            return True
+
+        # Detect intervals containing f(x) = yp
+        points = interval_contains(self.y_min, self.y_max, yp)
+
+        # Check that nodes exist
+        if not points.any():
+            return False
+
+        # Find x-values corresponding to yp for each segment
+        nodes = solve(self.x1[points],
+                      self.y1[points],
+                      self.x2[points],
+                      self.y2[points],
+                      yp)
+
+        # Count nodes left/right of xp
+        return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
+
+
+def valid_segments(x, y):
+    """Convert coordinates representing polygon to segments used by algorithm
+
+    .. note:: segments parallel to x-axis are removed since algorithm
+              can't search line segments with dy equal to zero.
+    """
+    # pylint: disable=invalid-name
+    x1, y1 = x, y
+    x2, y2 = cycle(x), cycle(y)
+    return remove_horizontal(x1, y1, x2, y2)
+
+
+def remove_horizontal(x1, y1, x2, y2):
+    """Remove segments with zero slope"""
+    keep = y1 != y2
+    return x1[keep], y1[keep], x2[keep], y2[keep]
 
 
 def cycle(values):
@@ -100,9 +152,11 @@ def interval_contains(minimum, maximum, value):
     """Determine if interval contains point
 
     .. note:: zero sized intervals do not contain points
+
+    .. note:: interval is closed to the left and open on the right
     """
     minimum, maximum = np.asarray(minimum), np.asarray(maximum)
-    return (minimum < value) & (value < maximum)
+    return (minimum <= value) & (value < maximum)
 
 
 def solve(x1, y1, x2, y2, y):

@@ -115,12 +115,16 @@ class TestAlgorithm(unittest.TestCase):
         expect = False
         self.assertEqual(expect, result)
 
-    @unittest.skip("implementing more fundamental feature")
+    def test_algorithm_given_point_with_same_y_coordinate_as_vertex(self):
+        result = domain.algorithm(self.octagon_x, self.octagon_y, 0.5, 0.5)
+        expect = True
+        self.assertEqual(expect, result)
+
     def test_algorithm_given_vector_of_points(self):
         result = domain.algorithm(self.octagon_x, self.octagon_y,
-                                  [0.5, -0.8], [0.5, -0.8])
+                                  [0.4, -0.8], [0.4, -0.8])
         expect = [True, False]
-        self.assertEqual(expect, result)
+        np.testing.assert_array_equal(expect, result)
 
 
 class TestIntervalContains(unittest.TestCase):
