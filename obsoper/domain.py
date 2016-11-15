@@ -47,7 +47,7 @@ def boundary(longitudes, latitudes):
 
     :param longitudes: 2D array shaped (N, M)
     :param latitudes: 2D array shaped (N, M)
-    :returns: array shaped (2, B) where B is the number of points on the
+    :returns: array shaped (B, 2) where B is the number of points on the
               boundary (2N + 2M - 4).
     """
     return np.asarray(zip(longitudes[:, 0], latitudes[:, 0]) +
@@ -57,116 +57,78 @@ def boundary(longitudes, latitudes):
                       dtype="d")
 
 
-def interval_contains(x1, x2, x):
-    """Determine if interval contains point"""
-    return x1 < x < x2
-
-
-def solve(x1, y1, x2, y2, x):
-    """Solve equation of line for y given x
-
-    :returns: value of y that satisfies line defined by (x1, y1), (x2, y2)
-    """
-    dydx = (y2 - y1) / (x2 - x1)
-    return  y1 + (dydx * (x - x1))
-
-
 def point_in_polygon(polygon, point):
     """Determine if points lie inside polygon"""
     for vertex in polygon:
         if np.allclose(vertex, point):
             return True
-
-    # Ray casting algorithm
-    ray = np.asarray([point_outside(polygon), point], dtype="d")
-    return (count_intersects(polygon, ray) % 2) == 1
+    return algorithm(polygon[:, 0], polygon[:, 1], point[0], point[1])
 
 
-def count_intersects(polygon, ray):
-    """Check that a ray cast through a polygon counts intersects correctly"""
-    intersects = 0
-    for face in faces(polygon):
-        if segments_intersect(face, ray):
-            if np.allclose(crossing_point(face, ray), face[0]):
-                continue
-            intersects += 1
-    return intersects
+def algorithm(x, y, xp, yp):
+    """Point in polygon algorithm"""
+    x, y = np.asarray(x), np.asarray(y)
 
+    # Detect intervals containing f(x) = yp
+    ymin, ymax = order_intervals(y, cycle(y))
+    points = interval_contains(ymin, ymax, yp)
 
-def point_outside(polygon, epsilon=0.1):
-    """Generate point that lies outside of a polygon"""
-    return np.mean(polygon[:, 0]), np.min(polygon[:, 1]) - epsilon
-
-
-def faces(polygon):
-    """Iterate over polygon"""
-    nsides = len(polygon)
-    for iside in range(nsides):
-        yield polygon[iside], polygon[(iside + 1) % nsides]
-
-
-def crossing_point(line_1, line_2):
-    """calculate crossing point of two intersecting line segments"""
-    # pylint: disable=invalid-name
-    line_1, line_2 = np.asarray(line_1), np.asarray(line_2)
-    p = line_1[0]
-    r = line_1[1] - line_1[0]
-    q = line_2[0]
-    s = line_2[1] - line_2[0]
-    t = np.cross((q - p), s) / np.cross(r, s)
-    return p + (t * r)
-
-
-def segments_intersect(line_1, line_2):
-    """Determine if two line segments intersect
-
-    A line is represented as a 2 by 2 array, 2 points and 2 dimensions.
-
-    :param line_1: array shaped (2, 2)
-    :param line_2: array shaped (2, 2)
-    :returns: True is line segments touch or intersect
-    """
-    line_1, line_2 = np.asarray(line_1), np.asarray(line_2)
-
-    # X axis boundary check
-    if disjoint(line_1[:, 0], line_2[:, 0]):
+    # Check that nodes exist
+    if not points.any():
         return False
 
-    # Y axis boundary check
-    if disjoint(line_1[:, 1], line_2[:, 1]):
-        return False
+    # Find x-values corresponding to yp for each segment
+    nodes = solve(x[points], y[points], cycle(x)[points], cycle(y)[points], yp)
 
-    # Both points not on same side of line
-    # if side_1 or side_2 are zero then point is on a line
-    side_1 = side(line_1, line_2[0])
-    side_2 = side(line_1, line_2[1])
-    return (side_1 * side_2) <= 0
+    # Count nodes left/right of xp
+    return odd(count_below(nodes, xp)) and odd(count_above(nodes, xp))
 
 
-def disjoint(interval_1, interval_2):
-    """Determine if 1D intervals are disjoint
+def cycle(values):
+    """Shift array view in a cyclic manner"""
+    return np.append(values[1:], values[0])
 
-    An interval is defined by two values on a 1D axis. Two intervals
-    are disjoint if their nearest end points have space between them.
 
-    :param interval_1: length 2 array
-    :param interval_2: length 2 array
-    :returns: True is intervals do not overlap
+def order_intervals(left, right):
+    """Rearrange intervals into ascending order
+
+    :param left: left interval values
+    :param right: right interval values
+    :returns: (minimum, maximum) arrays sorted into lower/upper values
     """
-    return ((np.min(interval_1) > np.max(interval_2)) or
-            (np.max(interval_1) < np.min(interval_2)))
+    return np.min([left, right], axis=0), np.max([left, right], axis=0)
 
 
-def side(line, point):
-    """Determine which side a point lies on
+def interval_contains(minimum, maximum, value):
+    """Determine if interval contains point"""
+    minimum, maximum = np.asarray(minimum), np.asarray(maximum)
+    return (minimum < value) & (value < maximum)
 
-    A side is defined by taking the cross product of the point with the line
-    after both have been translated so that the line touches the origin.
 
-    :returns: number where positive, zero and negative indicate right, on and
-              left sides of a line respectively
+def solve(x1, y1, x2, y2, y):
+    """Solve equation of line for x given y
+
+    This is the inverse of the usual approach to solving a linear equation.
+    Linear equations can be solved forward for y or backward for x using the
+    same form of equation, y0 + (dy / dx) * (x - x0). In this case with
+    y and x switched, the equation reads x0 + (dx / dy) * (y - y0).
+
+    :returns: value that satisfies line defined by (x1, y1), (x2, y2)
     """
-    # pylint: disable=invalid-name
-    xp, yp = point
-    (x1, y1), (x2, y2) = line
-    return ((yp - y1) * (x2 - x1)) - ((xp - x1) * (y2 - y1))
+    dxdy = (x2 - x1) / (y2 - y1)
+    return  x1 + (dxdy * (y - y1))
+
+
+def count_below(values, threshold):
+    """Count number of values lying below some threshold"""
+    return (values < threshold).sum()
+
+
+def count_above(values, threshold):
+    """Count number of values lying above some threshold"""
+    return (values > threshold).sum()
+
+
+def odd(number):
+    """Determine if number is odd"""
+    return (number % 2) == 1
