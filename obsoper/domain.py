@@ -23,6 +23,7 @@ Antarctica is a land mass covering the South Pole. A North/South extent
 check may be sufficient to determine whether a point belongs to the domain or
 not.
 """
+from itertools import izip
 import numpy as np
 from . import box
 
@@ -91,7 +92,7 @@ class PolygonSearch(object):
         return self._vector_inside(xp, yp)
 
     def _vector_inside(self, xp, yp):
-        return np.array([self._scalar_inside(x, y) for x, y in zip(xp, yp)],
+        return np.array([self._scalar_inside(x, y) for x, y in izip(xp, yp)],
                         dtype=np.bool)
 
     def _scalar_inside(self, xp, yp):
