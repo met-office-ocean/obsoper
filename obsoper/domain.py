@@ -95,6 +95,17 @@ class PointInPolygon(object):
         # Determine y-axis grid limit
         self.y_limit = np.max([self.y1, self.y2])
 
+    @classmethod
+    def from2d(cls, longitudes, latitudes):
+        """Construct point in polygon search from 2D longitudes and latitudes
+
+        Conveniently maps array boundaries to polygon definition
+
+        :param longitudes: array shape (X, Y)
+        :param latitudes: array shape (X, Y)
+        """
+        return cls(boundary(longitudes), boundary(latitudes))
+
     def inside(self, xp, yp):
         """Check point(s) lie inside polygon"""
         xp, yp = np.asarray(xp), np.asarray(yp)

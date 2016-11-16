@@ -150,6 +150,25 @@ class TestPointInPolygon(unittest.TestCase):
             np.testing.assert_array_equal(expect, result)
 
 
+class TestPointInPolygonFrom2D(unittest.TestCase):
+    def setUp(self):
+        self.longitudes, self.latitudes = np.meshgrid([10, 20, 30, 40],
+                                                      [-5, 0, 5],
+                                                      indexing="ij")
+        self.fixture = domain.PointInPolygon.from2d(self.longitudes,
+                                                    self.latitudes)
+
+    def test_from2d_given_2d_longitudes_extracts_boundary(self):
+        result = self.fixture.x
+        expect = domain.boundary(self.longitudes)
+        np.testing.assert_array_equal(expect, result)
+
+    def test_from2d_given_2d_latitudes_extracts_boundary(self):
+        result = self.fixture.y
+        expect = domain.boundary(self.latitudes)
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestIntervalContains(unittest.TestCase):
     def test_interval_contains_given_point_inside_interval_returns_true(self):
         self.check_interval_contains(0, 1, 0.5, True)
