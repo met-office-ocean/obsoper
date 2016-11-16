@@ -90,10 +90,8 @@ class PolygonSearch(object):
         return self._vector_inside(xp, yp)
 
     def _vector_inside(self, xp, yp):
-        result = np.zeros_like(xp, dtype=np.bool)
-        for i, (x, y) in enumerate(zip(xp, yp)):
-            result[i] = self._scalar_inside(x, y)
-        return result
+        return np.array([self._scalar_inside(x, y) for x, y in zip(xp, yp)],
+                        dtype=np.bool)
 
     def _scalar_inside(self, xp, yp):
         # Apply algorithm to points at top of domain
