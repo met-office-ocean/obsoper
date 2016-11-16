@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """
 Model domains
 =============
@@ -73,7 +74,8 @@ class PolygonSearch(object):
         self.x, self.y = np.asarray(x), np.asarray(y)
 
         # Define valid line segments
-        self.x1, self.y1, self.x2, self.y2 = valid_segments(self.x, self.y)
+        x1, y1, x2, y2 = as_segments(self.x, self.y)
+        self.x1, self.y1, self.x2, self.y2 = remove_horizontal(x1, y1, x2, y2)
 
         # Detect intervals containing f(x) = yp
         self.y_min, self.y_max = order_intervals(self.y1, self.y2)
@@ -131,16 +133,9 @@ class PolygonSearch(object):
                 odd(count_above(nodes, position)))
 
 
-def valid_segments(x, y):
-    """Convert coordinates representing polygon to segments used by algorithm
-
-    .. note:: segments parallel to x-axis are removed since algorithm
-              can't search line segments with dy equal to zero.
-    """
-    # pylint: disable=invalid-name
-    x1, y1 = x, y
-    x2, y2 = cycle(x), cycle(y)
-    return remove_horizontal(x1, y1, x2, y2)
+def as_segments(x, y):
+    """Convert coordinates representing polygon to segments"""
+    return x, y, cycle(x), cycle(y)
 
 
 def remove_horizontal(x1, y1, x2, y2):
