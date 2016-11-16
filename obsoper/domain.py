@@ -97,7 +97,7 @@ class PolygonSearch(object):
         # Apply algorithm to points at top of domain
         if yp == self.y_limit:
             nodes = self.x[self.y == self.y_limit]
-            return self.inside_nodes(nodes, xp)
+            return self.between_nodes(nodes, xp)
 
         # Detect intervals containing f(x) = yp
         points = interval_contains(self.y_min, self.y_max, yp)
@@ -112,10 +112,10 @@ class PolygonSearch(object):
                       self.x2[points],
                       self.y2[points],
                       yp)
-        return self.inside_nodes(nodes, xp)
+        return self.between_nodes(nodes, xp)
 
     @staticmethod
-    def inside_nodes(nodes, position):
+    def between_nodes(nodes, position):
         """Check position in relation to node positions
 
         A point is inside the domain for one of two reasons, either:
