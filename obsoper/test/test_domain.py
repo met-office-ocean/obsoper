@@ -42,3 +42,24 @@ class TestDomain(unittest.TestCase):
                          grid_latitudes)
         result = fixture.contains(longitudes, latitudes)
         self.assertEqual(expect, result)
+
+
+class TestIrregularDomain(unittest.TestCase):
+    def setUp(self):
+        # Trapezoid domain
+        longitudes = [[0, 3],
+                      [1, 2]]
+        latitudes = [[0, 0],
+                     [1, 1]]
+        self.fixture = Domain(longitudes, latitudes)
+
+    def test_contains_given_point_inside_bounding_box_outside_domain(self):
+        result = self.fixture.contains(0.1, 0.9)
+        expect = False
+        self.assertEqual(expect, result)
+
+    def test_contains_given_points_inside_bounding_box_and_domain(self):
+        result = self.fixture.contains([-0.1, 0.1, 1.0, 2.4],
+                                       [0.9, 0.9, 0.9, 0.9])
+        expect = [False, False, True, False]
+        np.testing.assert_array_equal(expect, result)

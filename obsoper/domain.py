@@ -25,20 +25,52 @@ not.
 """
 from itertools import izip
 import numpy as np
-from . import box
 
 
 class Domain(object):
     """Grid domain definition"""
     def __init__(self, longitudes, latitudes):
-        self.bounding_box = box.Box(np.min(longitudes),
-                                    np.max(longitudes),
-                                    np.min(latitudes),
-                                    np.max(latitudes))
+        self.bounding_box = Box(np.min(longitudes),
+                                np.max(longitudes),
+                                np.min(latitudes),
+                                np.max(latitudes))
+        self.point_in_polygon = PointInPolygon.from2d(longitudes,
+                                                      latitudes)
 
     def contains(self, longitudes, latitudes):
         """check observations are contained within domain"""
-        return self.bounding_box.inside(longitudes, latitudes)
+        longitudes = np.asarray(longitudes, dtype="d")
+        latitudes = np.asarray(latitudes, dtype="d")
+
+        if longitudes.ndim == 0:
+            return self.point_in_polygon.inside(longitudes,
+                                                latitudes)
+        # Optimal vector algorithm
+        result = np.zeros_like(longitudes, dtype=np.bool)
+        in_box = self.bounding_box.inside(longitudes, latitudes)
+        result[in_box] = self.point_in_polygon.inside(longitudes[in_box],
+                                                      latitudes[in_box])
+        return result
+
+class Box(object):
+    """Bounding box surrounding collection of vertices"""
+    def __init__(self, xmin, xmax, ymin, ymax):
+        self.xmin = xmin
+        self.xmax = xmax
+        self.ymin = ymin
+        self.ymax = ymax
+
+    def inside(self, x, y):
+        """Check point lies inside box
+
+        :param x: x-coordinate to test
+        :param y: y-coordinate to test
+        :returns: logical indicating coordinates contained in box
+        """
+        return ((x <= self.xmax) &
+                (x >= self.xmin) &
+                (y <= self.ymax) &
+                (y >= self.ymin))
 
 
 def boundary(values):
@@ -51,6 +83,7 @@ def boundary(values):
     :returns: array shaped (B, 2) where B is the number of points on the
               boundary (2N + 2M - 4).
     """
+    values = np.asarray(values)
     return np.asarray(list(values[:, 0]) +
                       list(values[-1, 1:-1]) +
                       list(values[::-1, -1]) +
