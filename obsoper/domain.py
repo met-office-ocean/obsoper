@@ -39,21 +39,20 @@ class Domain(object):
         return self.bounding_box.inside(longitudes, latitudes)
 
 
-def boundary(longitudes, latitudes):
+def boundary(values):
     """Extract boundary from grid
 
     A boundary of a grid shaped N x M consists of 2N + 2M - 4 points.
     2 rows, 2 columns minus 4 corners that have been double counted.
 
-    :param longitudes: 2D array shaped (N, M)
-    :param latitudes: 2D array shaped (N, M)
+    :param values: 2D array shaped (N, M)
     :returns: array shaped (B, 2) where B is the number of points on the
               boundary (2N + 2M - 4).
     """
-    return np.asarray(zip(longitudes[:, 0], latitudes[:, 0]) +
-                      zip(longitudes[-1, 1:-1], latitudes[-1, 1:-1]) +
-                      zip(longitudes[::-1, -1], latitudes[::-1, -1]) +
-                      zip(longitudes[0, -2:0:-1], latitudes[0, -2:0:-1]),
+    return np.asarray(list(values[:, 0]) +
+                      list(values[-1, 1:-1]) +
+                      list(values[::-1, -1]) +
+                      list(values[0, -2:0:-1]),
                       dtype="d")
 
 

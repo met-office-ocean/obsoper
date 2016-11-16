@@ -47,20 +47,19 @@ class TestPointInPolygon(unittest.TestCase):
 
 
 class TestBoundary(unittest.TestCase):
-    def test_boundary(self):
-        longitudes, latitudes = np.meshgrid([0, 1, 2],
-                                            [0, 1, 2],
-                                            indexing="ij")
-        result = obsoper.domain.boundary(longitudes,
-                                         latitudes)
-        expect = [(0, 0),
-                  (1, 0),
-                  (2, 0),
-                  (2, 1),
-                  (2, 2),
-                  (1, 2),
-                  (0, 2),
-                  (0, 1)]
+    def setUp(self):
+        self.longitudes, self.latitudes = np.meshgrid([0, 1, 2],
+                                                      [0, 1, 2],
+                                                      indexing="ij")
+
+    def test_boundary_given_longitudes(self):
+        self.check_boundary(self.longitudes, [0, 1, 2, 2, 2, 1, 0, 0])
+
+    def test_boundary_given_latitudes(self):
+        self.check_boundary(self.latitudes, [0, 0, 0, 1, 2, 2, 2, 1])
+
+    def check_boundary(self, given, expect):
+        result = obsoper.domain.boundary(given)
         np.testing.assert_array_equal(expect, result)
 
 
