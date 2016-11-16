@@ -5,47 +5,6 @@ import obsoper
 from obsoper import domain
 
 
-class TestPointInPolygon(unittest.TestCase):
-    def setUp(self):
-        self.octagon = np.array([(-0.5, -1.0),
-                                 (+0.5, -1.0),
-                                 (+1.0, -0.5),
-                                 (+1.0, +0.5),
-                                 (+0.5, +1.0),
-                                 (-0.5, +1.0),
-                                 (-1.0, +0.5),
-                                 (-1.0, -0.5)], dtype="d")
-        self.concave = np.array([(0, 0),
-                                 (1, 0),
-                                 (1, 1),
-                                 (2, 1),
-                                 (2, 0),
-                                 (3, 0),
-                                 (3, 3),
-                                 (0, 3)], dtype="d")
-
-    def test_point_in_polygon_given_octagon_center_returns_true(self):
-        self.check_point_in_polygon(self.octagon, 0, 0, True)
-
-    def test_point_in_polygon_given_each_vertex_returns_true(self):
-        for x, y in self.octagon:
-            self.check_point_in_polygon(self.octagon, x, y, True)
-
-    def test_point_in_polygon_bottom_left_corner_returns_false(self):
-        self.check_point_in_polygon(self.octagon, -0.8, -0.8, False)
-
-    def test_point_in_polygon_concave_outside_returns_false(self):
-        self.check_point_in_polygon(self.concave, 1.5, 0.5, False)
-
-    def test_point_in_polygon_concave_inside_returns_true(self):
-        self.check_point_in_polygon(self.concave, 1.5, 1.5, True)
-
-    def check_point_in_polygon(self, vertices, x, y, expect):
-        result = obsoper.point_in_polygon(vertices, (x, y))
-        message = "{} != {} for point ({}, {})".format(result, expect, x, y)
-        self.assertEqual(expect, result, message)
-
-
 class TestBoundary(unittest.TestCase):
     def setUp(self):
         self.longitudes, self.latitudes = np.meshgrid([0, 1, 2],
@@ -85,7 +44,7 @@ class TestSolve(unittest.TestCase):
         self.assertAlmostEqual(expect, result)
 
 
-class TestAlgorithm(unittest.TestCase):
+class TestPointInPolygon(unittest.TestCase):
     def setUp(self):
         self.octagon_x = [-0.5,
                           +0.5,
@@ -129,52 +88,66 @@ class TestAlgorithm(unittest.TestCase):
                            +1.0]
         self.triangle_x = [0, 1, 0.5]
         self.triangle_y = [0, 0, 1]
+        self.concave_x, self.concave_y = np.array([(0, 0),
+                                                   (1, 0),
+                                                   (1, 1),
+                                                   (2, 1),
+                                                   (2, 0),
+                                                   (3, 0),
+                                                   (3, 3),
+                                                   (0, 3)], dtype="d").T
 
     def test_algorithm_given_point_inside_unit_square(self):
-        result = domain.algorithm([0, 1, 1, 0], [0, 0, 1, 1], 0.5, 0.5)
-        expect = True
-        self.assertEqual(expect, result)
+        self.check_algorithm([0, 1, 1, 0], [0, 0, 1, 1], 0.5, 0.5, True)
 
     def test_algorithm_given_point_outside_octagon(self):
-        result = domain.algorithm(self.octagon_x, self.octagon_y, -0.8, -0.8)
-        expect = False
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.octagon_x, self.octagon_y, -0.8, -0.8, False)
 
     def test_algorithm_given_point_with_same_y_coordinate_as_vertex(self):
-        result = domain.algorithm(self.octagon_x, self.octagon_y, 0.5, 0.5)
-        expect = True
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.octagon_x, self.octagon_y, 0.5, 0.5, True)
 
     def test_algorithm_given_vector_of_points(self):
-        result = domain.algorithm(self.octagon_x, self.octagon_y,
-                                  [0.4, -0.8], [0.4, -0.8])
-        expect = [True, False]
-        np.testing.assert_array_equal(expect, result)
+        self.check_algorithm(self.octagon_x,
+                             self.octagon_y,
+                             [0.4, -0.8],
+                             [0.4, -0.8],
+                             [True, False])
 
     def test_algorithm_given_point_inside_top_returns_true(self):
-        result = domain.algorithm(self.letter_h_x, self.letter_h_y, 0.75, 1.)
-        expect = True
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.letter_h_x, self.letter_h_y, 0.75, 1., True)
 
     def test_algorithm_given_point_outside_right_top_returns_false(self):
-        result = domain.algorithm(self.letter_h_x, self.letter_h_y, 100., 1.)
-        expect = False
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.letter_h_x, self.letter_h_y, 100., 1., False)
 
     def test_algorithm_given_point_outside_left_top_returns_false(self):
-        result = domain.algorithm(self.letter_h_x, self.letter_h_y, -100., 1.)
-        expect = False
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.letter_h_x, self.letter_h_y, -100., 1., False)
 
     def test_algorithm_given_point_left_of_peak_returns_false(self):
-        result = domain.algorithm(self.triangle_x, self.triangle_y, -100., 1.)
-        expect = False
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.triangle_x, self.triangle_y, -100., 1., False)
 
     def test_algorithm_given_point_right_of_peak_returns_false(self):
-        result = domain.algorithm(self.triangle_x, self.triangle_y, +100., 1.)
-        expect = False
-        self.assertEqual(expect, result)
+        self.check_algorithm(self.triangle_x, self.triangle_y, +100., 1., False)
+
+    def test_algorithm_given_octagon_center_returns_true(self):
+        self.check_algorithm(self.octagon_x, self.octagon_y, 0, 0, True)
+
+    def test_algorithm_given_each_vertex_returns_true(self):
+        for x, y in zip(self.octagon_x, self.octagon_y):
+            self.check_algorithm(self.octagon_x, self.octagon_y, x, y, True)
+
+    def test_algorithm_concave_outside_returns_false(self):
+        self.check_algorithm(self.concave_x, self.concave_y, 1.5, 0.5, False)
+
+    def test_algorithm_concave_inside_returns_true(self):
+        self.check_algorithm(self.concave_x, self.concave_y, 1.5, 1.5, True)
+
+    def check_algorithm(self, polygon_x, polygon_y, x, y, expect):
+        result = domain.point_in_polygon(polygon_x, polygon_y, x, y)
+        if np.isscalar(x):
+            message = "{} != {} for point ({}, {})".format(result, expect, x, y)
+            self.assertEqual(expect, result, message)
+        else:
+            np.testing.assert_array_equal(expect, result)
 
 
 class TestIntervalContains(unittest.TestCase):

@@ -58,19 +58,18 @@ def boundary(values):
                       dtype="d")
 
 
-def point_in_polygon(polygon, point):
-    """Determine if points lie inside polygon"""
-    return algorithm(polygon[:, 0], polygon[:, 1], point[0], point[1])
-
-
-def algorithm(x, y, xp, yp):
+def point_in_polygon(x, y, xp, yp):
     """Point in polygon algorithm"""
     search = PolygonSearch(x, y)
     return search.inside(xp, yp)
 
 
 class PolygonSearch(object):
-    """Point in polygon search algorithm"""
+    """Point in polygon search algorithm
+
+    :param x: array of x coordinates of polygon vertices
+    :param y: array of y coordinates of polygon vertices
+    """
     def __init__(self, x, y):
         self.x, self.y = np.asarray(x), np.asarray(y)
 
