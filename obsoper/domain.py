@@ -103,7 +103,7 @@ class PolygonSearch(object):
         points = interval_contains(self.y_min, self.y_max, yp)
 
         # Check that nodes exist
-        if not points.any():
+        if len(self.x1[points]) == 0:
             return False
 
         # Find x-values corresponding to yp for each segment
