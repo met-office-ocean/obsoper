@@ -66,6 +66,19 @@ def point_in_polygon(x, y, xp, yp):
 class PointInPolygon(object):
     """Point in polygon search algorithm
 
+    The algorithm proceeds as follow:
+
+        - Detect faces that contain the y-coordinate of the test point
+        - Find x-coordinate (nodes) for the faces at the test y-coordinate
+        - Count nodes either side of the test point
+        - An odd number of nodes on both sides means the point is inside
+        - If the test point is a node (lies on boundary) it is also
+          counted as inside
+
+    In cases where two faces meet the lower face is counted as having a node.
+    This convention removes double counting. As a result,
+    points at the top of the polygon need to be treated separately.
+
     :param x: array of x coordinates of polygon vertices
     :param y: array of y coordinates of polygon vertices
     """
