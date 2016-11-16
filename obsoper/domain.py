@@ -60,11 +60,10 @@ def boundary(values):
 
 def point_in_polygon(x, y, xp, yp):
     """Point in polygon algorithm"""
-    search = PolygonSearch(x, y)
-    return search.inside(xp, yp)
+    return PointInPolygon(x, y).inside(xp, yp)
 
 
-class PolygonSearch(object):
+class PointInPolygon(object):
     """Point in polygon search algorithm
 
     :param x: array of x coordinates of polygon vertices
