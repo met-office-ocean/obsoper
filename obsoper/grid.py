@@ -26,8 +26,18 @@ from . import (coordinates,
 SearchResult = namedtuple("SearchResult", ("ilon", "ilat", "dilon", "dilat"))
 
 
-class Search(object):
-    """Finds lower-left hand grid point nearest observation"""
+class TripolarSearch(object):
+    """Finds lower-left hand grid point nearest observation
+
+    Uses a longitude/latitude KD-Tree search followed by an iterative
+    walk algorithm to converge on a Cell surrounding a point.
+
+    The walk algorithm knows the layout of the grid and the great circle
+    direction needed to move closer to the point.
+
+    :param grid_longitudes: 2D array dimensioned (X, Y)
+    :param grid_latitudes: 2D array dimensioned (X, Y)
+    """
     def __init__(self, grid_longitudes, grid_latitudes):
         self.neighbour = NearestNeighbour(grid_longitudes, grid_latitudes)
         self.walk = walk.Walk.tripolar(grid_longitudes,
@@ -36,6 +46,10 @@ class Search(object):
     def lower_left(self, longitudes, latitudes):
         """Detect lower left corner index of four corners surrounding
         observations.
+
+        :param longitudes: array shaped ([N],)
+        :param latituds: array shaped ([N],)
+        :returns: (i, j) index arrays representing lower left hand corners
         """
         i, j = self.nearest(longitudes, latitudes)
         return self.walk.query(longitudes, latitudes, i, j)
@@ -43,6 +57,64 @@ class Search(object):
     def nearest(self, longitudes, latitudes):
         """Find nearest neighbour"""
         return self.neighbour.nearest(longitudes, latitudes)
+
+
+class Search(TripolarSearch):
+    pass
+
+
+class CartesianSearch(object):
+    """Search for corners surrounding observations
+
+    Uses a Cartesian coordinate KD-Tree search followed by an
+    iteration through the N nearest neighbours to find the Cell
+    that contains each point.
+
+    .. note:: No further knowledge of the grid layout is needed since the
+              KD-Tree search should by the pigeon hole principle detect
+              the correct corner
+
+    :param grid_longitudes: 2D array dimensioned (X, Y)
+    :param grid_latitudes: 2D array dimensioned (X, Y)
+    """
+    def __init__(self, grid_longitudes, grid_latitudes):
+        self.ni, self.nj = grid_longitudes.shape
+        self._nearest_neighbour = CartesianNeighbour(grid_longitudes,
+                                                     grid_latitudes)
+
+    def lower_left(self, longitudes, latitudes):
+        """find lower left corner index of corners surrounding observations
+
+        .. note:: assumes positions provided have already been checked
+                  for domain membership
+
+        :param longitudes: array shaped ([N],)
+        :param latituds: array shaped ([N],)
+        :returns: (i, j) index arrays representing lower left hand corners
+        """
+        i_near, j_near = self._nearest_neighbour.nearest(longitudes,
+                                                         latitudes,
+                                                         k=4)
+        i_result, j_result = [], []
+        for longitude, latitude, i_indices, j_indices in zip(longitudes,
+                                                             latitudes,
+                                                             i_near,
+                                                             j_near):
+            i, j = self.detect(longitude,
+                               latitude,
+                               i_indices,
+                               j_indices)
+            i_result.append(i)
+            j_result.append(j)
+        return np.array(i_result), np.array(j_result)
+
+    def detect(self, longitude, latitude, i_indices, j_indices):
+        """Detect a single point given several candidates"""
+        for i, j in zip(i_indices, j_indices):
+            if (i == (self.ni - 1)) or (j == (self.nj - 1)):
+                # point on boundary
+                continue
+        return 0, 0
 
 
 class NearestNeighbour(object):

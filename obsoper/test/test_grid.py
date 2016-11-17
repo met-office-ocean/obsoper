@@ -68,6 +68,35 @@ class TestSearch(unittest.TestCase):
         np.testing.assert_array_equal(expect, result)
 
 
+class TestCartesianSearch(unittest.TestCase):
+    def setUp(self):
+        self.dateline_cell = self.make_cartesian_search([100, -179], [50, 70])
+        self.two_by_two = self.make_cartesian_search([0, 1, 2], [0, 1, 2])
+
+    def make_cartesian_search(self, lons, lats):
+        grid_lons, grid_lats = np.meshgrid(lons, lats, indexing="ij")
+        return grid.CartesianSearch(grid_lons, grid_lats)
+
+    def test_lower_left_given_points_in_dateline_cell(self):
+        self.check_lower_left(self.dateline_cell,
+                              [140, 160, -179.5], [50, 60, 70],
+                              ([0, 0, 0], [0, 0, 0]))
+
+    @unittest.skip("implementing lower level functions")
+    def test_lower_left_given_point_near_upper_right_corner_in_two_by_two(self):
+        self.check_lower_left(self.two_by_two,
+                              [1.9], [1.9],
+                              ([1], [1]))
+
+    def check_lower_left(self,
+                         search,
+                         lons,
+                         lats,
+                         expect):
+        result = search.lower_left(lons, lats)
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestNearestNeighbour(unittest.TestCase):
     def test_nearest(self):
         grid_longitudes = np.array([[0, 1],
