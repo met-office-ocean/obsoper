@@ -59,13 +59,15 @@ class NearestNeighbour(object):
         self.tree = cKDTree(self.points(longitudes,
                                         latitudes))
 
-    def nearest(self, longitudes, latitudes):
+    def nearest(self, longitudes, latitudes, **query_args):
         """Find nearest neighbour grid indexes
 
+        :param query_args: keyword arguments to be passed to cKDTree.query()
         :returns: i, j arrays of indices
         """
         _, indices = self.tree.query(self.points(longitudes,
-                                                 latitudes))
+                                                 latitudes),
+                                     **query_args)
         return np.unravel_index(indices,
                                 self.shape)
 
@@ -91,13 +93,18 @@ class CartesianNeighbour(object):
         self.tree = cKDTree(self.points(longitudes,
                                         latitudes))
 
-    def nearest(self, longitudes, latitudes):
+    def nearest(self, longitudes, latitudes, **query_args):
         """Find nearest neighbour grid indexes
 
+        Converts longitudes and latitudes to (x, y, z) before calling
+        cKDTree.query().
+
+        :param query_args: keyword arguments to be passed to cKDTree.query()
         :returns: i, j arrays of indices of points nearest to given positions
         """
         _, indices = self.tree.query(self.points(longitudes,
-                                                 latitudes))
+                                                 latitudes),
+                                     **query_args)
         return np.unravel_index(indices,
                                 self.shape)
 

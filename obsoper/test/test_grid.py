@@ -119,6 +119,15 @@ class TestCartesianNeighbour(unittest.TestCase):
         expect = ([1], [1])
         np.testing.assert_array_equal(expect, result)
 
+    def test_nearest_given_multiple_nearest_neighbours(self):
+        grid_longitudes, grid_latitudes = np.meshgrid([100, -179],
+                                                      [50, 70],
+                                                      indexing="ij")
+        fixture = grid.CartesianNeighbour(grid_longitudes, grid_latitudes)
+        result = fixture.nearest(179, 70, k=4)
+        expect = ([[1, 1, 0, 0]], [[1, 0, 1, 0]])
+        np.testing.assert_array_equal(expect, result)
+
     def check_nearest(self, longitudes, latitudes, expect):
         result = self.fixture.nearest(longitudes, latitudes)
         np.testing.assert_array_equal(expect, result)
