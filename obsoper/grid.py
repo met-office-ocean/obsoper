@@ -94,7 +94,7 @@ class CartesianNeighbour(object):
 
     KD-Tree search in Cartesian space. Simplifies usage of scipy.spatial.KDTree
     by handling conversion of array shapes and mapping between geographic
-    and cartesian coordinates.
+    and Cartesian coordinates.
 
     .. note: Cartesian representation is on a unit sphere
 
