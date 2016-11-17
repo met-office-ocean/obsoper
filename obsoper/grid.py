@@ -78,12 +78,25 @@ class NearestNeighbour(object):
                          np.ravel(latitudes)]).T
 
 
+class LonLatNeighbour(NearestNeighbour):
+    """Nearest neighbour search in longitude/latitude space
+
+    KD-Tree algorithm using longitude and latitude as the dimensions.
+
+    :param longitudes: 2D array shaped (X, Y)
+    :param latitudes: 2D array shaped (X, Y)
+    """
+    pass
+
+
 class CartesianNeighbour(object):
     """Nearest neighbour algorithm that works in Cartesian coordinates
 
     KD-Tree search in Cartesian space. Simplifies usage of scipy.spatial.KDTree
     by handling conversion of array shapes and mapping between geographic
     and cartesian coordinates.
+
+    .. note: Cartesian representation is on a unit sphere
 
     :param longitudes: 2D array shaped (X, Y)
     :param latitudes: 2D array shaped (X, Y)
