@@ -19,7 +19,8 @@ from collections import namedtuple
 from scipy.spatial import cKDTree
 import numpy as np
 from .exceptions import NotInGrid
-from . import walk
+from . import (coordinates,
+               walk)
 
 
 SearchResult = namedtuple("SearchResult", ("ilon", "ilat", "dilon", "dilat"))
@@ -49,6 +50,9 @@ class NearestNeighbour(object):
 
     Unstructured nearest neighbour search in 2D. Takes advantage of
     KD-Tree algorithm.
+
+    :param longitudes: 2D array shaped (X, Y)
+    :param latitudes: 2D array shaped (X, Y)
     """
     def __init__(self, longitudes, latitudes):
         self.shape = longitudes.shape
@@ -56,7 +60,7 @@ class NearestNeighbour(object):
                                         latitudes))
 
     def nearest(self, longitudes, latitudes):
-        """Find nearest neighbour
+        """Find nearest neighbour grid indexes
 
         :returns: i, j arrays of indices
         """
@@ -70,6 +74,45 @@ class NearestNeighbour(object):
         """Convert arrays of longitudes and latitudes to single array"""
         return np.array([np.ravel(longitudes),
                          np.ravel(latitudes)]).T
+
+
+class CartesianNeighbour(object):
+    """Nearest neighbour algorithm that works in Cartesian coordinates
+
+    KD-Tree search in Cartesian space. Simplifies usage of scipy.spatial.KDTree
+    by handling conversion of array shapes and mapping between geographic
+    and cartesian coordinates.
+
+    :param longitudes: 2D array shaped (X, Y)
+    :param latitudes: 2D array shaped (X, Y)
+    """
+    def __init__(self, longitudes, latitudes):
+        self.shape = longitudes.shape
+        self.tree = cKDTree(self.points(longitudes,
+                                        latitudes))
+
+    def nearest(self, longitudes, latitudes):
+        """Find nearest neighbour grid indexes
+
+        :returns: i, j arrays of indices of points nearest to given positions
+        """
+        _, indices = self.tree.query(self.points(longitudes,
+                                                 latitudes))
+        return np.unravel_index(indices,
+                                self.shape)
+
+    @staticmethod
+    def points(longitudes, latitudes):
+        """Convert arrays of longitudes and latitudes to single array
+
+        :param longitudes: array of longitudes
+        :param latitudes: array of latitudes
+        :returns: Cartesian representation array shaped [N, 3]
+        """
+        x, y, z = coordinates.cartesian(longitudes, latitudes)
+        return np.array([np.ravel(x),
+                         np.ravel(y),
+                         np.ravel(z)]).T
 
 
 class Regular2DGrid(object):

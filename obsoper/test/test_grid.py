@@ -90,6 +90,40 @@ class TestNearestNeighbour(unittest.TestCase):
         np.testing.assert_array_equal(expect_j, result_j)
 
 
+class TestCartesianNeighbour(unittest.TestCase):
+    def setUp(self):
+        grid_longitudes, grid_latitudes = np.meshgrid([10, 20],
+                                                      [50, 70],
+                                                      indexing="ij")
+        self.fixture = grid.CartesianNeighbour(grid_longitudes,
+                                               grid_latitudes)
+
+    def test_nearest_given_lower_left_corner(self):
+        self.check_nearest(10, 50, ([0], [0]))
+
+    def test_nearest_given_lower_right_corner(self):
+        self.check_nearest(20, 50, ([1], [0]))
+
+    def test_nearest_given_upper_left_corner(self):
+        self.check_nearest(10, 70, ([0], [1]))
+
+    def test_nearest_given_upper_right_corner(self):
+        self.check_nearest(20, 70, ([1], [1]))
+
+    def test_nearest_given_point_on_other_side_of_180th_meridian(self):
+        grid_longitudes, grid_latitudes = np.meshgrid([100, -179],
+                                                      [50, 70],
+                                                      indexing="ij")
+        fixture = grid.CartesianNeighbour(grid_longitudes, grid_latitudes)
+        result = fixture.nearest(179, 70)
+        expect = ([1], [1])
+        np.testing.assert_array_equal(expect, result)
+
+    def check_nearest(self, longitudes, latitudes, expect):
+        result = self.fixture.nearest(longitudes, latitudes)
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestNumpy(unittest.TestCase):
     def test_specifying_points(self):
         """check that points can be specified as a list of pairs"""
