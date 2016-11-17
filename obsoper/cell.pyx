@@ -20,6 +20,10 @@ cdef class Cell:
             bounding_box = box.Box.frompolygon(vertices)
         self.bounding_box = bounding_box
 
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__,
+                               repr(np.asarray(self.vertices)))
+
     @classmethod
     def from_positions(cls, double[:, :, :] positions,
                        Py_ssize_t i,

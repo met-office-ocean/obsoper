@@ -247,3 +247,11 @@ class TestSameCell(unittest.TestCase):
         result = cell.same(cell_1, cell_2)
         expect = False
         self.assertEqual(expect, result)
+
+
+class TestCellRepr(unittest.TestCase):
+    def test_repr(self):
+        data = np.zeros((2, 2), dtype="d")
+        result = cell.Cell(data).__repr__()
+        expect = "Cell({})".format(repr(data))
+        self.assertEqual(expect, result)
