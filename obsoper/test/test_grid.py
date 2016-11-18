@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
+import mock
 from obsoper import grid
 from obsoper.grid import (Regular2DGrid,
                           Regular1DGrid,
@@ -97,15 +98,15 @@ class TestCartesianSearch(unittest.TestCase):
         np.testing.assert_array_equal(expect, result)
 
 
-class TestNearestNeighbour(unittest.TestCase):
+class TestLonLatNeighbour(unittest.TestCase):
     def test_nearest(self):
         grid_longitudes = np.array([[0, 1],
                                     [0, 1]])
         grid_latitudes = np.array([[0, 0],
                                    [1, 1]])
 
-        fixture = grid.NearestNeighbour(grid_longitudes,
-                                        grid_latitudes)
+        fixture = grid.LonLatNeighbour(grid_longitudes,
+                                       grid_latitudes)
         result = fixture.nearest([0.1, 0.9, 0.9],
                                  [0.1, 0.1, 0.9])
         expect = (np.array([0, 0, 1]),
@@ -117,6 +118,14 @@ class TestNearestNeighbour(unittest.TestCase):
         expect_i, expect_j = expect
         np.testing.assert_array_equal(expect_i, result_i)
         np.testing.assert_array_equal(expect_j, result_j)
+
+
+class TestNearestNeighbour(unittest.TestCase):
+    def test_deprecated(self):
+        with mock.patch("obsoper.grid.warnings") as mock_warnings:
+            grid.NearestNeighbour(np.ones((2, 2)),
+                                  np.ones((2, 2)))
+            mock_warnings.warn.assert_called_once()
 
 
 class TestCartesianNeighbour(unittest.TestCase):

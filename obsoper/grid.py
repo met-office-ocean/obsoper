@@ -15,6 +15,7 @@ implement the required positional search functions.
 
 """
 # pylint: disable=invalid-name
+import warnings
 from collections import namedtuple
 from scipy.spatial import cKDTree
 import numpy as np
@@ -39,7 +40,7 @@ class TripolarSearch(object):
     :param grid_latitudes: 2D array dimensioned (X, Y)
     """
     def __init__(self, grid_longitudes, grid_latitudes):
-        self.neighbour = NearestNeighbour(grid_longitudes, grid_latitudes)
+        self.neighbour = LonLatNeighbour(grid_longitudes, grid_latitudes)
         self.walk = walk.Walk.tripolar(grid_longitudes,
                                        grid_latitudes)
 
@@ -117,11 +118,10 @@ class CartesianSearch(object):
         return 0, 0
 
 
-class NearestNeighbour(object):
-    """Nearest neighbour search
+class LonLatNeighbour(object):
+    """Nearest neighbour search in longitude/latitude space
 
-    Unstructured nearest neighbour search in 2D. Takes advantage of
-    KD-Tree algorithm.
+    KD-Tree algorithm using longitude and latitude as the dimensions.
 
     :param longitudes: 2D array shaped (X, Y)
     :param latitudes: 2D array shaped (X, Y)
@@ -150,15 +150,21 @@ class NearestNeighbour(object):
                          np.ravel(latitudes)]).T
 
 
-class LonLatNeighbour(NearestNeighbour):
-    """Nearest neighbour search in longitude/latitude space
+class NearestNeighbour(LonLatNeighbour):
+    """Nearest neighbour search
 
-    KD-Tree algorithm using longitude and latitude as the dimensions.
+    .. deprecated:: 0.0.5
+       Use :class:`LonLatNeighbour` instead
+
+    Unstructured nearest neighbour search in 2D. Takes advantage of
+    KD-Tree algorithm.
 
     :param longitudes: 2D array shaped (X, Y)
     :param latitudes: 2D array shaped (X, Y)
     """
-    pass
+    def __init__(self, *args, **kwargs):
+        warnings.warn("NearestNeighbour deprecated use LonLatNeighbour instead")
+        super(NearestNeighbour, self).__init__(*args, **kwargs)
 
 
 class CartesianNeighbour(object):
