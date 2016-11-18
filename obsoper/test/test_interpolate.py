@@ -4,7 +4,30 @@ import numpy as np
 from obsoper import interpolate
 
 
-class TestTripolarInterpolator(unittest.TestCase):
+class TestRotated(unittest.TestCase):
+    def setUp(self):
+        # Trapezoid 2x2 grid represents most of the issues encountered with
+        # rotated grids
+        self.grid_lons = [[0, 1],
+                          [3, 2]]
+        self.grid_lats = [[0, 1],
+                          [0, 1]]
+        self.field = [[1, 2],
+                      [3, 4]]
+        self.obs_lons = [1.5]
+        self.obs_lats = [0.5]
+        self.fixture = interpolate.Rotated(self.grid_lons,
+                                           self.grid_lats,
+                                           self.obs_lons,
+                                           self.obs_lats)
+
+    def test_interpolate(self):
+        result = self.fixture.interpolate(self.field)
+        expect = 2.5
+        self.assertEqual(expect, result)
+
+
+class TestTripolar(unittest.TestCase):
     def setUp(self):
         self.grid_lons = np.array([[10, 10],
                                    [20, 20]])

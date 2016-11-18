@@ -1,14 +1,118 @@
 """
-Interpolators
-=============
+Horizontal interpolators
+========================
+
+For sufficiently complex interpolations it is sometimes beneficial to declare
+the observation locations up front, so that grid cells positions can be
+calculated. Then repeated calls to interpolate can map different fields to
+predefined locations.
+
+For simple light weight interpolations specifying desired locations at
+interpolation time is more convenient. In this use case, several sets of
+observations can be interpolated to a single model layout.
+
 """
+from abc import (ABCMeta,
+                 abstractmethod)
 import numpy as np
 from . import (grid,
                bilinear,
+               domain,
                orca)
 
 
-class Tripolar(object):
+class Horizontal(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def interpolate(self, field):
+        """interpolate to observed longitude/latitude positions"""
+
+
+class Rotated(Horizontal):
+    """Rotated grid horizontal interpolator
+
+    Applicable to ocean grids that are not regular lon/lat but are also
+    of finite extent.
+
+    :param grid_longitudes: 2D array of longitudes shapes (x, y)
+    :param grid_latitudes: 2D array of latitudes shapes (x, y)
+    :param observed_longitudes: 1D array of longitudes
+    :param observed_latitudes: 1D array of latitudes
+    """
+    def __init__(self,
+                 grid_longitudes,
+                 grid_latitudes,
+                 observed_longitudes,
+                 observed_latitudes):
+        # Cast positions as doubles
+        self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
+        self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
+        self.grid_longitudes = np.asarray(grid_longitudes, dtype="d")
+        self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
+        self.n_observations = len(self.observed_longitudes)
+
+        # Make a "grid" array needed by select_corners method
+        self._grid = np.dstack((self.grid_longitudes,
+                                self.grid_latitudes)).astype("d")
+
+        # Detect observations inside domain
+        self._domain = domain.Domain(self.grid_longitudes,
+                                     self.grid_latitudes)
+        self.included = self._domain.contains(self.observed_longitudes,
+                                              self.observed_latitudes)
+
+        if self.included.any():
+            included_longitudes = self.observed_longitudes[self.included]
+            included_latitudes = self.observed_latitudes[self.included]
+
+            # Detect grid cells containing observations
+            self._search = grid.CartesianSearch(self.grid_longitudes,
+                                                self.grid_latitudes)
+            self.i, self.j = self._search.lower_left(included_longitudes,
+                                                     included_latitudes)
+
+            # Correct grid cell corner positions to account for dateline
+            corners = select_corners(self._grid, self.i, self.j)
+            corners = correct_corners(corners, included_longitudes)
+
+            # Estimate interpolation weights from coordinates
+            # Corner position shape (4, 2, [N]) --> (N, 4, 2)
+            if corners.ndim == 3:
+                corners = np.transpose(corners, (2, 0, 1))
+            self.weights = bilinear.interpolation_weights(corners,
+                                                          included_longitudes,
+                                                          included_latitudes)
+
+    def interpolate(self, field):
+        """interpolate to observed longitude/latitude positions"""
+        field = np.asarray(field)
+
+        # Interpolate field to observed positions
+        if field.ndim == 3:
+            shape = (self.n_observations, field.shape[2])
+        else:
+            shape = (self.n_observations,)
+        result = np.ma.masked_all(shape, dtype="d")
+
+        if self.included.any():
+
+            corner_values = select_field(field, self.i, self.j)
+
+            # Corner values shape (4, [Z, [N]]) --> (Z, N, 4)
+            if corner_values.ndim == 2:
+                corner_values = corner_values.T
+            elif corner_values.ndim == 3:
+                corner_values = np.transpose(corner_values, (1, 2, 0))
+
+            corner_values = mask_corners(corner_values)
+
+            result[self.included] = bilinear.interpolate(corner_values,
+                                                         self.weights).T
+        return result
+
+
+class Tripolar(Horizontal):
     """Tri-polar interpolator
 
     Handles grids that are composed of quadrilaterals but may
