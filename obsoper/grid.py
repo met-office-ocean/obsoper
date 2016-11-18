@@ -102,6 +102,11 @@ class CartesianSearch(object):
         self._positions = np.dstack([grid_longitudes,
                                      grid_latitudes]).astype("d")
 
+    @property
+    def k(self):
+        """number of nearest neighbours based on grid size"""
+        return min(self.ni * self.nj, 8)
+
     def lower_left(self, longitudes, latitudes):
         """find lower left corner index of corners surrounding observations
 
@@ -114,7 +119,7 @@ class CartesianSearch(object):
         """
         i_near, j_near = self._nearest_neighbour.nearest(longitudes,
                                                          latitudes,
-                                                         k=4)
+                                                         k=self.k)
         i_result, j_result = [], []
         for longitude, latitude, i_indices, j_indices in zip(longitudes,
                                                              latitudes,

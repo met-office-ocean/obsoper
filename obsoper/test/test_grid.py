@@ -104,6 +104,17 @@ class TestCartesianSearch(unittest.TestCase):
         result = search.lower_left(lons, lats)
         np.testing.assert_array_equal(expect, result)
 
+    def test_number_of_neighbours_given_two_by_two_returns_4(self):
+        self.check_number((2, 2), 4)
+
+    def test_number_of_neighbours_given_3_by_3_returns_8(self):
+        self.check_number((3, 3), 8)
+
+    def check_number(self, shape, expect):
+        fixture = grid.CartesianSearch(np.zeros(shape), np.zeros(shape))
+        result = fixture.k
+        self.assertEqual(expect, result)
+
 
 class TestLonLatNeighbour(unittest.TestCase):
     def test_nearest(self):
