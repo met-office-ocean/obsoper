@@ -1,6 +1,5 @@
 """
-Horizontal interpolators
-========================
+Simple fraction weighted interpolation.
 """
 # pylint: disable=invalid-name
 import numpy as np
