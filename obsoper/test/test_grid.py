@@ -91,7 +91,6 @@ class TestCartesianSearch(unittest.TestCase):
                               [140, 160, -179.5], [50, 60, 70],
                               ([0, 0, 0], [0, 0, 0]))
 
-    @unittest.skip("implementing lower level functions")
     def test_lower_left_given_point_near_upper_right_corner_in_two_by_two(self):
         self.check_lower_left(self.two_by_two,
                               [1.9], [1.9],

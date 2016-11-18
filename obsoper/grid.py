@@ -20,7 +20,8 @@ from collections import namedtuple
 from scipy.spatial import cKDTree
 import numpy as np
 from .exceptions import NotInGrid
-from . import (coordinates,
+from . import (cell,
+               coordinates,
                walk)
 
 
@@ -98,6 +99,8 @@ class CartesianSearch(object):
         self.ni, self.nj = grid_longitudes.shape
         self._nearest_neighbour = CartesianNeighbour(grid_longitudes,
                                                      grid_latitudes)
+        self._positions = np.dstack([grid_longitudes,
+                                     grid_latitudes]).astype("d")
 
     def lower_left(self, longitudes, latitudes):
         """find lower left corner index of corners surrounding observations
@@ -131,7 +134,9 @@ class CartesianSearch(object):
             if (i == (self.ni - 1)) or (j == (self.nj - 1)):
                 # point on boundary
                 continue
-        return 0, 0
+            grid_cell = cell.Cell.from_positions(self._positions, i, j)
+            if grid_cell.contains(longitude, latitude):
+                return i, j
 
 
 class LonLatNeighbour(object):
