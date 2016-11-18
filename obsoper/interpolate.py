@@ -63,8 +63,8 @@ class Tripolar(object):
             included_latitudes = self.observed_latitudes[self.included]
 
             # Locate relevant grid cells
-            search = grid.Search(self.grid_longitudes,
-                                 self.grid_latitudes)
+            search = grid.TripolarSearch(self.grid_longitudes,
+                                         self.grid_latitudes)
             self.i, self.j = search.lower_left(included_longitudes,
                                                included_latitudes)
             self.i = np.asarray(self.i, dtype="i")

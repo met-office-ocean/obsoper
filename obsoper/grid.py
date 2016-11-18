@@ -61,7 +61,23 @@ class TripolarSearch(object):
 
 
 class Search(TripolarSearch):
-    pass
+    """Finds lower-left hand grid point nearest observation
+
+    .. deprecated:: 0.0.5
+       Use :class:`TripolarSearch` instead
+
+    Uses a longitude/latitude KD-Tree search followed by an iterative
+    walk algorithm to converge on a Cell surrounding a point.
+
+    The walk algorithm knows the layout of the grid and the great circle
+    direction needed to move closer to the point.
+
+    :param grid_longitudes: 2D array dimensioned (X, Y)
+    :param grid_latitudes: 2D array dimensioned (X, Y)
+    """
+    def __init__(self, *args, **kwargs):
+        warnings.warn("Search deprecated use TripolarSearch instead")
+        super(Search, self).__init__(*args, **kwargs)
 
 
 class CartesianSearch(object):

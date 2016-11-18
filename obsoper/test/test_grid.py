@@ -10,6 +10,14 @@ from obsoper.exceptions import NotInGrid
 
 
 class TestSearch(unittest.TestCase):
+    def test_deprecate(self):
+        with mock.patch("obsoper.grid.warnings") as mock_warnings:
+            grid.Search(np.ones((2, 2)),
+                        np.ones((2, 2)))
+            mock_warnings.warn.assert_called_once()
+
+
+class TestTripolarSearch(unittest.TestCase):
     def setUp(self):
         # NEMO netcdf arrays are dimensioned (y, x) or (latitude, longitude)
         # This is confusing as the natural correspondence between
@@ -33,7 +41,7 @@ class TestSearch(unittest.TestCase):
         #   |  |    |
         # 0 X--X----X
         #   0  2    5
-        self.fixture = grid.Search(self.longitudes, self.latitudes)
+        self.fixture = grid.TripolarSearch(self.longitudes, self.latitudes)
 
     def test_nearest_given_origin_returns_0_0(self):
         longitude, latitude = 0, 0
