@@ -5,6 +5,18 @@ from . import (grid,
 from .vertical import Vertical2DInterpolator
 
 
+class Operator(object):
+    """Observation operator"""
+    @classmethod
+    def from_arrays(cls,
+                    grid_longitudes,
+                    grid_latitudes,
+                    observed_longitudes,
+                    observed_latitudes):
+        """Construct observation operator from numpy arrays"""
+        pass
+
+
 class ObservationOperator(object):
     """Observation operator maps model values to observation locations
 

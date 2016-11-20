@@ -1,7 +1,22 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
+import obsoper
 from obsoper import ObservationOperator
+
+
+class TestOperator(unittest.TestCase):
+    def setUp(self):
+        self.grid_lons = None
+        self.grid_lats = None
+        self.obs_lons = None
+        self.obs_lats = None
+
+    def test_from_arrays(self):
+        obsoper.Operator.from_arrays(self.grid_lons,
+                                     self.grid_lats,
+                                     self.obs_lons,
+                                     self.obs_lats)
 
 
 class TestObservationOperator(unittest.TestCase):
