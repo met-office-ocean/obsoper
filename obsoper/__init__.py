@@ -7,7 +7,13 @@ A simple Python based framework for assessing models. The library distributes
 a :class:`ObservationOperator` class which
 performs the 2D/3D interpolation from model space to observation space.
 
-.. automodule:: obsoper
+.. autoclass:: obsoper.ObservationOperator
+   :members:
+
+.. autoclass:: obsoper.Operator
+   :members:
+
+.. automodule:: obsoper.domain
    :members:
 
 .. automodule:: obsoper.interpolate
