@@ -16,7 +16,7 @@ The obsoper package contains tools to simplify interpolation to observed locatio
 
 **Old API**
 
-For example, to interpolate a sea level anomaly analysis to Jason-2 altimeter tracks, the following steps may be taken.
+For example, to interpolate a sea level anomaly analysis to altimeter tracks, the following steps may be taken.
 
 >>> operator = obsoper.ObservationOperator(grid_lons, grid_lats)
 >>> result = operator.interpolate(sla_analysis, track_lons, track_lats)
@@ -28,9 +28,9 @@ To process multiple forecasts, the operator instance can be reused.
 
 **New API**
 
-For example, to interpolate a sea level anomaly analysis to Jason-2 altimeter tracks, the following steps may be taken.
+For example, to interpolate a sea level anomaly analysis to altimeter tracks, the following steps may be taken.
 
->>> operator = obsoper.Operator.from_arrays(grid_lons, grid_lats, track_lons, track_lats)
+>>> operator = obsoper.Operator(grid_lons, grid_lats, track_lons, track_lats)
 >>> result = operator.interpolate(sla_analysis)
 
 To process multiple forecasts, the operator instance can be reused.
@@ -38,24 +38,39 @@ To process multiple forecasts, the operator instance can be reused.
 >>> for forecast in forecasts:
 ...     counterparts = operator.interpolate(forecast)
 
-In the above examples, only numpy arrays and a single class were used to interpolate to observed locations. A
-more complicated use case would include depths.
+In the above examples, only surface fields have been used. To interpolate
+to observed profiles, add grid and observed depths arrays. Z-level models
+have 1D depth arrays, whereas S-level models have 3D depths.
 
->>> operator = obsoper.Operator.from_arrays(grid_lons, grid_lats, argo_lons, argo_lats, grid_depths=grid_depths, observed_depths=argo_depths)
+>>> operator = obsoper.Operator(grid_lons,
+...                             grid_lats,
+...                             argo_lons,
+...                             argo_lats,
+...                             grid_depths=grid_depths,
+...                             observed_depths=argo_depths)
 >>> result = operator.interpolate(temperature_analysis)
 
-Clearly, this would become unmanageable if we add extra parameters, such as time. An alternative usage would be to use abstractions
-for the grid and observations.
+To interpolate from a tripolar grid, care must be taken to first identify
+if the grid has a halo.
 
->>> grid = obsoper.Grid(grid_lons, grid_lats, grid_depths, layout="tripolar")
->>> positions = obsoper.Positions(argo_lons, argo_lats, argo_depths)
->>> operator = obsoper.Operator(grid, positions)
+>>> operator = obsoper.Operator(grid_lons,
+...                             grid_lats,
+...                             argo_lons,
+...                             argo_lats,
+...                             grid_depths=grid_depths,
+...                             observed_depths=argo_depths,
+...                             has_halo=True,
+...                             search="tripolar",
+...                             boundary="band")
+>>> result = operator.interpolate(temperature_analysis)
+
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   algorithm
    api
 
 

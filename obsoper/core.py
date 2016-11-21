@@ -13,7 +13,9 @@ class Operator(object):
     Performs a horizontal interpolation followed by a vertical
     interpolation if needed.
 
-    .. note:: search algorithm selection is user specified
+    .. note:: search methods and boundary definitions may result in
+              non-convergent interpolation algorithms.
+              See :class:`obsoper.interpolate.Horizontal` for more detail.
 
     :param grid_longitudes: 2D array
     :param grid_latitudes: 2D array
@@ -46,7 +48,12 @@ class Operator(object):
                                                  boundary=boundary)
 
     def interpolate(self, field):
-        """Map model field to observed locations"""
+        """Interpolates model field to observed locations
+
+        :param field: array shaped (X, Y[, Z])
+        :returns: array shapes (N[, L]) where N is number of observations
+                  and L is the number of observed levels
+        """
         if self.observed_depths is None:
             return self.horizontal.interpolate(field)
         section = vertical.Section(self.horizontal.interpolate(field),

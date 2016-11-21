@@ -61,9 +61,9 @@ def inside(grid_longitudes,
     elif kind.lower() in ["band", "latitude_band"]:
         return LatitudeBand.from_latitudes(grid_latitudes).inside(observed_latitudes)
     elif kind.lower() in ["polygon", "irregular", "rotated"]:
-        return Domain(grid_longitudes,
-                      grid_latitudes).contains(observed_longitudes,
-                                               observed_latitudes)
+        return Polygon(grid_longitudes,
+                       grid_latitudes).inside(observed_longitudes,
+                                              observed_latitudes)
 
 
 class LatitudeBand(object):
@@ -90,15 +90,23 @@ class LatitudeBand(object):
                 (latitudes <= self.maximum))
 
 
-class Domain(object):
-    """Grid domain definition"""
+class Polygon(object):
+    """General ocean grid definition
+
+    Arbitrary shaped non-intersecting polygon domain. Uses
+    a combination of bounding box and point in polygon
+    algorithms to decide if a point is inside the domain.
+
+    :param longitudes: 2D array
+    :param latitudes: 2D array
+    """
     def __init__(self, longitudes, latitudes):
         self.bounding_box = Box.from2d(longitudes,
                                        latitudes)
         self.point_in_polygon = PointInPolygon.from2d(longitudes,
                                                       latitudes)
 
-    def contains(self, longitudes, latitudes):
+    def inside(self, longitudes, latitudes):
         """check observations are contained within domain"""
         longitudes = np.asarray(longitudes, dtype="d")
         latitudes = np.asarray(latitudes, dtype="d")

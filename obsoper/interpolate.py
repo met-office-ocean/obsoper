@@ -20,27 +20,31 @@ from . import (grid,
 
 
 class Horizontal(object):
-    """Horizontal grid interpolator
+    """Interpolate ocean grid to observation locations
 
-    Perform bilinear interpolation on ocean grids.
-
-    .. note:: Care must be taken when choosing the appropriate search
-              algorithm and boundary definition.
+    Perform bilinear interpolation on ocean grids. The following combinations
+    of boundary and search algorithm are recommended.
 
     ======== ========= =====================
     Boundary Search    Description
     ======== ========= =====================
     band     tripolar  ORCA family of models
     polygon  cartesian Regional models
+    regular  cartesian Regular lon/lat models
     ======== ========= =====================
 
-    .. note:: When analysing ORCA models it is important to specify
+    .. note:: When analysing tripolar models it is important to specify
               whether or not the grid includes a halo via `has_halo`
 
     :param grid_longitudes: 2D array of longitudes shapes (x, y)
     :param grid_latitudes: 2D array of latitudes shapes (x, y)
     :param observed_longitudes: 1D array of longitudes
     :param observed_latitudes: 1D array of latitudes
+    :param has_halo: logical indicating existence of halo
+    :param search: algorithm either 'tripolar' or 'cartesian'
+                   see :func:`obsoper.grid.lower_left`
+    :param boundary: domain shape either 'band', 'polygon' or 'regular',
+                     see :func:`obsoper.domain.inside`
     """
     def __init__(self,
                  grid_longitudes,
