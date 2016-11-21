@@ -50,7 +50,7 @@ class Operator(object):
         if self.observed_depths is None:
             return self.horizontal.interpolate(field)
         section = vertical.Section(self.horizontal.interpolate(field),
-                                   self.grid_depths)
+                                   self.horizontal.interpolate(self.grid_depths))
         return section.interpolate(self.observed_depths)
 
 
