@@ -38,42 +38,40 @@ class Horizontal(object):
                  search="cartesian",
                  boundary="polygon"):
         # Cast positions as doubles
-        self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
-        self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
-        self.grid_longitudes = np.asarray(grid_longitudes, dtype="d")
-        self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
-        self.n_observations = len(self.observed_longitudes)
+        observed_longitudes = np.asarray(observed_longitudes, dtype="d")
+        observed_latitudes = np.asarray(observed_latitudes, dtype="d")
+        grid_longitudes = np.asarray(grid_longitudes, dtype="d")
+        grid_latitudes = np.asarray(grid_latitudes, dtype="d")
+        self.n_observations = len(observed_longitudes)
 
         # Screen grid cells inside halo
         self.has_halo = has_halo
         if self.has_halo:
-            self.grid_longitudes = orca.remove_halo(self.grid_longitudes)
-            self.grid_latitudes = orca.remove_halo(self.grid_latitudes)
-
-        # Make a "grid" array needed by select_corners method
-        self._grid = np.dstack((self.grid_longitudes,
-                                self.grid_latitudes)).astype("d")
+            grid_longitudes = orca.remove_halo(grid_longitudes)
+            grid_latitudes = orca.remove_halo(grid_latitudes)
 
         # Detect observations inside domain
-        self.included = domain.inside(self.grid_longitudes,
-                                      self.grid_latitudes,
-                                      self.observed_longitudes,
-                                      self.observed_latitudes,
+        self.included = domain.inside(grid_longitudes,
+                                      grid_latitudes,
+                                      observed_longitudes,
+                                      observed_latitudes,
                                       kind=boundary)
 
         if self.included.any():
-            included_longitudes = self.observed_longitudes[self.included]
-            included_latitudes = self.observed_latitudes[self.included]
+            included_longitudes = observed_longitudes[self.included]
+            included_latitudes = observed_latitudes[self.included]
 
             # Detect grid cells containing observations
-            self.i, self.j = grid.lower_left(self.grid_longitudes,
-                                             self.grid_latitudes,
+            self.i, self.j = grid.lower_left(grid_longitudes,
+                                             grid_latitudes,
                                              included_longitudes,
                                              included_latitudes,
                                              search=search)
 
             # Correct grid cell corner positions to account for dateline
-            corners = select_corners(self._grid, self.i, self.j)
+            _grid = np.dstack((grid_longitudes,
+                               grid_latitudes)).astype("d")
+            corners = select_corners(_grid, self.i, self.j)
             corners = correct_corners(corners, included_longitudes)
 
             # Estimate interpolation weights from coordinates
