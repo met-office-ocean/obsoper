@@ -158,9 +158,8 @@ class Tripolar(Horizontal):
         self.n_observations = len(self.observed_longitudes)
 
         # Filter observations that are enclosed by grid
-        self.minimum_latitude = np.ma.min(self.grid_latitudes)
-        self.maximum_latitude = np.ma.max(self.grid_latitudes)
-        self.included = self.inside_grid(self.observed_latitudes)
+        self._domain = LatitudeBand.from_latitudes(self.grid_latitudes)
+        self.included = self._domain.inside(self.observed_latitudes)
 
         if self.included.any():
             included_longitudes = self.observed_longitudes[self.included]
@@ -185,11 +184,6 @@ class Tripolar(Horizontal):
             self.weights = bilinear.interpolation_weights(corners,
                                                           included_longitudes,
                                                           included_latitudes)
-
-    def inside_grid(self, latitudes):
-        """Determine observations inside grid"""
-        return ((latitudes >= self.minimum_latitude) &
-                (latitudes <= self.maximum_latitude))
 
     def interpolate(self, field):
         """Perform vectorised interpolation
@@ -230,6 +224,30 @@ class Tripolar(Horizontal):
     def select_field(self, field):
         """Select grid cell corner values corresponding to observations"""
         return select_field(field, self.i, self.j)
+
+
+class LatitudeBand(object):
+    """Latitude band domain
+
+    Positions within two latitude parallels are considered inside the domain.
+
+    :param minimum: southernmost latitude
+    :param maximum: northernmost latitude
+    """
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    @classmethod
+    def from_latitudes(cls, latitudes):
+        """Construct latitude band from latitude array"""
+        return cls(np.ma.min(latitudes),
+                   np.ma.max(latitudes))
+
+    def inside(self, latitudes):
+        """Determine observations inside grid"""
+        return ((latitudes >= self.minimum) &
+                (latitudes <= self.maximum))
 
 
 def mask_corners(corner_values):
