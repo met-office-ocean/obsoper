@@ -57,10 +57,11 @@ class Rotated(Horizontal):
                                 self.grid_latitudes)).astype("d")
 
         # Detect observations inside domain
-        self._domain = domain.Domain(self.grid_longitudes,
-                                     self.grid_latitudes)
-        self.included = self._domain.contains(self.observed_longitudes,
-                                              self.observed_latitudes)
+        self.included = domain.inside(self.grid_longitudes,
+                                      self.grid_latitudes,
+                                      self.observed_longitudes,
+                                      self.observed_latitudes,
+                                      kind="polygon")
 
         if self.included.any():
             included_longitudes = self.observed_longitudes[self.included]
@@ -158,8 +159,11 @@ class Tripolar(Horizontal):
         self.n_observations = len(self.observed_longitudes)
 
         # Filter observations that are enclosed by grid
-        self._domain = domain.LatitudeBand.from_latitudes(self.grid_latitudes)
-        self.included = self._domain.inside(self.observed_latitudes)
+        self.included = domain.inside(self.grid_longitudes,
+                                      self.grid_latitudes,
+                                      self.observed_longitudes,
+                                      self.observed_latitudes,
+                                      kind="latitude_band")
 
         if self.included.any():
             included_longitudes = self.observed_longitudes[self.included]

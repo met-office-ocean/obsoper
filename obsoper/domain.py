@@ -27,6 +27,24 @@ from itertools import izip
 import numpy as np
 
 
+def inside(grid_longitudes,
+           grid_latitudes,
+           observed_longitudes,
+           observed_latitudes,
+           kind="regular"):
+    """Detect points inside a model domain"""
+    if kind.lower() in ["regular", "box", "lonlat"]:
+        return Box.from2d(grid_longitudes,
+                          grid_latitudes).inside(observed_longitudes,
+                                                 observed_latitudes)
+    elif kind.lower() in ["band", "latitude_band"]:
+        return LatitudeBand.from_latitudes(grid_latitudes).inside(observed_latitudes)
+    elif kind.lower() in ["polygon", "irregular", "rotated"]:
+        return Domain(grid_longitudes,
+                      grid_latitudes).contains(observed_longitudes,
+                                               observed_latitudes)
+
+
 class LatitudeBand(object):
     """Latitude band domain
 
@@ -54,10 +72,8 @@ class LatitudeBand(object):
 class Domain(object):
     """Grid domain definition"""
     def __init__(self, longitudes, latitudes):
-        self.bounding_box = Box(np.min(longitudes),
-                                np.max(longitudes),
-                                np.min(latitudes),
-                                np.max(latitudes))
+        self.bounding_box = Box.from2d(longitudes,
+                                       latitudes)
         self.point_in_polygon = PointInPolygon.from2d(longitudes,
                                                       latitudes)
 
@@ -83,6 +99,14 @@ class Box(object):
         self.xmax = xmax
         self.ymin = ymin
         self.ymax = ymax
+
+    @classmethod
+    def from2d(cls, longitudes, latitudes):
+        """Construct from 2D coordinates"""
+        return cls(np.min(longitudes),
+                   np.max(longitudes),
+                   np.min(latitudes),
+                   np.max(latitudes))
 
     def inside(self, x, y):
         """Check point lies inside box

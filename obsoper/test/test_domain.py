@@ -1,7 +1,36 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
-from obsoper import Domain
+from obsoper import (domain,
+                     Domain)
+
+
+class TestInside(unittest.TestCase):
+    def setUp(self):
+        # Trapezoid 2x2 grid
+        self.grid_lons = [[0, 1],
+                          [3, 2]]
+        self.grid_lats = [[0, 1],
+                          [0, 1]]
+        self.obs_lons = [-1, 0.1, 1.5]
+        self.obs_lats = [0.5, 0.5, 0.5]
+
+    def test_inside_given_latitude_band(self):
+        self.check_inside("band", [True, True, True])
+
+    def test_inside_given_lonlat(self):
+        self.check_inside("lonlat", [False, True, True])
+
+    def test_inside_given_polygon(self):
+        self.check_inside("polygon", [False, False, True])
+
+    def check_inside(self, kind, expect):
+        result = domain.inside(self.grid_lons,
+                               self.grid_lats,
+                               self.obs_lons,
+                               self.obs_lats,
+                               kind=kind)
+        np.testing.assert_array_equal(expect, result)
 
 
 class TestDomain(unittest.TestCase):
