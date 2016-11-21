@@ -68,10 +68,11 @@ class Rotated(Horizontal):
             included_latitudes = self.observed_latitudes[self.included]
 
             # Detect grid cells containing observations
-            self._search = grid.CartesianSearch(self.grid_longitudes,
-                                                self.grid_latitudes)
-            self.i, self.j = self._search.lower_left(included_longitudes,
-                                                     included_latitudes)
+            self.i, self.j = grid.lower_left(self.grid_longitudes,
+                                             self.grid_latitudes,
+                                             included_longitudes,
+                                             included_latitudes,
+                                             search="cartesian")
 
             # Correct grid cell corner positions to account for dateline
             corners = select_corners(self._grid, self.i, self.j)
@@ -170,12 +171,11 @@ class Tripolar(Horizontal):
             included_latitudes = self.observed_latitudes[self.included]
 
             # Locate relevant grid cells
-            search = grid.TripolarSearch(self.grid_longitudes,
-                                         self.grid_latitudes)
-            self.i, self.j = search.lower_left(included_longitudes,
-                                               included_latitudes)
-            self.i = np.asarray(self.i, dtype="i")
-            self.j = np.asarray(self.j, dtype="i")
+            self.i, self.j = grid.lower_left(self.grid_longitudes,
+                                             self.grid_latitudes,
+                                             included_longitudes,
+                                             included_latitudes,
+                                             search="tripolar")
 
             # Correct grid cell corner positions to account for dateline
             corners = select_corners(self._grid, self.i, self.j)

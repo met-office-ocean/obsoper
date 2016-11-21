@@ -9,8 +9,33 @@ from obsoper.grid import (Regular2DGrid,
 from obsoper.exceptions import NotInGrid
 
 
+class TestLowerLeft(unittest.TestCase):
+    def setUp(self):
+        self.grid_lons = [[0, 0],
+                          [1, 1]]
+        self.grid_lats = [[0, 1],
+                          [0, 1]]
+        self.obs_lons = [0.1]
+        self.obs_lats = [0.1]
+
+    def test_lower_left_given_cartesian_search(self):
+        self.check_lower_left("cartesian", ([0], [0]))
+
+    def test_lower_left_given_tripolar_search(self):
+        self.check_lower_left("tripolar", ([0], [0]))
+
+    def check_lower_left(self, search, expect):
+        result = grid.lower_left(self.grid_lons,
+                                 self.grid_lats,
+                                 self.obs_lons,
+                                 self.obs_lats,
+                                 search=search)
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestSearch(unittest.TestCase):
-    def test_deprecate(self):
+    @staticmethod
+    def test_deprecate():
         with mock.patch("obsoper.grid.warnings") as mock_warnings:
             grid.Search(np.ones((2, 2)),
                         np.ones((2, 2)))

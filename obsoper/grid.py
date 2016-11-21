@@ -28,6 +28,26 @@ from . import (cell,
 SearchResult = namedtuple("SearchResult", ("ilon", "ilat", "dilon", "dilat"))
 
 
+def lower_left(grid_longitudes,
+               grid_latitudes,
+               observed_longitudes,
+               observed_latitudes,
+               search="cartesian"):
+    """Find lower left grid indicies associated with observed locations
+
+    :returns: i, j arrays of indices
+    """
+    return _algorithm(search)(grid_longitudes,
+                              grid_latitudes).lower_left(observed_longitudes,
+                                                         observed_latitudes)
+
+def _algorithm(search):
+    if search.lower() == "cartesian":
+        return CartesianSearch
+    elif search.lower() == "tripolar":
+        return TripolarSearch
+
+
 class TripolarSearch(object):
     """Finds lower-left hand grid point nearest observation
 
@@ -41,6 +61,8 @@ class TripolarSearch(object):
     :param grid_latitudes: 2D array dimensioned (X, Y)
     """
     def __init__(self, grid_longitudes, grid_latitudes):
+        grid_longitudes = np.asarray(grid_longitudes)
+        grid_latitudes = np.asarray(grid_latitudes)
         self.neighbour = LonLatNeighbour(grid_longitudes, grid_latitudes)
         self.walk = walk.Walk.tripolar(grid_longitudes,
                                        grid_latitudes)
@@ -54,7 +76,8 @@ class TripolarSearch(object):
         :returns: (i, j) index arrays representing lower left hand corners
         """
         i, j = self.nearest(longitudes, latitudes)
-        return self.walk.query(longitudes, latitudes, i, j)
+        ri, rj = self.walk.query(longitudes, latitudes, i, j)
+        return np.asarray(ri, dtype="i"), np.asarray(rj, dtype="i")
 
     def nearest(self, longitudes, latitudes):
         """Find nearest neighbour"""
@@ -96,6 +119,9 @@ class CartesianSearch(object):
     :param grid_latitudes: 2D array dimensioned (X, Y)
     """
     def __init__(self, grid_longitudes, grid_latitudes):
+        grid_longitudes = np.asarray(grid_longitudes)
+        grid_latitudes = np.asarray(grid_latitudes)
+
         self.ni, self.nj = grid_longitudes.shape
         self._nearest_neighbour = CartesianNeighbour(grid_longitudes,
                                                      grid_latitudes)
