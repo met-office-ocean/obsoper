@@ -97,8 +97,8 @@ class Polygon(object):
     a combination of bounding box and point in polygon
     algorithms to decide if a point is inside the domain.
 
-    :param longitudes: 2D array
-    :param latitudes: 2D array
+    :param longitudes: 2D array shaped (X, Y)
+    :param latitudes: 2D array shaped (X, Y)
     """
     def __init__(self, longitudes, latitudes):
         self.bounding_box = Box.from2d(longitudes,
@@ -107,7 +107,12 @@ class Polygon(object):
                                                       latitudes)
 
     def inside(self, longitudes, latitudes):
-        """check observations are contained within domain"""
+        """Check observations are contained within domain
+
+        :param longitudes: x-coordinate to test
+        :param latitudes: y-coordinate to test
+        :returns: logical indicating coordinates contained in polygon
+        """
         longitudes = np.asarray(longitudes, dtype="d")
         latitudes = np.asarray(latitudes, dtype="d")
 
