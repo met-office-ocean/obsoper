@@ -85,8 +85,16 @@ class Horizontal(object):
                                                           included_latitudes)
 
     def interpolate(self, field):
-        """interpolate to observed longitude/latitude positions"""
-        field = np.asarray(field)
+        """Perform vectorised interpolation to observed positions
+
+        .. note:: `has_halo` flag specified during construction trims field
+                  appropriately
+
+        :param field: array shaped (I, J, [K]) same shape as model domain
+        :returns: array shaped (N, [K]) of interpolated field values
+                  where N represents the number of observed positions
+        """
+        field = np.ma.asarray(field)
 
         if self.has_halo:
             field = orca.remove_halo(field)
@@ -127,8 +135,6 @@ class Tripolar(Horizontal):
     :param observed_latitudes: 1D array of latitudes
     :param has_halo: flag indicating whether diagnostics have redundant halo
                      columns and row.
-    :param dimension_order: describe grid dimensions "xy" or "yx", interpolator
-                            transposes arrays to "xy"
     """
     def __init__(self,
                  grid_longitudes,
@@ -136,93 +142,13 @@ class Tripolar(Horizontal):
                  observed_longitudes,
                  observed_latitudes,
                  has_halo=False):
-        # Cast positions as doubles
-        self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
-        self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
-        self.grid_longitudes = np.asarray(grid_longitudes, dtype="d")
-        self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
-
-        self.has_halo = has_halo
-
-        # Screen grid cells inside halo
-        if self.has_halo:
-            self.grid_longitudes = orca.remove_halo(self.grid_longitudes)
-            self.grid_latitudes = orca.remove_halo(self.grid_latitudes)
-
-        self._grid = np.dstack((self.grid_longitudes,
-                                self.grid_latitudes)).astype("d")
-
-        self.n_observations = len(self.observed_longitudes)
-
-        # Filter observations that are enclosed by grid
-        self.included = domain.inside(self.grid_longitudes,
-                                      self.grid_latitudes,
-                                      self.observed_longitudes,
-                                      self.observed_latitudes,
-                                      kind="latitude_band")
-
-        if self.included.any():
-            included_longitudes = self.observed_longitudes[self.included]
-            included_latitudes = self.observed_latitudes[self.included]
-
-            # Locate relevant grid cells
-            self.i, self.j = grid.lower_left(self.grid_longitudes,
-                                             self.grid_latitudes,
-                                             included_longitudes,
-                                             included_latitudes,
-                                             search="tripolar")
-
-            # Correct grid cell corner positions to account for dateline
-            corners = select_corners(self._grid, self.i, self.j)
-            corners = correct_corners(corners, included_longitudes)
-
-            # Estimate interpolation weights from coordinates
-            # Corner position shape (4, 2, [N]) --> (N, 4, 2)
-            if corners.ndim == 3:
-                corners = np.transpose(corners, (2, 0, 1))
-            self.weights = bilinear.interpolation_weights(corners,
-                                                          included_longitudes,
-                                                          included_latitudes)
-
-    def interpolate(self, field):
-        """Perform vectorised interpolation
-
-        .. note:: `has_halo` flag specified during construction trims field
-                  appropriately
-
-        :param field: array shaped (I, J, [K]) same shape as model domain
-        :returns: array shaped (N, [K]) of interpolated field values
-                  where N represents the number of observed positions
-        """
-        if self.has_halo:
-            field = orca.remove_halo(field)
-
-        # Interpolate field to observed positions
-        if field.ndim == 3:
-            shape = (self.n_observations, field.shape[2])
-        else:
-            shape = (self.n_observations,)
-        result = np.ma.masked_all(shape, dtype="d")
-
-        if self.included.any():
-
-            corner_values = self.select_field(field)
-
-            # Corner values shape (4, [Z, [N]]) --> (Z, N, 4)
-            if corner_values.ndim == 2:
-                corner_values = corner_values.T
-            elif corner_values.ndim == 3:
-                corner_values = np.transpose(corner_values, (1, 2, 0))
-
-            corner_values = mask_corners(corner_values)
-
-            result[self.included] = bilinear.interpolate(corner_values,
-                                                         self.weights).T
-        return result
-
-    def select_field(self, field):
-        """Select grid cell corner values corresponding to observations"""
-        return select_field(field, self.i, self.j)
+        super(Tripolar, self).__init__(grid_longitudes,
+                                       grid_latitudes,
+                                       observed_longitudes,
+                                       observed_latitudes,
+                                       has_halo=has_halo,
+                                       search="tripolar",
+                                       boundary="band")
 
 
 def mask_corners(corner_values):
