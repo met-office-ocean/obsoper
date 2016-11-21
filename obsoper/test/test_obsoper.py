@@ -7,16 +7,33 @@ from obsoper import ObservationOperator
 
 class TestOperator(unittest.TestCase):
     def setUp(self):
-        self.grid_lons = None
-        self.grid_lats = None
-        self.obs_lons = None
-        self.obs_lats = None
+        # Model grid
+        self.grid_lons = [[0, 1],
+                          [3, 2]]
+        self.grid_lats = [[0, 1],
+                          [0, 1]]
+        self.grid_depths = None
 
-    def test_from_arrays(self):
-        obsoper.Operator.from_arrays(self.grid_lons,
-                                     self.grid_lats,
-                                     self.obs_lons,
-                                     self.obs_lats)
+        # Observation positions
+        self.obs_lons = [1.5]
+        self.obs_lats = [0.5]
+        self.obs_depths = None
+
+        # Forecasts/results
+        self.analysis = [[1, 2],
+                         [3, 4]]
+        self.counterparts = [2.5]
+
+    def test_interpolate(self):
+        fixture = obsoper.Operator(self.grid_lons,
+                                   self.grid_lats,
+                                   self.obs_lons,
+                                   self.obs_lats,
+                                   self.grid_depths,
+                                   self.obs_depths)
+        result = fixture.interpolate(self.analysis)
+        expect = self.counterparts
+        np.testing.assert_array_equal(expect, result)
 
 
 class TestObservationOperator(unittest.TestCase):

@@ -1,20 +1,29 @@
 """observation operator"""
 import numpy as np
 from . import (grid,
-               horizontal)
+               horizontal,
+               interpolate)
 from .vertical import Vertical2DInterpolator
 
 
 class Operator(object):
     """Observation operator"""
-    @classmethod
-    def from_arrays(cls,
-                    grid_longitudes,
-                    grid_latitudes,
-                    observed_longitudes,
-                    observed_latitudes):
+    def __init__(self,
+                 grid_longitudes,
+                 grid_latitudes,
+                 observed_longitudes,
+                 observed_latitudes,
+                 grid_depths=None,
+                 observed_depths=None):
         """Construct observation operator from numpy arrays"""
-        pass
+        self.horizontal_interpolator = interpolate.Rotated(grid_longitudes,
+                                                           grid_latitudes,
+                                                           observed_longitudes,
+                                                           observed_latitudes)
+
+    def interpolate(self, field):
+        """Map model field to observed locations"""
+        return self.horizontal_interpolator.interpolate(field)
 
 
 class ObservationOperator(object):
