@@ -4,7 +4,7 @@ import numpy as np
 from obsoper import interpolate
 
 
-class TestRotated(unittest.TestCase):
+class TestHorizontal(unittest.TestCase):
     def setUp(self):
         # Trapezoid 2x2 grid represents most of the issues encountered with
         # rotated grids
@@ -16,10 +16,10 @@ class TestRotated(unittest.TestCase):
                       [3, 4]]
         self.obs_lons = [1.5]
         self.obs_lats = [0.5]
-        self.fixture = interpolate.Rotated(self.grid_lons,
-                                           self.grid_lats,
-                                           self.obs_lons,
-                                           self.obs_lats)
+        self.fixture = interpolate.Horizontal(self.grid_lons,
+                                              self.grid_lats,
+                                              self.obs_lons,
+                                              self.obs_lats)
 
     def test_interpolate(self):
         result = self.fixture.interpolate(self.field)

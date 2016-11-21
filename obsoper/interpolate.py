@@ -12,8 +12,6 @@ interpolation time is more convenient. In this use case, several sets of
 observations can be interpolated to a single model layout.
 
 """
-from abc import (ABCMeta,
-                 abstractmethod)
 import numpy as np
 from . import (grid,
                bilinear,
@@ -22,18 +20,9 @@ from . import (grid,
 
 
 class Horizontal(object):
-    __metaclass__ = ABCMeta
+    """Horizontal grid interpolator
 
-    @abstractmethod
-    def interpolate(self, field):
-        """interpolate to observed longitude/latitude positions"""
-
-
-class Rotated(Horizontal):
-    """Rotated grid horizontal interpolator
-
-    Applicable to ocean grids that are not regular lon/lat but are also
-    of finite extent.
+    Perform bilinear interpolation on ocean grids.
 
     :param grid_longitudes: 2D array of longitudes shapes (x, y)
     :param grid_latitudes: 2D array of latitudes shapes (x, y)
@@ -44,13 +33,22 @@ class Rotated(Horizontal):
                  grid_longitudes,
                  grid_latitudes,
                  observed_longitudes,
-                 observed_latitudes):
+                 observed_latitudes,
+                 has_halo=False,
+                 search="cartesian",
+                 boundary="polygon"):
         # Cast positions as doubles
         self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
         self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
         self.grid_longitudes = np.asarray(grid_longitudes, dtype="d")
         self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
         self.n_observations = len(self.observed_longitudes)
+
+        # Screen grid cells inside halo
+        self.has_halo = has_halo
+        if self.has_halo:
+            self.grid_longitudes = orca.remove_halo(self.grid_longitudes)
+            self.grid_latitudes = orca.remove_halo(self.grid_latitudes)
 
         # Make a "grid" array needed by select_corners method
         self._grid = np.dstack((self.grid_longitudes,
@@ -61,7 +59,7 @@ class Rotated(Horizontal):
                                       self.grid_latitudes,
                                       self.observed_longitudes,
                                       self.observed_latitudes,
-                                      kind="polygon")
+                                      kind=boundary)
 
         if self.included.any():
             included_longitudes = self.observed_longitudes[self.included]
@@ -72,7 +70,7 @@ class Rotated(Horizontal):
                                              self.grid_latitudes,
                                              included_longitudes,
                                              included_latitudes,
-                                             search="cartesian")
+                                             search=search)
 
             # Correct grid cell corner positions to account for dateline
             corners = select_corners(self._grid, self.i, self.j)
@@ -89,6 +87,9 @@ class Rotated(Horizontal):
     def interpolate(self, field):
         """interpolate to observed longitude/latitude positions"""
         field = np.asarray(field)
+
+        if self.has_halo:
+            field = orca.remove_halo(field)
 
         # Interpolate field to observed positions
         if field.ndim == 3:

@@ -2,28 +2,56 @@
 import numpy as np
 from . import (grid,
                horizontal,
+               vertical,
                interpolate)
 from .vertical import Vertical2DInterpolator
 
 
 class Operator(object):
-    """Observation operator"""
+    """Observation operator maps model values to observation locations
+
+    Performs a horizontal interpolation followed by a vertical
+    interpolation if needed.
+
+    .. note:: search algorithm selection is user specified
+
+    :param grid_longitudes: 2D array
+    :param grid_latitudes: 2D array
+    :param observed_longitudes: 1D array
+    :param observed_latitudes: 1D array
+    :param grid_depths: 1D/3D array representing either Z-levels or S-levels
+    :param observed_depths: 1D array
+    :param has_halo: logical indicating tri-polar grid with halo
+    :param search: grid search algorithm
+    :param boundary: domain boundary description
+    """
     def __init__(self,
                  grid_longitudes,
                  grid_latitudes,
                  observed_longitudes,
                  observed_latitudes,
                  grid_depths=None,
-                 observed_depths=None):
-        """Construct observation operator from numpy arrays"""
-        self.horizontal_interpolator = interpolate.Rotated(grid_longitudes,
-                                                           grid_latitudes,
-                                                           observed_longitudes,
-                                                           observed_latitudes)
+                 observed_depths=None,
+                 has_halo=False,
+                 search="cartesian",
+                 boundary="polygon"):
+        self.grid_depths = grid_depths
+        self.observed_depths = observed_depths
+        self.horizontal = interpolate.Horizontal(grid_longitudes,
+                                                 grid_latitudes,
+                                                 observed_longitudes,
+                                                 observed_latitudes,
+                                                 has_halo=has_halo,
+                                                 search=search,
+                                                 boundary=boundary)
 
     def interpolate(self, field):
         """Map model field to observed locations"""
-        return self.horizontal_interpolator.interpolate(field)
+        if self.observed_depths is None:
+            return self.horizontal.interpolate(field)
+        section = vertical.Section(self.horizontal.interpolate(field),
+                                   self.grid_depths)
+        return section.interpolate(self.observed_depths)
 
 
 class ObservationOperator(object):
