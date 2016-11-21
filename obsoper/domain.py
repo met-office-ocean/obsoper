@@ -27,6 +27,30 @@ from itertools import izip
 import numpy as np
 
 
+class LatitudeBand(object):
+    """Latitude band domain
+
+    Positions within two latitude parallels are considered inside the domain.
+
+    :param minimum: southernmost latitude
+    :param maximum: northernmost latitude
+    """
+    def __init__(self, minimum, maximum):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    @classmethod
+    def from_latitudes(cls, latitudes):
+        """Construct latitude band from latitude array"""
+        return cls(np.ma.min(latitudes),
+                   np.ma.max(latitudes))
+
+    def inside(self, latitudes):
+        """Determine observations inside grid"""
+        return ((latitudes >= self.minimum) &
+                (latitudes <= self.maximum))
+
+
 class Domain(object):
     """Grid domain definition"""
     def __init__(self, longitudes, latitudes):
