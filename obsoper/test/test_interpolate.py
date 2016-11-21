@@ -204,45 +204,6 @@ class TestTripolar(unittest.TestCase):
         np.testing.assert_array_equal(expect, result)
 
 
-class TestTripolarGridDimensions(unittest.TestCase):
-    def setUp(self):
-        self.shape_yx = (3, 2)
-        self.shape_xy = (2, 3)
-        self.grid_lons = np.full(self.shape_yx, 10)
-        self.grid_lats = np.full(self.shape_yx, 11)
-        self.lons, self.lats = [], []
-        self.fixture = interpolate.Tripolar(self.grid_lons,
-                                            self.grid_lats,
-                                            self.lons,
-                                            self.lats,
-                                            dimension_order="yx")
-
-    def test_constructor_transposes_grid_longitudes(self):
-        result = self.fixture.grid_longitudes.shape
-        expect = self.shape_xy
-        self.assertEqual(expect, result)
-
-    def test_constructor_transposes_grid_latitudes(self):
-        result = self.fixture.grid_latitudes.shape
-        expect = self.shape_xy
-        self.assertEqual(expect, result)
-
-    def test_constructor_given_list_and_yx(self):
-        grid_lons = [[0, 1],
-                     [0, 1]]
-        grid_lats = [[0, 0],
-                     [1, 1]]
-        fixture = interpolate.Tripolar(grid_lons,
-                                       grid_lats,
-                                       self.lons,
-                                       self.lats,
-                                       dimension_order="yx")
-        result = fixture.grid_longitudes, fixture.grid_latitudes
-        expect = (np.array(grid_lons).T,
-                  np.array(grid_lats).T)
-        np.testing.assert_array_equal(expect, result)
-
-
 class TestTripolar3D(unittest.TestCase):
     def test_interpolate_3d_data(self):
         no = 5

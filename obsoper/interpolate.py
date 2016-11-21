@@ -135,8 +135,7 @@ class Tripolar(Horizontal):
                  grid_latitudes,
                  observed_longitudes,
                  observed_latitudes,
-                 has_halo=False,
-                 dimension_order="xy"):
+                 has_halo=False):
         # Cast positions as doubles
         self.observed_longitudes = np.asarray(observed_longitudes, dtype="d")
         self.observed_latitudes = np.asarray(observed_latitudes, dtype="d")
@@ -144,11 +143,6 @@ class Tripolar(Horizontal):
         self.grid_latitudes = np.asarray(grid_latitudes, dtype="d")
 
         self.has_halo = has_halo
-
-        # Transpose coordinates
-        if dimension_order.lower() == "yx":
-            self.grid_longitudes = self.grid_longitudes.T
-            self.grid_latitudes = self.grid_latitudes.T
 
         # Screen grid cells inside halo
         if self.has_halo:
