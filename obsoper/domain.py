@@ -32,7 +32,28 @@ def inside(grid_longitudes,
            observed_longitudes,
            observed_latitudes,
            kind="regular"):
-    """Detect points inside a model domain"""
+    """Detect points inside a model domain
+
+    Apply geometry techniques to determine if an observation is inside a model
+    domain. Strategies included can handle regular lon/lat, global latitude
+    bands and polygonal grids.
+
+    ======= ===============================================
+    Key     Description
+    ======= ===============================================
+    regular model grids bounded by a longitude/latitude box
+    band    model grid bounded north/south
+    polygon general case where model boundary treated as
+            polygon
+    ======= ===============================================
+
+    :param grid_longitudes: 2D array shaped (X, Y)
+    :param grid_latitudes: 2D array shaped (X, Y)
+    :param observed_longitudes: 1D array shaped (N,)
+    :param observed_latitudes: 1D array shaped (N,)
+    :param kind: string indicating which kind of model grid is being used
+    :returns: boolean array where True indicates observation is inside domain
+    """
     if kind.lower() in ["regular", "box", "lonlat"]:
         return Box.from2d(grid_longitudes,
                           grid_latitudes).inside(observed_longitudes,
