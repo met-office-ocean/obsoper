@@ -7,9 +7,10 @@ The obsoper package contains tools to simplify interpolation to observed locatio
 Surface
 -------
 
-To interpolate a surface parameter like a sea level anomaly analysis to altimeter tracks the following steps may be taken.
+To interpolate a surface parameter like a sea level anomaly analysis from
+a regular lon/lat grid to altimeter tracks the following steps may be taken.
 
->>> operator = obsoper.Operator(grid_lons, grid_lats, track_lons, track_lats)
+>>> operator = obsoper.Operator(grid_lons, grid_lats, track_lons, track_lats, layout="regular")
 >>> result = operator.interpolate(sla_analysis)
 
 To process multiple forecasts, the operator instance can be reused.
@@ -33,8 +34,10 @@ and observed depths arrays.
 ...                             observed_depths=argo_depths)
 >>> result = operator.interpolate(temperature_analysis)
 
-To interpolate from a tripolar grid, care must be taken to first identify
-if the grid has a halo.
+By default, the operator assumes the grid is regular lon/lat.
+To interpolate from a tripolar grid the layout keyword must be altered.
+Care must also be taken to identify if the grid has a halo. At present, the
+search algorithm needs to know if a halo exists.
 
 >>> operator = obsoper.Operator(grid_lons,
 ...                             grid_lats,
