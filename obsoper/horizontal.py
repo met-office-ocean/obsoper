@@ -139,8 +139,6 @@ class Regional(Horizontal):
     :param grid_latitudes: 2D array of latitudes shapes (x, y)
     :param observed_longitudes: 1D array of longitudes
     :param observed_latitudes: 1D array of latitudes
-    :param has_halo: flag indicating whether diagnostics have redundant halo
-                     columns and row.
     """
     def __init__(self,
                  grid_longitudes,
@@ -312,7 +310,13 @@ def is_west(longitudes):
 
 
 class Regular(object):
-    """Regular grid horizontal interpolator"""
+    """Regular grid horizontal interpolator
+
+    :param grid_longitudes: Array shaped (X[, Y])
+    :param grid_latitudes: Array shaped ([X,] Y)
+    :param observed_longitudes: 1D array of longitudes
+    :param observed_latitudes: 1D array of latitudes
+    """
     def __init__(self,
                  grid_longitudes,
                  grid_latitudes,
