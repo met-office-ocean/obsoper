@@ -41,7 +41,6 @@ class Horizontal(object):
     :param grid_latitudes: 2D array of latitudes shapes (x, y)
     :param observed_longitudes: 1D array of longitudes
     :param observed_latitudes: 1D array of latitudes
-    :param has_halo: logical indicating existence of halo
     :param search: algorithm either 'tripolar' or 'cartesian'
                    see :func:`obsoper.grid.lower_left`
     :param boundary: domain shape either 'band', 'polygon' or 'regular',
@@ -52,7 +51,6 @@ class Horizontal(object):
                  grid_latitudes,
                  observed_longitudes,
                  observed_latitudes,
-                 has_halo=False,
                  search="cartesian",
                  boundary="polygon"):
         # Cast positions as doubles
@@ -61,12 +59,6 @@ class Horizontal(object):
         grid_longitudes = np.asarray(grid_longitudes, dtype="d")
         grid_latitudes = np.asarray(grid_latitudes, dtype="d")
         self.n_observations = len(observed_longitudes)
-
-        # Screen grid cells inside halo
-        self.has_halo = has_halo
-        if self.has_halo:
-            grid_longitudes = orca.remove_halo(grid_longitudes)
-            grid_latitudes = orca.remove_halo(grid_latitudes)
 
         # Detect observations inside domain
         self.included = domain.inside(grid_longitudes,
@@ -103,17 +95,11 @@ class Horizontal(object):
     def interpolate(self, field):
         """Perform vectorised interpolation to observed positions
 
-        .. note:: `has_halo` flag specified during construction trims field
-                  appropriately
-
         :param field: array shaped (I, J, [K]) same shape as model domain
         :returns: array shaped (N, [K]) of interpolated field values
                   where N represents the number of observed positions
         """
         field = np.ma.asarray(field)
-
-        if self.has_halo:
-            field = orca.remove_halo(field)
 
         # Interpolate field to observed positions
         if field.ndim == 3:
@@ -123,7 +109,6 @@ class Horizontal(object):
         result = np.ma.masked_all(shape, dtype="d")
 
         if self.included.any():
-
             corner_values = select_field(field, self.i, self.j)
 
             # Corner values shape (4, [Z, [N]]) --> (Z, N, 4)
@@ -158,13 +143,32 @@ class Tripolar(Horizontal):
                  observed_longitudes,
                  observed_latitudes,
                  has_halo=False):
+        # Screen grid cells inside halo
+        self.has_halo = has_halo
+        if self.has_halo:
+            grid_longitudes = orca.remove_halo(grid_longitudes)
+            grid_latitudes = orca.remove_halo(grid_latitudes)
         super(Tripolar, self).__init__(grid_longitudes,
                                        grid_latitudes,
                                        observed_longitudes,
                                        observed_latitudes,
-                                       has_halo=has_halo,
                                        search="tripolar",
                                        boundary="band")
+
+    def interpolate(self, field):
+        """Perform vectorised interpolation to observed positions
+
+        .. note:: `has_halo` flag specified during construction trims field
+                  appropriately
+
+        :param field: array shaped (I, J, [K]) same shape as model domain
+        :returns: array shaped (N, [K]) of interpolated field values
+                  where N represents the number of observed positions
+        """
+        field = np.ma.asarray(field)
+        if self.has_halo:
+            field = orca.remove_halo(field)
+        return super(Tripolar, self).interpolate(field)
 
 
 def mask_corners(corner_values):

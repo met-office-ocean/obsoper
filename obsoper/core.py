@@ -38,13 +38,19 @@ class Operator(object):
                  boundary="polygon"):
         self.grid_depths = grid_depths
         self.observed_depths = observed_depths
-        self.horizontal = horizontal.Horizontal(grid_longitudes,
-                                                grid_latitudes,
-                                                observed_longitudes,
-                                                observed_latitudes,
-                                                has_halo=has_halo,
-                                                search=search,
-                                                boundary=boundary)
+        if search == "tripolar":
+            self.horizontal = horizontal.Tripolar(grid_longitudes,
+                                                  grid_latitudes,
+                                                  observed_longitudes,
+                                                  observed_latitudes,
+                                                  has_halo=has_halo)
+        else:
+            self.horizontal = horizontal.Horizontal(grid_longitudes,
+                                                    grid_latitudes,
+                                                    observed_longitudes,
+                                                    observed_latitudes,
+                                                    search=search,
+                                                    boundary=boundary)
 
     def interpolate(self, field):
         """Interpolates model field to observed locations
