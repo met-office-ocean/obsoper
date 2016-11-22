@@ -30,9 +30,11 @@ If installation was successful it should be possible to import the package witho
 
 ## Basic usage
 
-### Regular lat/lon grids
+In what follows, variables prepended with `grid_` or `observed_` are specified as N-dimenional numpy arrays.
 
-Regular latitude/longitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
+### Regular longitude/latitude grids
+
+Regular spaced longitude/latitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
 grid is specified then only `grid_longitudes[:, 0]` and `grid_latitudes[0, :]` are used to define the search criteria.
 
 ```python
