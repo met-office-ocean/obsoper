@@ -32,11 +32,12 @@ If installation was successful it should be possible to import the package witho
 
 ### Regular lat/lon grids
 
-Regular latitude/longitude grids can be specified by 1 dimensional arrays.
+Regular latitude/longitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
+grid is specified then only grid_longitudes[:, 0] and grid_latitudes[0, :] are used to define the search criteria.
 
 ```python
->>> operator = obsoper.Operator(gridded_longitudes,
-...                             gridded_latitudes,
+>>> operator = obsoper.Operator(grid_longitudes,
+...                             grid_latitudes,
 ...                             observed_longitudes,
 ...                             observed_latitudes)
 ```
@@ -45,7 +46,7 @@ Once the default observation operator has seen the 1 dimensional grid definition
 the grid extent and how to select indices surrounding a point in space.
 
 ```python
->>> result = operator.interpolate(gridded_sst)
+>>> result = operator.interpolate(grid_sst)
 ```
 
 ### Tri-polar grids
@@ -74,7 +75,7 @@ Once the operator has been trained on a set of data, it is then possible to iter
 
 Interpolated model counterparts can then be written to a file or analysed further to generate plots.
 
-## Non-regular regional models
+### Regional models
 
 Regional models with non-trivial boundaries and rotated coordinate systems can be interpolated using the following keyword arguments.
 
@@ -86,7 +87,7 @@ Regional models with non-trivial boundaries and rotated coordinate systems can b
 ...                             layout="regional")
 ```
 
-# Cubic spline vertical interpolation
+### Interpolating profiles
 
 Vertical interpolation is triggered by specifying grid_depths and observed_depths keyword arguments. 
 
