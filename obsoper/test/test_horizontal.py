@@ -664,3 +664,27 @@ class TestUnitSquare(unittest.TestCase):
         result = fixture(data)
         expect = np.array([1, 2]).reshape(1, 2)
         np.testing.assert_array_equal(expect, result)
+
+
+class TestRegular(unittest.TestCase):
+    def setUp(self):
+        self.grid_longitudes = np.arange(3)
+        self.grid_latitudes = np.arange(3)
+        self.observed_longitudes = np.array([0.9, 1.9])
+        self.observed_latitudes = np.array([1.5, 0.1])
+        self.fixture = horizontal.Regular(self.grid_longitudes,
+                                          self.grid_latitudes,
+                                          self.observed_longitudes,
+                                          self.observed_latitudes)
+        self.field = np.array([[1, 2, 3],
+                               [4, 5, 6],
+                               [7, 8, 9]])
+        self.counterparts = np.array([5.2, 6.8])
+
+    def test_constructor_given_lists(self):
+        horizontal.Regular([], [], [], [])
+
+    def test_interpolate(self):
+        result = self.fixture.interpolate(self.field)
+        expect = self.counterparts
+        np.testing.assert_array_equal(expect, result)

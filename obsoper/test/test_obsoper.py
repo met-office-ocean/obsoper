@@ -24,13 +24,32 @@ class TestOperator(unittest.TestCase):
                          [3, 4]]
         self.counterparts = [2.5]
 
-    def test_interpolate(self):
+    def test_interpolate_given_tripolar_grid(self):
         fixture = obsoper.Operator(self.grid_lons,
                                    self.grid_lats,
                                    self.obs_lons,
                                    self.obs_lats,
-                                   self.grid_depths,
-                                   self.obs_depths)
+                                   layout="tripolar")
+        result = fixture.interpolate(self.analysis)
+        expect = self.counterparts
+        np.testing.assert_array_equal(expect, result)
+
+    def test_interpolate_given_regular_grid(self):
+        fixture = obsoper.Operator([100, 200],
+                                   [10, 20],
+                                   [120],
+                                   [12],
+                                   layout="regular")
+        result = fixture.interpolate(self.analysis)
+        expect = [1.6]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_interpolate_given_regional_grid(self):
+        fixture = obsoper.Operator(self.grid_lons,
+                                   self.grid_lats,
+                                   self.obs_lons,
+                                   self.obs_lats,
+                                   layout="regional")
         result = fixture.interpolate(self.analysis)
         expect = self.counterparts
         np.testing.assert_array_equal(expect, result)
@@ -111,13 +130,3 @@ class TestObservationOperator(unittest.TestCase):
         self.assertEqual(expect.shape, result.shape)
         np.testing.assert_array_almost_equal(expect.compressed(),
                                              result.compressed())
-
-    def test_inside_grid_given_coordinate_inside_returns_true(self):
-        result = self.fixture.inside_grid(self.inside_lons, self.inside_lats)
-        expect = np.array([True], dtype=np.bool)
-        np.testing.assert_array_equal(expect, result)
-
-    def test_inside_grid_given_coordinate_outside_returns_false(self):
-        result = self.fixture.inside_grid(self.outside_lons, self.outside_lats)
-        expect = np.array([False], dtype=np.bool)
-        np.testing.assert_array_equal(expect, result)

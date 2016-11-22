@@ -280,6 +280,65 @@ def is_west(longitudes):
     return ~is_east(longitudes)
 
 
+class Regular(object):
+    """Regular grid horizontal interpolator"""
+    def __init__(self,
+                 grid_longitudes,
+                 grid_latitudes,
+                 observed_longitudes,
+                 observed_latitudes):
+        self.observed_longitudes = np.asarray(observed_longitudes)
+        self.observed_latitudes = np.asarray(observed_latitudes)
+
+        grid_longitudes = np.asarray(grid_longitudes, dtype="d")
+        if grid_longitudes.ndim == 2:
+            grid_longitudes = grid_longitudes[:, 0]
+
+        grid_latitudes = np.asarray(grid_latitudes, dtype="d")
+        if grid_latitudes.ndim == 2:
+            grid_latitudes = grid_latitudes[0, :]
+
+        self.grid = grid.Regular2DGrid(grid_longitudes,
+                                       grid_latitudes)
+
+    def interpolate(self, field):
+        """interpolates model field to observed locations
+
+        :param field: 2D/3D model array
+        :param observed_longitudes: 1D array
+        :param observed_latitudes: 1D array
+        :returns: either 1D vector or 2D section of field in
+                  observation space
+        """
+        field = np.ma.asarray(field)
+
+        # Detect observations inside grid
+        mask = self.grid.inside(self.observed_longitudes,
+                                self.observed_latitudes)
+
+        # np.ma.where is used to prevent masked elements being used as indices
+        points = np.ma.where(mask)
+
+        # Interpolate to observations inside grid
+        search_result = self.grid.search(self.observed_longitudes[points],
+                                         self.observed_latitudes[points])
+        interpolator = UnitSquare(*search_result)
+        interpolated = interpolator(field)
+
+        # Assemble result
+        result = np.ma.masked_all(self.section_shape(self.observed_longitudes,
+                                                     field))
+        result[points] = interpolated
+        return result
+
+    @staticmethod
+    def section_shape(positions, field):
+        """defines shape of bilinear interpolated section/surface"""
+        if field.ndim == 2:
+            return (len(positions),)
+        return (len(positions), field.shape[2])
+
+
 class UnitSquare(object):
     """bilinear interpolator
 

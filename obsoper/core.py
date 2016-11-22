@@ -22,9 +22,8 @@ class Operator(object):
     :param observed_latitudes: 1D array
     :param grid_depths: 1D/3D array representing either Z-levels or S-levels
     :param observed_depths: 1D array
+    :param layout: ocean model horizontal layout
     :param has_halo: logical indicating tri-polar grid with halo
-    :param search: grid search algorithm
-    :param boundary: domain boundary description
     """
     def __init__(self,
                  grid_longitudes,
@@ -33,24 +32,26 @@ class Operator(object):
                  observed_latitudes,
                  grid_depths=None,
                  observed_depths=None,
-                 has_halo=False,
-                 search="cartesian",
-                 boundary="polygon"):
+                 layout="regular",
+                 has_halo=False):
         self.grid_depths = grid_depths
         self.observed_depths = observed_depths
-        if search == "tripolar":
+        if layout.lower() == "tripolar":
             self.horizontal = horizontal.Tripolar(grid_longitudes,
                                                   grid_latitudes,
                                                   observed_longitudes,
                                                   observed_latitudes,
                                                   has_halo=has_halo)
+        if layout.lower() == "regular":
+            self.horizontal = horizontal.Regular(grid_longitudes,
+                                                 grid_latitudes,
+                                                 observed_longitudes,
+                                                 observed_latitudes)
         else:
             self.horizontal = horizontal.Horizontal(grid_longitudes,
                                                     grid_latitudes,
                                                     observed_longitudes,
-                                                    observed_latitudes,
-                                                    search=search,
-                                                    boundary=boundary)
+                                                    observed_latitudes)
 
     def interpolate(self, field):
         """Interpolates model field to observed locations
@@ -77,7 +78,8 @@ class ObservationOperator(object):
     :param model_depths: 3D array
     """
     def __init__(self, model_longitudes, model_latitudes, model_depths=None):
-        self.grid = grid.Regular2DGrid(model_longitudes, model_latitudes)
+        self.model_longitudes = model_longitudes
+        self.model_latitudes = model_latitudes
         self.model_depths = model_depths
 
     def interpolate(self, model_field, observed_longitudes,
@@ -119,34 +121,10 @@ class ObservationOperator(object):
         :returns: either 1D vector or 2D section of model_field in
                   observation space
         """
-        # Detect observations inside grid
-        mask = self.inside_grid(observed_longitudes, observed_latitudes)
-
-        # np.ma.where is used to prevent masked elements being used as indices
-        points = np.ma.where(mask)
-
-        # Interpolate to observations inside grid
-        search_result = self.grid.search(observed_longitudes[points],
-                                         observed_latitudes[points])
-        interpolator = horizontal.UnitSquare(*search_result)
-        interpolated = interpolator(model_field)
-
-        # Assemble result
-        result = np.ma.masked_all(self.section_shape(observed_longitudes,
-                                                     model_field))
-        result[points] = interpolated
-        return result
-
-    @staticmethod
-    def section_shape(positions, field):
-        """defines shape of bilinear interpolated section/surface"""
-        if field.ndim == 2:
-            return (len(positions),)
-        return (len(positions), field.shape[2])
-
-    def inside_grid(self, observed_longitudes, observed_latitudes):
-        """detect values inside model grid"""
-        return self.grid.inside(observed_longitudes, observed_latitudes)
+        return horizontal.Regular(self.model_longitudes,
+                                  self.model_latitudes,
+                                  observed_longitudes,
+                                  observed_latitudes).interpolate(model_field)
 
     @staticmethod
     def vertical_interpolate(model_section, model_depths,
