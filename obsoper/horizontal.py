@@ -124,6 +124,37 @@ class Horizontal(object):
         return result
 
 
+class Regional(Horizontal):
+    """Regional ocean model interpolator
+
+    Computes horizontal interpolations for regional ocean models with
+    irregular boundaries and/or rotated grid coordinates.
+
+    Similar to :class:`obsoper.horizontal.Regular` in that the boundaries
+    are of finite extent but is more general. A point in polygon test is
+    used to determine if a point is inside the domain. And a KD tree search
+    is used to locate grid points surrounding an observation.
+
+    :param grid_longitudes: 2D array of longitudes shapes (x, y)
+    :param grid_latitudes: 2D array of latitudes shapes (x, y)
+    :param observed_longitudes: 1D array of longitudes
+    :param observed_latitudes: 1D array of latitudes
+    :param has_halo: flag indicating whether diagnostics have redundant halo
+                     columns and row.
+    """
+    def __init__(self,
+                 grid_longitudes,
+                 grid_latitudes,
+                 observed_longitudes,
+                 observed_latitudes):
+        super(Regional, self).__init__(grid_longitudes,
+                                       grid_latitudes,
+                                       observed_longitudes,
+                                       observed_latitudes,
+                                       search="cartesian",
+                                       boundary="polygon")
+
+
 class Tripolar(Horizontal):
     """Tri-polar interpolator
 

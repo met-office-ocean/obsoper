@@ -20,3 +20,7 @@ class TooFewKnots(Exception):
 
 class RequiredArgument(Exception):
     """Indicate required argument is missing from method call"""
+
+
+class UnknownLayout(Exception):
+    """Indicate ocean model layout isn't recognised or supported"""

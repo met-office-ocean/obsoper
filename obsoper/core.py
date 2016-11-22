@@ -1,8 +1,7 @@
 """observation operator"""
-import numpy as np
-from . import (grid,
-               horizontal,
-               vertical)
+from . import (horizontal,
+               vertical,
+               exceptions)
 from .vertical import Vertical2DInterpolator
 
 
@@ -12,9 +11,11 @@ class Operator(object):
     Performs a horizontal interpolation followed by a vertical
     interpolation if needed.
 
-    .. note:: search methods and boundary definitions may result in
-              non-convergent interpolation algorithms.
-              See :class:`obsoper.horizontal.Horizontal` for more detail.
+    Ocean model horizontal layout can be specified via the `layout` keyword
+    argument. By default it is set to 'regular', indicating regular lon/lat
+    grids. But it may be changed to 'tripolar' for orca family grids or
+    'regional' for models with complicated boundaries or longitude/latitude
+    specifications.
 
     :param grid_longitudes: 2D array
     :param grid_latitudes: 2D array
@@ -22,7 +23,8 @@ class Operator(object):
     :param observed_latitudes: 1D array
     :param grid_depths: 1D/3D array representing either Z-levels or S-levels
     :param observed_depths: 1D array
-    :param layout: ocean model horizontal layout
+    :param layout: ocean model horizontal layout, one of 'tripolar', 'regional'
+                   or 'regular'
     :param has_halo: logical indicating tri-polar grid with halo
     """
     def __init__(self,
@@ -42,16 +44,19 @@ class Operator(object):
                                                   observed_longitudes,
                                                   observed_latitudes,
                                                   has_halo=has_halo)
-        if layout.lower() == "regular":
+        elif layout.lower() == "regular":
             self.horizontal = horizontal.Regular(grid_longitudes,
                                                  grid_latitudes,
                                                  observed_longitudes,
                                                  observed_latitudes)
+        elif layout.lower() == "regional":
+            self.horizontal = horizontal.Regional(grid_longitudes,
+                                                  grid_latitudes,
+                                                  observed_longitudes,
+                                                  observed_latitudes)
         else:
-            self.horizontal = horizontal.Horizontal(grid_longitudes,
-                                                    grid_latitudes,
-                                                    observed_longitudes,
-                                                    observed_latitudes)
+            message = "unknown layout: {}".format(layout)
+            raise exceptions.UnknownLayout(message)
 
     def interpolate(self, field):
         """Interpolates model field to observed locations

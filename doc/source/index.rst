@@ -59,9 +59,8 @@ if the grid has a halo.
 ...                             argo_lats,
 ...                             grid_depths=grid_depths,
 ...                             observed_depths=argo_depths,
-...                             has_halo=True,
-...                             search="tripolar",
-...                             boundary="band")
+...                             layout="tripolar",
+...                             has_halo=True)
 >>> result = operator.interpolate(temperature_analysis)
 
 
