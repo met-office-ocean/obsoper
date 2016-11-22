@@ -89,7 +89,9 @@ Regional models with non-trivial boundaries and rotated coordinate systems can b
 
 ### Interpolating profiles
 
-Vertical interpolation is triggered by specifying grid_depths and observed_depths keyword arguments. 
+Vertical interpolation is triggered by specifying `grid_depths` and `observed_depths` keyword arguments. Using our
+regional model example above it is easy to extend the call to the `obsoper.Operator` constructor to allow
+model and profile depths.
 
 ```python
 >>> operator = obsoper.Operator(grid_longitudes.T,
