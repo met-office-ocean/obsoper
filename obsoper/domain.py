@@ -126,6 +126,7 @@ class Polygon(object):
                                                       latitudes[in_box])
         return result
 
+
 class Box(object):
     """Bounding box surrounding collection of vertices"""
     def __init__(self, xmin, xmax, ymin, ymax):
