@@ -8,23 +8,34 @@ from .vertical import Vertical2DInterpolator
 class Operator(object):
     """Observation operator maps model values to observation locations
 
-    Performs a horizontal interpolation followed by a vertical
-    interpolation if needed.
+    **Method**
 
-    Ocean model horizontal layout can be specified via the `layout` keyword
-    argument. By default it is set to 'regular', indicating regular lon/lat
-    grids. But it may be changed to 'tripolar' for orca family grids or
-    'regional' for models with complicated boundaries or longitude/latitude
-    specifications.
+    Performs a bilinear horizontal interpolation followed by a cubic
+    spline vertical interpolation if needed.
 
-    :param grid_longitudes: 2D array
-    :param grid_latitudes: 2D array
-    :param observed_longitudes: 1D array
-    :param observed_latitudes: 1D array
+    **Horizontal grid layout**
+
+    Ocean model horizontal layout can be specified via the ``layout`` keyword
+    argument. By default it is set to regular lon/lat. It may be changed to
+    ``'tripolar'`` for orca family grids or ``'regional'`` for models with
+    complicated boundaries or longitude/latitude specifications.
+
+    **Vertical interpolation**
+
+    If ``observed_depths`` are not provided the operator only performs a
+    horizontal interpolation. See :class:`obsoper.vertical.Section` for
+    further details.
+
+    :param grid_longitudes: 2D array shaped (X, Y)
+    :param grid_latitudes: 2D array shaped (X, Y)
+    :param observed_longitudes: 1D array shaped (N,)
+    :param observed_latitudes: 1D array shaped (N,)
     :param grid_depths: 1D/3D array representing either Z-levels or S-levels
-    :param observed_depths: 1D array
-    :param layout: ocean model horizontal layout, one of 'tripolar', 'regional'
-                   or 'regular'
+                        shaped ([X, Y,] Z)
+    :param observed_depths: 1D array if ``None`` then only horizontal
+                            interpolation is performed
+    :param layout: ocean model horizontal layout either ``'tripolar'``,
+                   ``'regional'`` or ``'regular'``
     :param has_halo: logical indicating tri-polar grid with halo
     """
     def __init__(self,
@@ -74,6 +85,9 @@ class Operator(object):
 
 class ObservationOperator(object):
     """Observation operator maps model values to observation locations
+
+    .. deprecated:: 0.0.5
+        Please use :class:`obsoper.Operator` instead
 
     Performs a horizontal interpolation followed by a vertical
     interpolation if needed.

@@ -4,13 +4,13 @@ Observation operator
 ====================
 
 A simple Python based framework for assessing models. The library distributes
-a :class:`ObservationOperator` class which
+a :class:`obsoper.Operator` class which
 performs the 2D/3D interpolation from model space to observation space.
 
-.. autoclass:: obsoper.ObservationOperator
+.. autoclass:: obsoper.Operator
    :members:
 
-.. autoclass:: obsoper.Operator
+.. autoclass:: obsoper.ObservationOperator
    :members:
 
 .. automodule:: obsoper.domain

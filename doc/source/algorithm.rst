@@ -2,8 +2,9 @@
 Algorithms
 ==========
 
-There are several steps to take when mapping forecasts to observed locations. Each
-step has it's own family of algorithms.
+Before taking a detailed look at the concrete classes and methods included
+in the package it is worthwhile to take a brief overview of the algorithms
+included in the package.
 
 Domain membership
 -----------------
@@ -39,13 +40,27 @@ surrounding a position of interest.
 * KD tree in longitude/latitude space
 * KD tree in Cartesian space
 
+**Tri-polar**
+
+For tri-polar grids a KD Tree algorithm is used to locate the "nearest" grid
+point in longitude/latitude space. Then to reduce the ammount of checking needed
+to locate the four grid points surrounding the observation an algorithm
+was designed to "walk" the grid in the direction of the observed point.
+
 Interpolation
 -------------
+
+**Horizontal**
 
 Bilinear interpolation is simple on a unit square but slightly more involved
 on more complicated geometries.
 
 * Unit square
 * Arbitrary quadrilateral
+
+**Vertical**
+
+The vertical interpolation method used throughout the package is cubic spline
+interpolation.
 
 
