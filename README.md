@@ -1,6 +1,6 @@
 # Python observation operator
 
-Maps ocean forecasts from model space to observation space
+Map ocean forecasts from model space to observation space quickly and efficiently.
 
 [![Build Status](https://travis-ci.org/met-office-ocean/obsoper.svg?branch=master)](https://travis-ci.org/met-office-ocean/obsoper)
 
@@ -60,8 +60,8 @@ Typical usage involves a fixed set of observations with multiple diagnostic fiel
 ```python
 >>> operator = obsoper.Operator(grid_longitudes.T,
 ...                             grid_latitudes.T,
-...                             obs_longitudes,
-...                             obs_latitudes,
+...                             observed_longitudes,
+...                             observed_latitudes,
 ...                             layout="tripolar",
 ...                             has_halo=True)
 ```
@@ -84,8 +84,8 @@ Regional models with non-trivial boundaries and rotated coordinate systems can b
 ```python
 >>> operator = obsoper.Operator(grid_longitudes.T,
 ...                             grid_latitudes.T,
-...                             obs_longitudes,
-...                             obs_latitudes,
+...                             observed_longitudes,
+...                             observed_latitudes,
 ...                             layout="regional")
 ```
 
