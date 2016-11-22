@@ -34,7 +34,7 @@ In what follows, variables prepended with `grid_` or `observed_` are specified a
 
 ### Regular longitude/latitude grids
 
-Regular spaced longitude/latitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
+Evenly spaced longitude/latitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
 grid is specified then only `grid_longitudes[:, 0]` and `grid_latitudes[0, :]` are used to define the search criteria.
 
 ```python
