@@ -99,7 +99,7 @@ model and profile depths.
 ...                             obs_longitudes,
 ...                             obs_latitudes,
 ...                             grid_depths=grid_depths.T,
-...                             obs_depths=obs_depths,
+...                             observed_depths=obs_depths,
 ...                             layout="regional")
 ```
 
