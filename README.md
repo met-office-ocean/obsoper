@@ -79,7 +79,7 @@ Interpolated model counterparts can then be written to a file or analysed furthe
 
 ### Regional models
 
-Regional models with non-trivial boundaries and rotated coordinate systems can be interpolated using the following keyword arguments.
+Regional models with non-trivial boundaries and rotated coordinate systems can be interpolated by specifying `layout="regional"`.
 
 ```python
 >>> operator = obsoper.Operator(grid_longitudes.T,
