@@ -2,8 +2,7 @@
 import numpy as np
 from . import (grid,
                horizontal,
-               vertical,
-               interpolate)
+               vertical)
 from .vertical import Vertical2DInterpolator
 
 
@@ -15,7 +14,7 @@ class Operator(object):
 
     .. note:: search methods and boundary definitions may result in
               non-convergent interpolation algorithms.
-              See :class:`obsoper.interpolate.Horizontal` for more detail.
+              See :class:`obsoper.horizontal.Horizontal` for more detail.
 
     :param grid_longitudes: 2D array
     :param grid_latitudes: 2D array
@@ -39,13 +38,13 @@ class Operator(object):
                  boundary="polygon"):
         self.grid_depths = grid_depths
         self.observed_depths = observed_depths
-        self.horizontal = interpolate.Horizontal(grid_longitudes,
-                                                 grid_latitudes,
-                                                 observed_longitudes,
-                                                 observed_latitudes,
-                                                 has_halo=has_halo,
-                                                 search=search,
-                                                 boundary=boundary)
+        self.horizontal = horizontal.Horizontal(grid_longitudes,
+                                                grid_latitudes,
+                                                observed_longitudes,
+                                                observed_latitudes,
+                                                has_halo=has_halo,
+                                                search=search,
+                                                boundary=boundary)
 
     def interpolate(self, field):
         """Interpolates model field to observed locations
