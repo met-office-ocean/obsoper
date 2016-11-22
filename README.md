@@ -33,7 +33,7 @@ If installation was successful it should be possible to import the package witho
 ### Regular lat/lon grids
 
 Regular latitude/longitude grids can be specified by 1 or 2 dimensional arrays. If the full 2 dimensional
-grid is specified then only grid_longitudes[:, 0] and grid_latitudes[0, :] are used to define the search criteria.
+grid is specified then only `grid_longitudes[:, 0]` and `grid_latitudes[0, :]` are used to define the search criteria.
 
 ```python
 >>> operator = obsoper.Operator(grid_longitudes,
@@ -42,8 +42,8 @@ grid is specified then only grid_longitudes[:, 0] and grid_latitudes[0, :] are u
 ...                             observed_latitudes)
 ```
 
-Once the default observation operator has seen the 1 dimensional grid definition it knows
-the grid extent and how to select indices surrounding a point in space.
+Once the default observation operator has seen the grid definition it knows
+the grid extent and how to select indices surrounding points in space.
 
 ```python
 >>> result = operator.interpolate(grid_sst)
@@ -64,7 +64,7 @@ Typical usage involves a fixed set of observations with multiple diagnostic fiel
 ...                             has_halo=True)
 ```
 
-**Note:** Grid longitude and latitude arrays must be shaped (x, y), where x represents longitude and y represent latitude directions. NEMO diagnostics are typically stored (t, z, y, x) appropriate transpose operations should be made prior to interpolation.
+**Note:** Grid longitude and latitude arrays must be shaped (x, y), where **x** represents longitude and **y** represent latitude directions. NEMO diagnostics are typically stored (t, z, y, x) appropriate transpose operations should be made prior to interpolation.
 
 Once the operator has been trained on a set of data, it is then possible to iteratively interpolate a collection of forecasts.
 
