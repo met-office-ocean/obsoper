@@ -9,6 +9,6 @@ before_install:
 install:
   - "pip install --only-binary=numpy,scipy numpy scipy"
   - "pip install -r requirements.txt"
-before_script: python2.7 setup.py develop
+before_script: python2.7 setup.py develop --use-cython
 # command to run tests
 script: python2.7 -m unittest discover -b
