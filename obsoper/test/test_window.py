@@ -69,3 +69,15 @@ class TestTimeWindow(unittest.TestCase):
         result = fixture.end
         expect = self.end
         self.assertEqual(expect, result)
+
+    def test_frominterval_given_start_returns_datetime(self):
+        fixture = TimeWindow.frominterval(self.start, self.end - self.start)
+        result = fixture.start
+        expect = self.start
+        self.assertEqual(expect, result)
+
+    def test_frominterval_given_end_returns_datetime(self):
+        fixture = TimeWindow.frominterval(self.start, self.end - self.start)
+        result = fixture.end
+        expect = self.end
+        self.assertEqual(expect, result)
