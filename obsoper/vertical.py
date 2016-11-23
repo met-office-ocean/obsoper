@@ -174,6 +174,8 @@ class Section(Vertical2DInterpolator):
         :returns: array shaped (N, M) where N is the number of profiles
                   and M is the number of observed levels
         """
+        if isinstance(observed_depths, list):
+            observed_depths = np.asarray(observed_depths)
         message = ("observed depths has incorrect first dimension: "
                    "{} != {}").format(observed_depths.shape[0],
                                       self.field.shape[0])

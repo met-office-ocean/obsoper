@@ -59,6 +59,28 @@ class TestOperator(unittest.TestCase):
         with self.assertRaises(exceptions.UnknownLayout):
             obsoper.Operator(None, None, None, None, layout="not a layout")
 
+    def test_vertical_interpolation_given_regular_layout(self):
+        grid_lons = np.array([0, 1])
+        grid_lats = np.array([0, 1])
+        grid_depths = np.array([[[0, 1],
+                                 [0, 1]],
+                                [[0, 1],
+                                 [0, 1]]])
+        field = np.array([[[11, 12],
+                           [13, 14]],
+                          [[21, 22],
+                           [23, 24]]])
+        obs_lons, obs_lats, obs_depths = [0.5], [0.5], [0.5]
+        fixture = obsoper.Operator(grid_lons,
+                                   grid_lats,
+                                   obs_lons,
+                                   obs_lats,
+                                   observed_depths=obs_depths,
+                                   grid_depths=grid_depths)
+        result = fixture.interpolate(field)
+        expect = [(12.5 + 22.5) / 2.]
+        np.testing.assert_array_almost_equal(expect, result)
+
 
 class TestObservationOperator(unittest.TestCase):
     def setUp(self):
