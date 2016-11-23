@@ -2,7 +2,8 @@
 import unittest
 import numpy as np
 import obsoper
-from obsoper import ObservationOperator
+from obsoper import (exceptions,
+                     ObservationOperator)
 
 
 class TestOperator(unittest.TestCase):
@@ -53,6 +54,10 @@ class TestOperator(unittest.TestCase):
         result = fixture.interpolate(self.analysis)
         expect = self.counterparts
         np.testing.assert_array_equal(expect, result)
+
+    def test_constructor_given_unknown_layout_raises_exception(self):
+        with self.assertRaises(exceptions.UnknownLayout):
+            obsoper.Operator(None, None, None, None, layout="not a layout")
 
 
 class TestObservationOperator(unittest.TestCase):
