@@ -243,7 +243,7 @@ def select_corners(values, i, j):
                values[(i+1) % ni, j],
                values[(i+1) % ni, j+1],
                values[i % ni, j+1]]
-    if np.isscalar(i):
+    if np.ndim(i) == 0:
         return array_constructor(vectors, dtype="d")
     else:
         return array_constructor([vector.T for vector in vectors], dtype="d")
