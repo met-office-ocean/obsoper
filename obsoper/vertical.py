@@ -64,6 +64,7 @@ class Vertical1DInterpolator(object):
     :param field: 1D array
     """
     def __init__(self, depths, field):
+        assert len(depths) > 0, 'must specify at least 1 level'
         depths, field = self.match(depths, field)
         self._interpolator = self.select_interpolator(depths, field)
         self.window = self.select_window(depths)
@@ -165,6 +166,7 @@ class Section(Vertical2DInterpolator):
         return "{}(values={},\ndepths={})".format(self.__class__.__name__,
                                                   repr(self.values),
                                                   repr(self.depths))
+
     @property
     def values(self):
         return self.field

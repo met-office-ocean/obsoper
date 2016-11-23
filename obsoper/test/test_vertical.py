@@ -30,6 +30,18 @@ class TestSection(unittest.TestCase):
             vertical.Section([], [[0, 0]])
 
 
+class TestColumn(unittest.TestCase):
+    def setUp(self):
+        self.values = [0, 100]
+        self.depths = [0, 1]
+        self.fixture = vertical.Column(self.values, self.depths)
+
+    def test_interpolate(self):
+        result = self.fixture.interpolate(0.9)
+        expect = 90.
+        np.testing.assert_array_equal(expect, result)
+
+
 class TestVertical1DInterpolator(unittest.TestCase):
     def setUp(self):
         # Depths
@@ -49,6 +61,10 @@ class TestVertical1DInterpolator(unittest.TestCase):
                                               self.linear_field)
         self.sample_depth = np.array([150])
         self.sample_value = np.array([15])
+
+    def test_constructor_raises_exception_if_zero_sized_array_given(self):
+        with self.assertRaises(AssertionError):
+            vertical.Vertical1DInterpolator([], [])
 
     def test_given_linear_function(self):
         result = self.fixture(self.sample_depth)
