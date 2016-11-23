@@ -1,0 +1,11 @@
+# Cython generated C code and shared objects
+*.c
+*.so
+
+# Build directories
+build
+dist
+
+# Coverage output
+.coverage
+cover
