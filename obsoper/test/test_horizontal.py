@@ -684,6 +684,18 @@ class TestRegular(unittest.TestCase):
     def test_constructor_given_lists(self):
         horizontal.Regular([], [], [], [])
 
+    def test_interpolate_given_2d_grid_lon_lat_arrays(self):
+        grid_longitudes = np.array([[10, 10], [20, 20]])
+        grid_latitudes = np.array([[30, 40], [30, 40]])
+        field = np.array([[0, 0], [1, 1]])
+        fixture = horizontal.Regular(grid_longitudes,
+                                     grid_latitudes,
+                                     [11],
+                                     [31])
+        result = fixture.interpolate(field)
+        expect = [0.1]
+        np.testing.assert_array_equal(expect, result)
+
     def test_interpolate(self):
         result = self.fixture.interpolate(self.field)
         expect = self.counterparts
