@@ -1,10 +1,6 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
-
-import pyximport
-pyximport.install()
-
 from obsoper import cell
 
 
