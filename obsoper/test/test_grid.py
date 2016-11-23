@@ -312,6 +312,14 @@ class TestRegular1DGrid(unittest.TestCase):
         result = self.fixture.outside(self.maximum)
         self.assertTrue(result)
 
+    def test_inside_given_point_outside_returns_false(self):
+        result = self.fixture.inside(self.minimum - 0.1)
+        self.assertEqual(result, False)
+
+    def test_inside_given_point_inside_returns_true(self):
+        result = self.fixture.inside(self.maximum - 0.1)
+        self.assertEqual(result, True)
+
     def test_search_given_empty_list_returns_empty_lists(self):
         self.check_search([], ([], []))
 
