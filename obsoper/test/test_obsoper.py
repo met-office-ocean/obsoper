@@ -59,26 +59,41 @@ class TestOperator(unittest.TestCase):
         with self.assertRaises(exceptions.UnknownLayout):
             obsoper.Operator(None, None, None, None, layout="not a layout")
 
-    def test_vertical_interpolation_given_regular_layout(self):
-        grid_lons = np.array([0, 1])
-        grid_lats = np.array([0, 1])
-        grid_depths = np.array([[[0, 1],
-                                 [0, 1]],
-                                [[0, 1],
-                                 [0, 1]]])
-        field = np.array([[[11, 12],
-                           [13, 14]],
-                          [[21, 22],
-                           [23, 24]]])
+
+class TestOperatorRegularGrid(unittest.TestCase):
+    def setUp(self):
+        self.grid_lons = np.array([0, 1])
+        self.grid_lats = np.array([0, 1])
+        self.s_levels = np.array([[[0, 1],
+                                   [0, 1]],
+                                  [[0, 1],
+                                   [0, 2]]])
+        self.z_levels = np.array([0, 1])
+        self.field = np.array([[[11, 12],
+                                [13, 14]],
+                               [[21, 22],
+                                [23, 24]]])
+        self.z_counterparts = 17.5
+        self.s_counterparts = 17.4
+
+    def make_operator(self, levels):
         obs_lons, obs_lats, obs_depths = [0.5], [0.5], [0.5]
-        fixture = obsoper.Operator(grid_lons,
-                                   grid_lats,
-                                   obs_lons,
-                                   obs_lats,
-                                   observed_depths=obs_depths,
-                                   grid_depths=grid_depths)
-        result = fixture.interpolate(field)
-        expect = [(12.5 + 22.5) / 2.]
+        return obsoper.Operator(self.grid_lons,
+                                self.grid_lats,
+                                obs_lons,
+                                obs_lats,
+                                observed_depths=obs_depths,
+                                grid_depths=levels)
+
+    def test_vertical_interpolation_given_regular_layout_and_s_levels(self):
+        self.check_interpolate(self.s_levels, self.s_counterparts)
+
+    def test_vertical_interpolation_given_regular_layout_and_z_levels(self):
+        self.check_interpolate(self.z_levels, self.z_counterparts)
+
+    def check_interpolate(self, levels, expect):
+        fixture = self.make_operator(levels)
+        result = fixture.interpolate(self.field)
         np.testing.assert_array_almost_equal(expect, result)
 
 

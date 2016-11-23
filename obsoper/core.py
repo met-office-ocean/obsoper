@@ -1,4 +1,5 @@
 """observation operator"""
+import numpy as np
 from . import (horizontal,
                vertical,
                exceptions)
@@ -78,8 +79,17 @@ class Operator(object):
         """
         if self.observed_depths is None:
             return self.horizontal.interpolate(field)
+
+        # Grid depths at profile locations
+        if np.ndim(self.grid_depths) == 3:
+            # S-levels
+            grid_depths = self.horizontal.interpolate(self.grid_depths)
+        else:
+            # Z-levels
+            grid_depths = self.grid_depths
+
         section = vertical.Section(self.horizontal.interpolate(field),
-                                   self.horizontal.interpolate(self.grid_depths))
+                                   grid_depths)
         return section.interpolate(self.observed_depths)
 
 
