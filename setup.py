@@ -1,16 +1,32 @@
 """map ocean model forecasts to observation space"""
 import os
-from Cython.Build import cythonize
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 import numpy
 
+
 NAME = "obsoper"
+USE_CYTHON = True
+
 
 # Capture __version__
 exec(open(os.path.join(NAME, "version.py")).read())
 
-extensions = [Extension("*", [os.path.join(NAME, "*.pyx")])]
+
+if USE_CYTHON:
+    from Cython.Build import cythonize
+    extensions = cythonize([Extension("*", [os.path.join(NAME, "*.pyx")])])
+else:
+    # Manually detect C code
+    extensions = []
+    for path in os.listdir(NAME):
+        stem, ext = os.path.splitext(path)
+        if ext == ".c":
+            module = ".".join([NAME, stem])
+            source = os.path.join(NAME, path)
+            extension = Extension(module, [source])
+            extensions.append(extension)
+
 
 setup(name=NAME,
       version=__version__,
@@ -25,5 +41,5 @@ setup(name=NAME,
               "data/*.nc"
           ]
       },
-      ext_modules=cythonize(extensions),
+      ext_modules=extensions,
       include_dirs=[numpy.get_include()])
