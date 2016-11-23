@@ -19,7 +19,6 @@ import warnings
 from collections import namedtuple
 from scipy.spatial import cKDTree
 import numpy as np
-from .exceptions import NotInGrid
 from . import (exceptions,
                cell,
                coordinates,
@@ -306,7 +305,7 @@ class Regular2DGrid(object):
         :rtype: :class:`SearchResult`
         """
         if self.outside(longitudes, latitudes).any():
-            raise NotInGrid
+            raise exceptions.NotInGrid
         ilon, dilon = self.longitudes.search(longitudes)
         ilat, dilat = self.latitudes.search(latitudes)
         return SearchResult(ilon, ilat, dilon, dilat)

@@ -2,12 +2,8 @@
 import unittest
 import numpy as np
 import mock
-from obsoper import grid
-from obsoper.grid import (Regular2DGrid,
-                          Regular1DGrid,
-                          SearchResult)
-from obsoper import exceptions
-from obsoper.exceptions import NotInGrid
+from obsoper import (exceptions,
+                     grid)
 
 
 class TestLowerLeft(unittest.TestCase):
@@ -108,7 +104,8 @@ class TestCartesianSearch(unittest.TestCase):
         self.dateline_cell = self.make_cartesian_search([100, -179], [50, 70])
         self.two_by_two = self.make_cartesian_search([0, 1, 2], [0, 1, 2])
 
-    def make_cartesian_search(self, lons, lats):
+    @staticmethod
+    def make_cartesian_search(lons, lats):
         grid_lons, grid_lats = np.meshgrid(lons, lats, indexing="ij")
         return grid.CartesianSearch(grid_lons, grid_lats)
 
@@ -122,8 +119,8 @@ class TestCartesianSearch(unittest.TestCase):
                               [1.9], [1.9],
                               ([1], [1]))
 
-    def check_lower_left(self,
-                         search,
+    @staticmethod
+    def check_lower_left(search,
                          lons,
                          lats,
                          expect):
@@ -163,7 +160,8 @@ class TestLonLatNeighbour(unittest.TestCase):
                   np.array([0, 1, 1]))
         self.assertIndexEqual(expect, result)
 
-    def assertIndexEqual(self, expect, result):
+    @staticmethod
+    def assertIndexEqual(expect, result):
         result_i, result_j = result
         expect_i, expect_j = expect
         np.testing.assert_array_equal(expect_i, result_i)
@@ -171,7 +169,8 @@ class TestLonLatNeighbour(unittest.TestCase):
 
 
 class TestNearestNeighbour(unittest.TestCase):
-    def test_deprecated(self):
+    @staticmethod
+    def test_deprecated():
         with mock.patch("obsoper.grid.warnings") as mock_warnings:
             grid.NearestNeighbour(np.ones((2, 2)),
                                   np.ones((2, 2)))
@@ -235,7 +234,7 @@ class TestRegular2DGrid(unittest.TestCase):
     def setUp(self):
         self.longitudes = [0, 1]
         self.latitudes = [2, 3]
-        self.fixture = Regular2DGrid(self.longitudes, self.latitudes)
+        self.fixture = grid.Regular2DGrid(self.longitudes, self.latitudes)
 
         # Point outside grid
         self.outside_longitude = np.array([180.])
@@ -243,11 +242,11 @@ class TestRegular2DGrid(unittest.TestCase):
 
     def test_search_given_single_longitude_and_latitude(self):
         result = self.fixture.search(np.array([0.8]), np.array([2.2]))
-        expect = SearchResult([0], [0], [0.8], [0.2])
+        expect = grid.SearchResult([0], [0], [0.8], [0.2])
         self.assertSearchResultEqual(expect, result)
 
     def test_search_given_point_outside_domain_raises_exception(self):
-        with self.assertRaises(NotInGrid):
+        with self.assertRaises(exceptions.NotInGrid):
             self.fixture.search(self.outside_longitude, self.outside_latitude)
 
     def test_outside_given_point_outside_grid_returns_true(self):
@@ -275,7 +274,7 @@ class TestRegular1DGrid(unittest.TestCase):
         self.values = [0., 0.11111]
         self.minimum = 0.
         self.maximum = 0.11110
-        self.fixture = Regular1DGrid(self.values)
+        self.fixture = grid.Regular1DGrid(self.values)
 
     def test_cells_given_two_vertices_returns_one(self):
         result = self.fixture.cells
@@ -342,26 +341,26 @@ class TestRegular1DGrid(unittest.TestCase):
 
     @staticmethod
     def test_cell_space_scales_point_by_grid_spacing():
-        fixture = Regular1DGrid([0., 0.1])
+        fixture = grid.Regular1DGrid([0., 0.1])
         result = fixture.cell_space(np.array([0.05]))
         expect = [0.5]
         np.testing.assert_array_equal(expect, result)
 
     @staticmethod
     def test_cell_space_shifts_point_by_minimum():
-        fixture = Regular1DGrid([1., 2.])
+        fixture = grid.Regular1DGrid([1., 2.])
         result = fixture.cell_space(np.array([1.5]))
         expect = [0.5]
         np.testing.assert_array_equal(expect, result)
 
     def test_fromcenters_minimum(self):
-        fixture = Regular1DGrid.fromcenters([1., 2.])
+        fixture = grid.Regular1DGrid.fromcenters([1., 2.])
         result = fixture.minimum
         expect = 0.5
         self.assertEqual(expect, result)
 
     def test_fromcenters_grid_spacing(self):
-        fixture = Regular1DGrid.fromcenters([1., 2.])
+        fixture = grid.Regular1DGrid.fromcenters([1., 2.])
         result = fixture.grid_spacing
         expect = 1.
         self.assertEqual(expect, result)
