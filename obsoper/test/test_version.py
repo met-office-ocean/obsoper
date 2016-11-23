@@ -5,4 +5,4 @@ import obsoper
 
 class TestVersion(unittest.TestCase):
     def test_version(self):
-        self.assertEqual(obsoper.__version__, "0.0.6")
+        self.assertEqual(obsoper.__version__, "0.0.7")
