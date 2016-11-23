@@ -1,8 +1,33 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
+from obsoper import vertical
 from obsoper.vertical import (Vertical2DInterpolator,
                               Vertical1DInterpolator)
+
+
+class TestSection(unittest.TestCase):
+    def test_repr(self):
+        fixture = vertical.Section([], [])
+        result = repr(fixture)
+        expect = "Section(values=[],\ndepths=[])"
+        self.assertEqual(expect, result)
+
+    def test_construct_with_lists_returns_depths(self):
+        fixture = vertical.Section([], [])
+        result = fixture.depths
+        expect = []
+        np.testing.assert_array_equal(expect, result)
+
+    def test_construct_with_lists_returns_values(self):
+        fixture = vertical.Section([], [])
+        result = fixture.values
+        expect = []
+        np.testing.assert_array_equal(expect, result)
+
+    def test_construct_given_incompatible_depths_raises_assertion_error(self):
+        with self.assertRaises(AssertionError):
+            vertical.Section([], [[0, 0]])
 
 
 class TestVertical1DInterpolator(unittest.TestCase):

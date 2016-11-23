@@ -156,15 +156,18 @@ class Section(Vertical2DInterpolator):
                    and Z represents the model levels
     """
     def __init__(self, values, depths):
-        assert values.shape[-1] == depths.shape[-1], \
+        assert np.shape(values)[-1] == np.shape(depths)[-1], \
             "values and depths must have same levels"
         # Note: changed interface from (depths, values) to (values, depths)
         super(Section, self).__init__(depths, values)
 
     def __repr__(self):
         return "{}(values={},\ndepths={})".format(self.__class__.__name__,
-                                                  repr(self.field),
+                                                  repr(self.values),
                                                   repr(self.depths))
+    @property
+    def values(self):
+        return self.field
 
     def interpolate(self, observed_depths):
         """Apply vertical interpolation to estimate model values at observed
