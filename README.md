@@ -6,20 +6,21 @@ Map ocean forecasts from model space to observation space quickly and efficientl
 
 ## Installation
 
-Python package distributed with setuptools. Requires Cython to build
-extension modules.
+### PYPI
 
-Can be installed directly from setup.py
+The [obsoper](https://pypi.python.org/pypi/obsoper) package is available on [PYPI](https://pypi.python.org). To install
+simply call pip install. It is recommended to use the `--user` flag to prevent contamination of the system Python build.
+
+```bash
+> pip install obsoper --user
+```
+
+## Clone repository
+
+Alternatively, it is possible to build from source by cloning this repository. The package itself uses setuptools to install.
 
 ```bash
 :> python setup.py install --user
-```
-
-Or with pip
-
-```bash
-:> python setup.py bdist_wheel
-:> pip install dist/obsoper-${VERSION}-cp27-none-linux_x86_64.whl
 ```
 
 If installation was successful it should be possible to import the package without error.
