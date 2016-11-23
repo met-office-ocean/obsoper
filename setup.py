@@ -1,12 +1,19 @@
 """map ocean model forecasts to observation space"""
 import os
+import sys
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 import numpy
 
 
 NAME = "obsoper"
-USE_CYTHON = True
+
+
+# Check if user wants to use Cython to generate C code
+USE_CYTHON = False
+if "--use-cython" in sys.argv:
+    USE_CYTHON = True
+    sys.argv.remove("--use-cython")
 
 
 # Capture __version__
