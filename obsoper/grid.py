@@ -20,7 +20,8 @@ from collections import namedtuple
 from scipy.spatial import cKDTree
 import numpy as np
 from .exceptions import NotInGrid
-from . import (cell,
+from . import (exceptions,
+               cell,
                coordinates,
                walk)
 
@@ -160,14 +161,26 @@ class CartesianSearch(object):
         return np.array(i_result), np.array(j_result)
 
     def detect(self, longitude, latitude, i_indices, j_indices):
-        """Detect a single point given several candidates"""
+        """Detect lower left corner near a point given several candidates"""
         for i, j in zip(i_indices, j_indices):
+            # Note: this check might be unnescessary for cyclic grids
             if (i == (self.ni - 1)) or (j == (self.nj - 1)):
                 # point on boundary
                 continue
-            grid_cell = cell.Cell.from_positions(self._positions, i, j)
-            if grid_cell.contains(longitude, latitude):
+            if self.detect_one(longitude, latitude, i, j):
                 return i, j
+
+        # Report search failure to user
+        message = "could not find ({}, {}) given i={}, j={}".format(longitude,
+                                                                    latitude,
+                                                                    i_indices,
+                                                                    j_indices)
+        raise exceptions.SearchFailed(message)
+
+    def detect_one(self, longitude, latitude, i, j):
+        """Check that a particular point is contained in a cell"""
+        grid_cell = cell.Cell.from_positions(self._positions, i, j)
+        return grid_cell.contains(longitude, latitude)
 
 
 class LonLatNeighbour(object):

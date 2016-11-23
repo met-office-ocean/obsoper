@@ -6,6 +6,10 @@ Collection of custom exceptions used throughout the package.
 """
 
 
+class SearchFailed(Exception):
+    """Indicate grid search failure"""
+
+
 class StepNotFound(Exception):
     """Indicate great circle arc overlapping failure"""
 

@@ -6,6 +6,7 @@ from obsoper import grid
 from obsoper.grid import (Regular2DGrid,
                           Regular1DGrid,
                           SearchResult)
+from obsoper import exceptions
 from obsoper.exceptions import NotInGrid
 
 
@@ -139,6 +140,12 @@ class TestCartesianSearch(unittest.TestCase):
         fixture = grid.CartesianSearch(np.zeros(shape), np.zeros(shape))
         result = fixture.k
         self.assertEqual(expect, result)
+
+    def test_lower_left_raises_exception_if_search_fails(self):
+        """should report algorithm failure to user"""
+        with self.assertRaises(exceptions.SearchFailed):
+            grid.CartesianSearch(np.zeros((2, 2)),
+                                 np.zeros((2, 2))).lower_left([1], [1])
 
 
 class TestLonLatNeighbour(unittest.TestCase):
