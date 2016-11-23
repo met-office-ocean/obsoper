@@ -1,4 +1,4 @@
-"""obsoper - observation operator"""
+"""map ocean model forecasts to observation space"""
 import os
 from Cython.Build import cythonize
 from setuptools import setup, find_packages
@@ -14,9 +14,11 @@ extensions = [Extension("*", [os.path.join(NAME, "*.pyx")])]
 
 setup(name=NAME,
       version=__version__,
-      description=__doc__,
+      description="observation operator",
+      long_description=__doc__,
       author="Andrew Ryan",
       author_email="andrew.ryan@metoffice.gov.uk",
+      url="https://github.com/met-office-ocean/obsoper",
       packages=find_packages(),
       package_data={
           "obsoper.test": [
