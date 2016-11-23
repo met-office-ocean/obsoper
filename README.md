@@ -105,6 +105,10 @@ model and profile depths.
 ...                             layout="regional")
 ```
 
+#### Vertical coordinates
+
+Both Z-level and S-level models are handled seamlessly behind the scenes. The operator knows if a grid has the same vertical levels at each grid point or horizontally varying levels based on the dimensionality of `grid_depths` keyword.
+
 ## Full documentation
 
 More comprehensive documentation can be found at [obsoper.readthedocs.io](http://obsoper.readthedocs.io).
