@@ -33,7 +33,7 @@ class Operator(object):
     :param observed_latitudes: 1D array shaped (N,)
     :param grid_depths: 1D/3D array representing either Z-levels or S-levels
                         shaped ([X, Y,] Z)
-    :param observed_depths: 1D array if ``None`` then only horizontal
+    :param observed_depths: array shaped (N, L) if ``None`` then only horizontal
                             interpolation is performed
     :param layout: ocean model horizontal layout either ``'tripolar'``,
                    ``'regional'`` or ``'regular'``
