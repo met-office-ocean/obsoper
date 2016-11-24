@@ -18,6 +18,8 @@ simply call `pip install --user`. It is recommended to use the `--user` flag to 
 Alternatively, it is possible to build from source by cloning this repository. The package itself uses setuptools to install and
 can be installed using `python setup.py install --user`.
 
+**Note:** The `--use-cython` flag may need to be added to generate `*.c` files if only `*.pyx` files are present in the source code. 
+
 If installation was successful it should be possible to import the package without error.
 
 ```python
