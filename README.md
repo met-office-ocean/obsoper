@@ -6,12 +6,16 @@ Map ocean forecasts from model space to observation space quickly and efficientl
 
 ## Installation
 
-There are two ways to install the package, via the Python Package Index (PYPI) and manually from a repository clone.
+There are multiple ways to install the package. Two common choices are install from the Python Package Index (PYPI) and manually from a repository clone.
 
 ### PYPI
 
 The [obsoper](https://pypi.python.org/pypi/obsoper) package is available on [PYPI](https://pypi.python.org). To install
-simply call `pip install --user`. It is recommended to use the `--user` flag to prevent contamination of the system Python build.
+simply call `pip install --user obsoper`. It is recommended to use the `--user` flag to prevent contamination of the system Python build.
+
+#### Virtualenv
+
+Inside a virtual environment the `--user` flag may be omitted.
 
 ### Clone repository
 
