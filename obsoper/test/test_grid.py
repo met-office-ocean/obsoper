@@ -343,22 +343,21 @@ class TestRegular1DGrid(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect[1], result[1])
 
     def test_cell_space_given_empty_list_returns_empty_list(self):
-        result = self.fixture.cell_space(np.array([]))
-        expect = []
-        np.testing.assert_array_equal(expect, result)
+        self.check_cell_space([0., 0.11111], [], [])
+
+    def test_cell_space_scales_point_by_grid_spacing(self):
+        self.check_cell_space([0., 0.1], [0.05], [0.5])
+
+    def test_cell_space_shifts_point_by_minimum(self):
+        self.check_cell_space([1., 2.], [1.5], [0.5])
+
+    def test_cell_space_given_descending_grid(self):
+        self.check_cell_space([1., 0.], [0.1], [0.9])
 
     @staticmethod
-    def test_cell_space_scales_point_by_grid_spacing():
-        fixture = grid.Regular1DGrid([0., 0.1])
-        result = fixture.cell_space(np.array([0.05]))
-        expect = [0.5]
-        np.testing.assert_array_equal(expect, result)
-
-    @staticmethod
-    def test_cell_space_shifts_point_by_minimum():
-        fixture = grid.Regular1DGrid([1., 2.])
-        result = fixture.cell_space(np.array([1.5]))
-        expect = [0.5]
+    def check_cell_space(vertices, points, expect):
+        fixture = grid.Regular1DGrid(vertices)
+        result = fixture.cell_space(np.array(points))
         np.testing.assert_array_equal(expect, result)
 
     def test_fromcenters_minimum(self):
@@ -371,4 +370,26 @@ class TestRegular1DGrid(unittest.TestCase):
         fixture = grid.Regular1DGrid.fromcenters([1., 2.])
         result = fixture.grid_spacing
         expect = 1.
+        self.assertEqual(expect, result)
+
+    def test_inside_given_point_inside_descending_grid_returns_true(self):
+        self.check_inside([1., 0.], [0.5], [True])
+
+    def test_inside_given_point_left_of_descending_grid_returns_false(self):
+        self.check_inside([1., 0.], [1.1], [False])
+
+    def test_inside_given_point_right_of_descending_grid_returns_false(self):
+        self.check_inside([1., 0.], [-0.1], [False])
+
+    def check_inside(self, vertices, points, expect):
+        fixture = grid.Regular1DGrid(vertices)
+        result = fixture.inside(points)
+        np.testing.assert_array_equal(expect, result)
+
+    def test_spacing_given_descending_coordinate(self):
+        self.check_grid_spacing([1., 0.], -1)
+
+    def check_grid_spacing(self, vertices, expect):
+        fixture = grid.Regular1DGrid(vertices)
+        result = fixture.grid_spacing
         self.assertEqual(expect, result)
