@@ -373,7 +373,7 @@ class Regular1DGrid(object):
         :param points: Array of positions along dimension
         :returns: Array of positions in grid cell space
         """
-        return (points - self.minimum) / self.grid_spacing
+        return (points - self.initial) / self.grid_spacing
 
     def outside(self, points):
         """Detects points outside the grid.
@@ -413,6 +413,15 @@ class Regular1DGrid(object):
         :returns: Minimum allowed grid position
         :rtype: float
         """
+        return np.ma.min(self.vertices)
+
+    @property
+    def initial(self):
+        """Calculates initial position.
+
+        :returns: First grid position
+        :rtype: float
+        """
         return self.vertices[0]
 
     @property
@@ -422,7 +431,7 @@ class Regular1DGrid(object):
         :returns: Maximum allowed grid position
         :rtype: float
         """
-        return self.minimum + self.cells * self.grid_spacing
+        return self.minimum + self.cells * np.ma.abs(self.grid_spacing)
 
     @property
     def cells(self):
