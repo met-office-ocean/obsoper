@@ -6,6 +6,11 @@ def search():
     """Search function"""
 
 
+def longest_side(points):
+    """Longest side of a polygon"""
+    return np.argmax(side_lengths(points))
+
+
 def side_lengths(points):
     """Polygon side lengths"""
     n_sides = len(points)

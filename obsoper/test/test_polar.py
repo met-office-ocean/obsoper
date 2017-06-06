@@ -8,6 +8,12 @@ class TestPolarSearch(unittest.TestCase):
     def test_polar_search(self):
         polar.search()
 
+    def test_longest_side_given_right_angle_triangle(self):
+        points = np.array([[0, 0], [1, 0], [1, 1]])
+        result = polar.longest_side(points)
+        expect = 2
+        self.assertEqual(expect, result)
+
     def test_side_lengths_given_unit_segment(self):
         points = np.array([[0, 0], [1, 0]])
         result = polar.side_lengths(points)
