@@ -1,6 +1,6 @@
 """Tripolar grid search/interpolation"""
 import numpy as np
-from obsoper import (domain, grid, bilinear, orca)
+from obsoper import (grid, bilinear, orca)
 from obsoper.corners import (
     select_corners,
     select_field,
@@ -42,11 +42,10 @@ class Tripolar(object):
         self.n_observations = len(observed_longitudes)
 
         # Detect observations inside domain
-        self.included = domain.inside(grid_longitudes,
-                                      grid_latitudes,
-                                      observed_longitudes,
-                                      observed_latitudes,
-                                      kind="band")
+        southern_edge = np.ma.min(grid_latitudes)
+        northern_edge = np.ma.max(grid_latitudes)
+        self.included = ((observed_latitudes >= southern_edge) &
+                         (observed_latitudes <= northern_edge))
 
         if self.included.any():
             included_longitudes = observed_longitudes[self.included]
