@@ -33,22 +33,7 @@ class Tripolar(object):
         if self.has_halo:
             grid_longitudes = orca.remove_halo(grid_longitudes)
             grid_latitudes = orca.remove_halo(grid_latitudes)
-        self._init(
-            grid_longitudes,
-            grid_latitudes,
-            observed_longitudes,
-            observed_latitudes,
-            search="tripolar",
-            boundary="band")
 
-    def _init(
-            self,
-            grid_longitudes,
-            grid_latitudes,
-            observed_longitudes,
-            observed_latitudes,
-            search="cartesian",
-            boundary="polygon"):
         # Cast positions as doubles
         observed_longitudes = np.asarray(observed_longitudes, dtype="d")
         observed_latitudes = np.asarray(observed_latitudes, dtype="d")
@@ -61,7 +46,7 @@ class Tripolar(object):
                                       grid_latitudes,
                                       observed_longitudes,
                                       observed_latitudes,
-                                      kind=boundary)
+                                      kind="band")
 
         if self.included.any():
             included_longitudes = observed_longitudes[self.included]
@@ -72,7 +57,7 @@ class Tripolar(object):
                                              grid_latitudes,
                                              included_longitudes,
                                              included_latitudes,
-                                             search=search)
+                                             search="tripolar")
 
             # Correct grid cell corner positions to account for dateline
             _grid = np.dstack((grid_longitudes,
@@ -101,16 +86,6 @@ class Tripolar(object):
         field = np.ma.asarray(field)
         if self.has_halo:
             field = orca.remove_halo(field)
-        return self._interpolate(field)
-
-    def _interpolate(self, field):
-        """Perform vectorised interpolation to observed positions
-
-        :param field: array shaped (I, J, [K]) same shape as model domain
-        :returns: array shaped (N, [K]) of interpolated field values
-                  where N represents the number of observed positions
-        """
-        field = np.ma.asarray(field)
 
         # Interpolate field to observed positions
         if field.ndim == 3:
