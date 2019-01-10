@@ -100,7 +100,7 @@ class TestORCA12(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result)
 
 
-if os.path.exists(ORCA12_FILE):
+if not HAS_NETCDF4 or os.path.exists(ORCA12_FILE):
     TestORCA12 = unittest.skip(TestORCA12)
 
 
