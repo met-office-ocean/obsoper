@@ -14,6 +14,8 @@ import obsoper
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 ORCA12_FILE = os.path.join(SCRIPT_DIR, "data/ostdemo_orca12.nc")
+ORCA025_FILE = os.path.join(SCRIPT_DIR, "data/orca025_grid.nc")
+ORCA025_CICE_FILE = os.path.join(SCRIPT_DIR, "data/orca025_cice.nc")
 
 
 def locate_file(name):
@@ -48,6 +50,74 @@ if HAS_NETCDF4:
             result = fixture.interpolate(self.constant_field)
             expect = np.array([self.constant])
             np.testing.assert_array_equal(expect, result)
+
+
+class TestORCA025(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with netCDF4.Dataset(ORCA025_FILE) as dataset:
+            cls.grid_longitudes = dataset.variables["nav_lon"][:]
+            cls.grid_latitudes = dataset.variables["nav_lat"][:]
+
+    def setUp(self):
+        shape = self.grid_longitudes.T.shape
+        self.constant = 30.
+        self.constant_field = np.full(shape, self.constant)
+
+    def test_tripolar_interpolation_given_constant_surface_field(self):
+        lons, lats = [100], [10]
+        fixture = obsoper.Tripolar(self.grid_longitudes.T,
+                                   self.grid_latitudes.T,
+                                   lons,
+                                   lats)
+        result = fixture.interpolate(self.constant_field)
+        expect = np.array([self.constant])
+        np.testing.assert_array_equal(expect, result)
+
+    def test_radial_algorithm_exhaustion(self):
+        lons, lats = [-9.9305896759], [-44.4005584717]
+        fixture = obsoper.Tripolar(self.grid_longitudes.T,
+                                   self.grid_latitudes.T,
+                                   lons,
+                                   lats)
+        result = fixture.interpolate(self.constant_field)
+        expect = np.array([self.constant])
+        np.testing.assert_array_equal(expect, result)
+
+
+@unittest.skip("implementing simpler algorithm")
+class TestORCA025CICE(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with netCDF4.Dataset(ORCA025_CICE_FILE) as dataset:
+            cls.grid_longitudes = dataset.variables["TLON"][:]
+            cls.grid_latitudes = dataset.variables["TLAT"][:]
+
+    def setUp(self):
+        shape = self.grid_longitudes.T.shape
+        self.constant = 30.
+        self.constant_field = np.full(shape, self.constant)
+
+    def test_tripolar_interpolation_given_constant_surface_field(self):
+        lons, lats = [100], [10]
+        fixture = obsoper.Tripolar(self.grid_longitudes.T,
+                                   self.grid_latitudes.T,
+                                   lons,
+                                   lats)
+        result = fixture.interpolate(self.constant_field)
+        expect = np.array([self.constant])
+        np.testing.assert_array_equal(expect, result)
+
+    def test_radial_algorithm_exhaustion(self):
+        lons, lats = [-9.9305896759], [-44.4005584717]
+        fixture = obsoper.Tripolar(self.grid_longitudes.T,
+                                   self.grid_latitudes.T,
+                                   lons,
+                                   lats)
+        result = fixture.interpolate(self.constant_field)
+        expect = np.array([self.constant])
+        np.testing.assert_array_equal(expect, result)
+
 
 
 class TestORCA12(unittest.TestCase):

@@ -1,4 +1,5 @@
 """Tripolar grid search/interpolation"""
+import scipy.spatial
 import numpy as np
 from obsoper import (grid, bilinear, orca)
 from obsoper.corners import (
@@ -7,6 +8,42 @@ from obsoper.corners import (
     correct_corners,
     mask_corners)
 
+
+class ORCAExtended(object):
+    """General purpose extended grid interpolator"""
+    def __init__(
+            self,
+            grid_lons,
+            grid_lats,
+            grid_mask,
+            obs_lons,
+            obs_lats):
+        mask = grid_mask
+        nx, ny = grid_lons.shape
+        glons = np.ma.masked_array(grid_lons, mask).compressed()
+        glats = np.ma.masked_array(grid_lats, mask).compressed()
+        gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
+        self.gi = np.ma.masked_array(gi, mask).compressed()
+        self.gj = np.ma.masked_array(gj, mask).compressed()
+        x, y, z = self.cartesian(glons, glats)
+        xc, yc, zc = self.cartesian(obs_lons, obs_lats)
+        self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T)
+        eps, self.i = self.tree.query([xc, yc, zc], k=12)
+
+    def __call__(self, *args):
+        return self.interpolate(*args)
+
+    def interpolate(self, field):
+        for i, j in zip(self.gi[self.i], self.gj[self.i]):
+            print(i, j)
+
+    @staticmethod
+    def cartesian(lon, lat):
+        lon, lat = np.deg2rad(lon), np.deg2rad(lat)
+        z = np.cos(lat)
+        y = np.sin(lat) * np.sin(lon)
+        x = np.sin(lat) * np.cos(lon)
+        return x, y, z
 
 
 class Tripolar(object):
@@ -107,11 +144,3 @@ class Tripolar(object):
             result[self.included] = bilinear.interpolate(corner_values,
                                                          self.weights).T
         return result
-
-
-def stereographic(lons, lats):
-    """Simple projection with Earth Radius equals one"""
-    radius = np.tan(np.deg2rad(90. - lats))
-    x = radius * np.cos(np.deg2rad(lons))
-    y = radius * np.sin(np.deg2rad(lons))
-    return x, y
