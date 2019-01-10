@@ -1,6 +1,7 @@
 """observation operator"""
 import numpy as np
-from . import (horizontal,
+from . import (tripolar,
+               horizontal,
                vertical,
                exceptions)
 from .vertical import Vertical2DInterpolator
@@ -51,11 +52,12 @@ class Operator(object):
         self.grid_depths = grid_depths
         self.observed_depths = observed_depths
         if layout.lower() == "tripolar":
-            self.horizontal = horizontal.Tripolar(grid_longitudes,
-                                                  grid_latitudes,
-                                                  observed_longitudes,
-                                                  observed_latitudes,
-                                                  has_halo=has_halo)
+            self.horizontal = tripolar.Tripolar(
+                grid_longitudes,
+                grid_latitudes,
+                observed_longitudes,
+                observed_latitudes,
+                has_halo=has_halo)
         elif layout.lower() == "regular":
             self.horizontal = horizontal.Regular(grid_longitudes,
                                                  grid_latitudes,

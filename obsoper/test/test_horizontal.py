@@ -2,7 +2,7 @@
 import unittest
 import numpy as np
 from obsoper.horizontal import UnitSquare
-from obsoper import horizontal
+from obsoper import (horizontal, tripolar, corners)
 
 
 class TestHorizontal(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestTripolar(unittest.TestCase):
     def test_interpolate_given_two_points(self):
         observed_longitudes = np.array([11, 19])
         observed_latitudes = np.array([31, 39])
-        interpolator = horizontal.Tripolar(self.grid_lons,
+        interpolator = tripolar.Tripolar(self.grid_lons,
                                            self.grid_lats,
                                            observed_longitudes,
                                            observed_latitudes)
@@ -55,7 +55,7 @@ class TestTripolar(unittest.TestCase):
 
         observed_lons = np.array([179.2])
         observed_lats = np.array([10.2])
-        interpolator = horizontal.Tripolar(grid_lons,
+        interpolator = tripolar.Tripolar(grid_lons,
                                            grid_lats,
                                            observed_lons,
                                            observed_lats)
@@ -86,7 +86,7 @@ class TestTripolar(unittest.TestCase):
         field = np.zeros((6, 3))
         field[[0, -1], :] = 1
 
-        fixture = horizontal.Tripolar(grid_lons,
+        fixture = tripolar.Tripolar(grid_lons,
                                       grid_lats,
                                       lons,
                                       lats)
@@ -102,7 +102,7 @@ class TestTripolar(unittest.TestCase):
 
         observed_lons = np.array([0.5])
         observed_lats = np.array([0.5])
-        interpolator = horizontal.Tripolar(grid_lons,
+        interpolator = tripolar.Tripolar(grid_lons,
                                            grid_lats,
                                            observed_lons,
                                            observed_lats)
@@ -120,7 +120,7 @@ class TestTripolar(unittest.TestCase):
                                            [0, 1],
                                            indexing="ij")
         observed_lons, observed_lats = [0.5], [0.5]
-        fixture = horizontal.Tripolar(grid_lons,
+        fixture = tripolar.Tripolar(grid_lons,
                                       grid_lats,
                                       observed_lons,
                                       observed_lats)
@@ -135,7 +135,7 @@ class TestTripolar(unittest.TestCase):
         field = np.array([[1, 2, 3],
                           [4, 5, 6],
                           [7, 8, 9]])
-        fixture = horizontal.Tripolar(grid_lons,
+        fixture = tripolar.Tripolar(grid_lons,
                                       grid_lats,
                                       lons,
                                       lats)
@@ -152,7 +152,7 @@ class TestTripolar(unittest.TestCase):
     def test_interpolate_given_unmasked_masked_array(self):
         grid_lons, grid_lats = np.meshgrid([0, 1], [0, 1], indexing="ij")
         obs_lons, obs_lats = np.array([0.1]), np.array([0.1])
-        operator = horizontal.Tripolar(grid_lons,
+        operator = tripolar.Tripolar(grid_lons,
                                        grid_lats,
                                        obs_lons,
                                        obs_lats)
@@ -174,7 +174,7 @@ class TestTripolar(unittest.TestCase):
         grid_lons, grid_lats = np.meshgrid([0, 1, 2, 0, 1],
                                            [0, 1, 2], indexing="ij")
         obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
-        operator = horizontal.Tripolar(grid_lons,
+        operator = tripolar.Tripolar(grid_lons,
                                        grid_lats,
                                        obs_lons,
                                        obs_lats,
@@ -193,7 +193,7 @@ class TestTripolar(unittest.TestCase):
         grid_lons, grid_lats = np.meshgrid([1, 2, 0],
                                            [0, 1], indexing="ij")
         obs_lons, obs_lats = np.array([0.5]), np.array([0.5])
-        operator = horizontal.Tripolar(grid_lons,
+        operator = tripolar.Tripolar(grid_lons,
                                        grid_lats,
                                        obs_lons,
                                        obs_lats)
@@ -216,7 +216,7 @@ class TestTripolar3D(unittest.TestCase):
                            [0, 1, 2]],
                           [[0, 1, 2],
                            [0, 1, 2]]])
-        fixture = horizontal.Tripolar(grid_lons,
+        fixture = tripolar.Tripolar(grid_lons,
                                       grid_lats,
                                       lons,
                                       lats)
@@ -227,22 +227,6 @@ class TestTripolar3D(unittest.TestCase):
                            [0, 1, 2],
                            [0, 1, 2]])
         np.testing.assert_array_equal(expect, result)
-
-
-class TestPolarStereo(unittest.TestCase):
-    def test_pole_returns_origin(self):
-        self.check(0, 90, 0, 0)
-
-    def test_45N_returns_one_zero(self):
-        self.check(0, 45, 1, 0)
-
-    def test_45N_180E_returns_minus_one_zero(self):
-        self.check(180, 45, -1, 0)
-
-    def check(self, lons, lats, ex, ey):
-        rx, ry = horizontal.stereographic(lons, lats)
-        np.testing.assert_array_almost_equal(rx, ex)
-        np.testing.assert_array_almost_equal(ry, ey)
 
 
 class TestSelectCorners(unittest.TestCase):
@@ -515,8 +499,8 @@ class TestIsDateline(unittest.TestCase):
     def test_is_dateline_given_sequence_returns_boolean_array(self):
         self.check_is_dateline(self.sequence, [False, True, False])
 
-    def check_is_dateline(self, corners, expect):
-        result = horizontal.is_dateline(corners)
+    def check_is_dateline(self, cell, expect):
+        result = corners.is_dateline(cell)
         np.testing.assert_array_almost_equal(expect, result)
 
     def test_self_sequence_shape(self):
@@ -540,7 +524,7 @@ class TestIsEast(unittest.TestCase):
         self.check_is_east([-1, 0, 1], [True, True, False])
 
     def check_is_east(self, longitudes, expect):
-        result = horizontal.is_east(longitudes)
+        result = corners.is_east(longitudes)
         np.testing.assert_array_almost_equal(expect, result)
 
 
@@ -558,7 +542,7 @@ class TestIsWest(unittest.TestCase):
         self.check_is_west([-1, 0, 1], [False, False, True])
 
     def check_is_west(self, longitudes, expect):
-        result = horizontal.is_west(longitudes)
+        result = corners.is_west(longitudes)
         np.testing.assert_array_almost_equal(expect, result)
 
 
