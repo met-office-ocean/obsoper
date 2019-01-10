@@ -91,6 +91,8 @@ class Horizontal(object):
             self.weights = bilinear.interpolation_weights(corners,
                                                           included_longitudes,
                                                           included_latitudes)
+    def __call__(self, field):
+        return self.interpolate(field)
 
     def interpolate(self, field):
         """Perform vectorised interpolation to observed positions
@@ -122,6 +124,14 @@ class Horizontal(object):
             result[self.included] = bilinear.interpolate(corner_values,
                                                          self.weights).T
         return result
+
+
+def stereographic(lons, lats):
+    """Simple projection with Earth Radius equals one"""
+    radius = np.tan(np.deg2rad(90. - lats))
+    x = radius * np.cos(np.deg2rad(lons))
+    y = radius * np.sin(np.deg2rad(lons))
+    return x, y
 
 
 class Regional(Horizontal):

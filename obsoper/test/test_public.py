@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring, invalid-name
+import os
 import unittest
 import pkg_resources
 
@@ -11,13 +12,20 @@ except ImportError:
 import numpy as np
 import obsoper
 
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+ORCA12_FILE = os.path.join(SCRIPT_DIR, "data/ostdemo_orca12.nc")
+
+
+def locate_file(name):
+    """Locate file inside test suite"""
+    return pkg_resources.resource_filename("obsoper.test",
+                                           os.path.join("data", name))
 
 if HAS_NETCDF4:
     @unittest.skip("slow test")
     class TestTripolar(unittest.TestCase):
         def setUp(self):
-            orca025_grid = pkg_resources.resource_filename("obsoper.test",
-                                                           "data/orca025_grid.nc")
+            orca025_grid = locate_file("orca025_grid.nc")
             self.grid_longitudes = self.read_variable(orca025_grid, "nav_lon")
             self.grid_latitudes = self.read_variable(orca025_grid, "nav_lat")
 
@@ -40,6 +48,60 @@ if HAS_NETCDF4:
             result = fixture.interpolate(self.constant_field)
             expect = np.array([self.constant])
             np.testing.assert_array_equal(expect, result)
+
+
+class TestORCA12(unittest.TestCase):
+    """Integration tests to confirm ORCA12 support
+
+    .. note: ORCA12 nav_lat has missing data at index 1494 since
+             it is the equator and the _FillValue is 0.
+    """
+    @classmethod
+    def setUpClass(cls):
+        with netCDF4.Dataset(ORCA12_FILE) as dataset:
+            cls.orca12_lons = dataset.variables["nav_lon"][:]
+            cls.orca12_lats = dataset.variables["nav_lat"][:]
+
+    def setUp(self):
+        self.grid_lons = np.ma.copy(self.orca12_lons)
+        self.grid_lats = np.ma.copy(self.orca12_lats)
+        self.field = np.ones(self.grid_lons.T.shape)
+
+        # Fill in missing equator
+        self.grid_lats[1494] = 0
+
+    @unittest.skip("solving radial grid search problem")
+    def test_interpolate_given_random_observation(self):
+        """should work for all data between 90S, 90N and 180E, 180W"""
+        sample_size = 10**4
+        lons = np.random.uniform(-180, 180, sample_size)
+        lats = np.random.uniform(-90, 90, sample_size)
+        self.check_interpolate(lons, lats)
+
+    def test_radial_algorithm_exhaustion(self):
+        lons, lats = [150.012414668], [89.9564470382]
+        self.check_interpolate(lons, lats)
+
+    def check_interpolate(self, lons, lats):
+        operator = obsoper.Operator(self.grid_lons.T,
+                                    self.grid_lats.T,
+                                    lons,
+                                    lats,
+                                    layout="tripolar",
+                                    has_halo=True)
+        result = operator.interpolate(self.grid_lons.T)
+        expect = lons
+
+        # Diagnose failure
+        errors = np.ma.abs(result - expect)
+        index = np.ma.argmax(errors)
+        print result[index], lons[index], lats[index]
+
+        np.testing.assert_array_almost_equal(expect, result)
+
+
+if os.path.exists(ORCA12_FILE):
+    TestORCA12 = unittest.skip(TestORCA12)
 
 
 class TestPublicInterface(unittest.TestCase):
