@@ -18,16 +18,35 @@ class TestORCA025EXTCICE(unittest.TestCase):
             cls.grid_lats = dataset.variables["TLAT"][:]
             cls.grid_ice = dataset.variables["aice"][:]
 
-    def test_search(self):
-        lon = -9.9305896759
-        lat = -44.4005584717
-        interpolator = obsoper.ORCAExtended(
+    def setUp(self):
+        self.interpolator = obsoper.ORCAExtended(
             self.grid_lons,
             self.grid_lats,
             self.grid_ice.mask)
-        result = interpolator.search(lon, lat)
-        expect = (484, 1108)
-        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_search(self):
+        lon = -9.9305896759
+        lat = -44.4005584717
+        ri, rj, rw = self.interpolator.search(lon, lat)
+        ei, ej, ew = 484, 1108, [0.44, 0.27, 0.1, 0.17]
+        self.assertEqual((ei, ej), (ri, rj))
+        np.testing.assert_array_almost_equal(ew, rw, decimal=2)
+
+    def test_interpolate_equator(self):
+        result = self.interpolator(self.grid_ice[0], [0], [0])
+        expect = [0]
+        self.assert_masked_array_equal(expect, result)
+
+    def test_interpolate_southern_ocean(self):
+        result = self.interpolator(self.grid_ice[0], [14], [-55])
+        expect = [1]
+        self.assert_masked_array_equal(expect, result)
+
+    def assert_masked_array_equal(self, expect, result):
+        expect = np.ma.asarray(expect)
+        self.assertEqual(expect.shape, result.shape)
+        np.testing.assert_array_almost_equal(expect.compressed(),
+                                             result.compressed())
 
 
 class TestStereographic(unittest.TestCase):

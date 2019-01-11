@@ -32,39 +32,41 @@ class ORCAExtended(object):
     def __call__(self, *args):
         return self.interpolate(*args)
 
-    def interpolate(self, field):
-        pass
-
-    def weights(self, lons, lats):
-        pass
+    def interpolate(self, field, lons, lats):
+        result = np.ma.masked_all(len(lons), dtype=np.double)
+        for io in range(len(lons)):
+            i, j, weights = self.search(lons[io], lats[io])
+            pts = (i + np.array([0, 1, 1, 0]),
+                   j + np.array([0, 0, 1, 1]))
+            result[io] = np.sum(weights * field[pts])
+        return result
 
     def search(self, lon, lat):
         x, y, z = self.cartesian(lon, lat)
         eps, self.i = self.tree.query([x, y, z], k=12)
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
-            if self.contains(i, j, lon, lat):
-                return i, j
+            pts = (i + np.array([0, 1, 1, 0]),
+                   j + np.array([0, 0, 1, 1]))
+            x, y = self.stereographic(
+                self.grid_lons[pts],
+                self.grid_lats[pts],
+                central_lon=lon,
+                central_lat=lat)
+            vertices = np.asarray([x, y], dtype=np.double).T
+            if self.contains(vertices, 0., 0.):
+                print(i, j, vertices)
+                return i, j, self.weights(vertices, 0., 0.)
 
-    def contains(self, i, j, lon, lat):
-        lons = np.array([
-            self.grid_lons[i, j],
-            self.grid_lons[i + 1, j],
-            self.grid_lons[i + 1, j + 1],
-            self.grid_lons[i, j + 1]
-        ])
-        lats = np.array([
-            self.grid_lats[i, j],
-            self.grid_lats[i + 1, j],
-            self.grid_lats[i + 1, j + 1],
-            self.grid_lats[i, j + 1]
-        ])
-        x, y = self.stereographic(
-            lons,
-            lats,
-            central_lon=lon,
-            central_lat=lat)
-        vertices = np.asarray([x, y], dtype=np.double).T
-        return cell.Cell(vertices).contains(0., 0.)
+    def weights(self, vertices, x, y):
+        if self.signed_area(vertices) < 0:
+            vertices = vertices[::-1]
+            weights = bilinear.interpolation_weights(vertices, x, y)
+            return weights[::-1]
+        else:
+            return bilinear.interpolation_weights(vertices, x, y)
+
+    def contains(self, vertices, x, y):
+        return cell.Cell(vertices).contains(x, y)
 
     @staticmethod
     def cartesian(lon, lat):
@@ -94,6 +96,16 @@ class ORCAExtended(object):
         y = k * (cos(phi1) * sin(phi) -
                  sin(phi1) * cos(phi) * cos(lam - lam0))
         return x, y
+
+    @staticmethod
+    def signed_area(vertices):
+        """Uses the shoelace formula"""
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = vertices
+        return 0.5 * (
+            x1 * y2 - x2 * y1 +
+            x2 * y3 - x3 * y2 +
+            x3 * y4 - x4 * y3
+        )
 
 
 class Tripolar(object):
