@@ -1,6 +1,7 @@
 """Tripolar grid search/interpolation"""
 import scipy.spatial
 import numpy as np
+from numpy import sin, cos, deg2rad
 from obsoper import (grid, bilinear, orca)
 from obsoper.corners import (
     select_corners,
@@ -39,11 +40,32 @@ class ORCAExtended(object):
 
     @staticmethod
     def cartesian(lon, lat):
+        """Project into 3D Cartesian space"""
         lon, lat = np.deg2rad(lon), np.deg2rad(lat)
-        z = np.cos(lat)
-        y = np.sin(lat) * np.sin(lon)
-        x = np.sin(lat) * np.cos(lon)
+        z = np.sin(lat)
+        y = np.cos(lat) * np.sin(lon)
+        x = np.cos(lat) * np.cos(lon)
         return x, y, z
+
+    @staticmethod
+    def stereographic(lon, lat,
+                      central_lon=0,
+                      central_lat=90):
+        """Stereographic projection through point
+
+        Conformal map centered on observation that can be used
+        to locate surrounding grid points
+        """
+        lam, lam0 = deg2rad(lon), deg2rad(central_lon)
+        phi, phi1 = deg2rad(lat), deg2rad(central_lat)
+        d = (1
+             + (sin(phi1) * sin(phi))
+             + (cos(phi1) * cos(phi) * cos(lam - lam0)))
+        k = 2 / d
+        x = k * cos(phi) * sin(lam - lam0)
+        y = k * (cos(phi1) * sin(phi)
+                 - sin(phi1) * cos(phi) * cos(lam - lam0))
+        return x, y
 
 
 class Tripolar(object):

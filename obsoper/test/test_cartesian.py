@@ -18,6 +18,7 @@ class TestORCA025EXTCICE(unittest.TestCase):
             cls.grid_lats = dataset.variables["TLAT"][:]
             cls.grid_ice = dataset.variables["aice"][:]
 
+    @unittest.skip("implementing search")
     def test_interpolate(self):
         lon = -9.9305896759
         lat = -44.4005584717
@@ -31,3 +32,27 @@ class TestORCA025EXTCICE(unittest.TestCase):
         result = interpolator(self.grid_ice)
         expect = [0]
         np.testing.assert_array_almost_equal(expect, result)
+
+
+class TestStereographic(unittest.TestCase):
+    def setUp(self):
+        self.radius_45 = 2 * (np.sqrt(2) - 1)
+
+    def test_stereographic_given_zero_ninety(self):
+        self.check(0, 90, 0, 0)
+
+    def test_stereographic_given_zero_forty_five(self):
+        self.check(0, 45, 0, -self.radius_45)
+
+    def test_stereographic_given_one_eighty_forty_five(self):
+        self.check(180, 45, 0, self.radius_45)
+
+    def test_stereographic_given_ninety_forty_five(self):
+        self.check(90, 45, self.radius_45, 0)
+
+    def check(self, lon, lat, ex, ey):
+        rx, ry = obsoper.ORCAExtended.stereographic(
+            lon,
+            lat)
+        np.testing.assert_array_almost_equal(ex, rx)
+        np.testing.assert_array_almost_equal(ey, ry)
