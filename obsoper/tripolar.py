@@ -2,7 +2,7 @@
 import scipy.spatial
 import numpy as np
 from numpy import sin, cos, deg2rad
-from obsoper import (grid, bilinear, orca)
+from obsoper import (grid, bilinear, orca, cell)
 from obsoper.corners import (
     select_corners,
     select_field,
@@ -16,9 +16,9 @@ class ORCAExtended(object):
             self,
             grid_lons,
             grid_lats,
-            grid_mask,
-            obs_lons,
-            obs_lats):
+            grid_mask):
+        self.grid_lons = grid_lons
+        self.grid_lats = grid_lats
         mask = grid_mask
         nx, ny = grid_lons.shape
         glons = np.ma.masked_array(grid_lons, mask).compressed()
@@ -27,16 +27,44 @@ class ORCAExtended(object):
         self.gi = np.ma.masked_array(gi, mask).compressed()
         self.gj = np.ma.masked_array(gj, mask).compressed()
         x, y, z = self.cartesian(glons, glats)
-        xc, yc, zc = self.cartesian(obs_lons, obs_lats)
         self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T)
-        eps, self.i = self.tree.query([xc, yc, zc], k=12)
 
     def __call__(self, *args):
         return self.interpolate(*args)
 
     def interpolate(self, field):
+        pass
+
+    def weights(self, lons, lats):
+        pass
+
+    def search(self, lon, lat):
+        x, y, z = self.cartesian(lon, lat)
+        eps, self.i = self.tree.query([x, y, z], k=12)
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
-            print(i, j)
+            if self.contains(i, j, lon, lat):
+                return i, j
+
+    def contains(self, i, j, lon, lat):
+        lons = np.array([
+            self.grid_lons[i, j],
+            self.grid_lons[i + 1, j],
+            self.grid_lons[i + 1, j + 1],
+            self.grid_lons[i, j + 1]
+        ])
+        lats = np.array([
+            self.grid_lats[i, j],
+            self.grid_lats[i + 1, j],
+            self.grid_lats[i + 1, j + 1],
+            self.grid_lats[i, j + 1]
+        ])
+        x, y = self.stereographic(
+            lons,
+            lats,
+            central_lon=lon,
+            central_lat=lat)
+        vertices = np.asarray([x, y], dtype=np.double).T
+        return cell.Cell(vertices).contains(0., 0.)
 
     @staticmethod
     def cartesian(lon, lat):
@@ -58,13 +86,13 @@ class ORCAExtended(object):
         """
         lam, lam0 = deg2rad(lon), deg2rad(central_lon)
         phi, phi1 = deg2rad(lat), deg2rad(central_lat)
-        d = (1
-             + (sin(phi1) * sin(phi))
-             + (cos(phi1) * cos(phi) * cos(lam - lam0)))
+        d = (1 +
+             (sin(phi1) * sin(phi)) +
+             (cos(phi1) * cos(phi) * cos(lam - lam0)))
         k = 2 / d
         x = k * cos(phi) * sin(lam - lam0)
-        y = k * (cos(phi1) * sin(phi)
-                 - sin(phi1) * cos(phi) * cos(lam - lam0))
+        y = k * (cos(phi1) * sin(phi) -
+                 sin(phi1) * cos(phi) * cos(lam - lam0))
         return x, y
 
 

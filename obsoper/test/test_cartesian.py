@@ -18,19 +18,15 @@ class TestORCA025EXTCICE(unittest.TestCase):
             cls.grid_lats = dataset.variables["TLAT"][:]
             cls.grid_ice = dataset.variables["aice"][:]
 
-    @unittest.skip("implementing search")
-    def test_interpolate(self):
+    def test_search(self):
         lon = -9.9305896759
         lat = -44.4005584717
         interpolator = obsoper.ORCAExtended(
             self.grid_lons,
             self.grid_lats,
-            self.grid_ice.mask,
-            lon,
-            lat
-        )
-        result = interpolator(self.grid_ice)
-        expect = [0]
+            self.grid_ice.mask)
+        result = interpolator.search(lon, lat)
+        expect = (484, 1108)
         np.testing.assert_array_almost_equal(expect, result)
 
 
