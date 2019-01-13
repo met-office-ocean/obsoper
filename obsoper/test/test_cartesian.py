@@ -10,6 +10,7 @@ ORCA025EXT_CICE_FILE = os.path.join(SCRIPT_DIR,
                                     "data/prodm_op_gl.cice_20180930_00.-36.nc")
 
 
+@unittest.skipIf(not os.path.exists(ORCA025EXT_CICE_FILE), "no ORCA025 CICE file available")
 class TestORCA025EXTCICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

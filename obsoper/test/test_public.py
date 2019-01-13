@@ -52,6 +52,7 @@ if HAS_NETCDF4:
             np.testing.assert_array_equal(expect, result)
 
 
+@unittest.skip("too computationally intensive")
 class TestORCA025(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -120,6 +121,7 @@ class TestORCA025CICE(unittest.TestCase):
 
 
 
+@unittest.skip("too computationally intensive")
 class TestORCA12(unittest.TestCase):
     """Integration tests to confirm ORCA12 support
 
@@ -168,10 +170,6 @@ class TestORCA12(unittest.TestCase):
         print result[index], lons[index], lats[index]
 
         np.testing.assert_array_almost_equal(expect, result)
-
-
-if not HAS_NETCDF4 or os.path.exists(ORCA12_FILE):
-    TestORCA12 = unittest.skip(TestORCA12)
 
 
 class TestPublicInterface(unittest.TestCase):
