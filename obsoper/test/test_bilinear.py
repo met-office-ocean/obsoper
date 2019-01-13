@@ -1,6 +1,7 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import numpy as np
+import obsoper
 from obsoper import bilinear
 
 
@@ -100,6 +101,22 @@ class TestBilinearTransform(unittest.TestCase):
         result = fixture(self.unit_values)
         expect = 2.5
         self.assertAlmostEqual(expect, result)
+
+
+class TestBilinearWeights(unittest.TestCase):
+    def test_on_edge(self):
+        corners = [[0, 0], [2, 0], [2, 1], [1, 1]]
+        x = 0.1
+        y = 0.1
+        result = bilinear.interpolation_weights(corners, x, y)
+        expect = (0.9, 0, 0, 0.1)
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_signed_area(self):
+        corners = [[0, 0], [1, 0], [1, 1], [0, 1]]
+        result = obsoper.ORCAExtended.signed_area(corners)
+        expect = 1.
+        np.testing.assert_array_almost_equal(expect, result)
 
 
 class TestInterpolate(unittest.TestCase):
