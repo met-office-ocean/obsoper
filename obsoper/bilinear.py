@@ -65,7 +65,7 @@ class BilinearTransform(object):
 
         weights = self._weights(x, y)
 
-        # Undo rotations/reversals
+        # Undo rotations/reversals if any
         if np.ndim(corners) == 3:
             for step, pts in rotations.iteritems():
                 weights[pts] = weights[pts][rotate_backward(step)]

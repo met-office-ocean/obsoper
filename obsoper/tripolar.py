@@ -10,6 +10,10 @@ from obsoper.corners import (
     mask_corners)
 
 
+class SearchFailed(Exception):
+    pass
+
+
 class ORCAExtended(object):
     """General purpose extended grid interpolator"""
     def __init__(
@@ -35,7 +39,10 @@ class ORCAExtended(object):
     def interpolate(self, field, lons, lats):
         result = np.ma.masked_all(len(lons), dtype=np.double)
         for io in range(len(lons)):
-            i, j, weights = self.search(lons[io], lats[io])
+            try:
+                i, j, weights = self.search(lons[io], lats[io])
+            except SearchFailed:
+                continue
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
             result[io] = np.sum(weights * field[pts])
@@ -47,14 +54,20 @@ class ORCAExtended(object):
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
+            try:
+                lons = self.grid_lons[pts]
+                lats = self.grid_lats[pts]
+            except IndexError:
+                continue
             x, y = self.stereographic(
-                self.grid_lons[pts],
-                self.grid_lats[pts],
+                lons,
+                lats,
                 central_lon=lon,
                 central_lat=lat)
             vertices = np.asarray([x, y], dtype=np.double).T
             if self.contains(vertices, 0., 0.):
                 return i, j, self.weights(vertices, 0., 0.)
+        raise SearchFailed("{} {} not found".format(lon, lat))
 
     def weights(self, vertices, x, y):
         return bilinear.interpolation_weights(vertices, x, y)
