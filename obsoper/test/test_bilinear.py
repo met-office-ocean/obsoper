@@ -105,7 +105,6 @@ class TestBilinearTransform(unittest.TestCase):
 
 class TestBilinearWeights(unittest.TestCase):
     """Signed area and vertex ordering assumptions"""
-    @unittest.skip("implementing orientation")
     def test_vertex_order(self):
         corners = [
             [0, 1],
@@ -115,40 +114,6 @@ class TestBilinearWeights(unittest.TestCase):
         ]
         result = bilinear.interpolation_weights(corners, 0, 0)
         expect = (0, 1, 0, 0)
-        np.testing.assert_array_almost_equal(expect, result)
-
-    def test_orientation_given_rotated_cell(self):
-        corners = np.array([
-            [0, 1],
-            [0, 0],
-            [1, 0],
-            [1, 1]
-        ])
-        pts = bilinear.orientation(corners)
-        result = corners[pts]
-        expect = [
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ]
-        np.testing.assert_array_almost_equal(expect, result)
-
-    def test_orientation_given_reversed_cell(self):
-        corners = np.array([
-            [0, 0],
-            [0, 1],
-            [1, 1],
-            [1, 0],
-        ])
-        pts = bilinear.orientation(corners)
-        result = corners[pts]
-        expect = [
-            [0, 0],
-            [1, 0],
-            [1, 1],
-            [0, 1]
-        ]
         np.testing.assert_array_almost_equal(expect, result)
 
     def test_lower_left_index_returns_one(self):
@@ -171,6 +136,62 @@ class TestBilinearWeights(unittest.TestCase):
         ]
         result = bilinear.lower_left_index(corners)
         expect = 2
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_lower_left_index_given_multiple_cells(self):
+        corners = np.array([
+            [[1, 1],
+             [0, 1],
+             [0, 0],
+             [1, 0]],
+            [[0, 1],
+             [0, 0],
+             [1, 0],
+             [1, 1]],
+            [[0, 1],
+             [0, 0],
+             [1, 0],
+             [1, 1]],
+        ])
+        self.assertEqual(corners.shape, (3, 4, 2))
+        result = bilinear.lower_left_index(corners)
+        expect = [2, 1, 1]
+        np.testing.assert_array_almost_equal(expect, result)
+
+
+class TestRotation(unittest.TestCase):
+    def test_rotate_forward_no_steps(self):
+        self.check_forward([3, 4, 5, 6], 0, [3, 4, 5, 6])
+
+    def test_rotate_back_no_steps(self):
+        self.check_backward([3, 4, 5, 6], 0, [3, 4, 5, 6])
+
+    def test_rotate_forward_one_step(self):
+        self.check_forward([3, 4, 5, 6], 1, [4, 5, 6, 3])
+
+    def test_rotate_back_one_step(self):
+        self.check_backward([4, 5, 6, 3], 1, [3, 4, 5, 6])
+
+    def test_rotate_forward_two_steps(self):
+        self.check_forward([3, 4, 5, 6], 2, [5, 6, 3, 4])
+
+    def test_rotate_back_two_steps(self):
+        self.check_backward([5, 6, 3, 4], 2, [3, 4, 5, 6])
+
+    def test_rotate_forward_three_steps(self):
+        self.check_forward([3, 4, 5, 6], 3, [6, 3, 4, 5])
+
+    def test_rotate_back_three_steps(self):
+        self.check_backward([6, 3, 4, 5], 3, [3, 4, 5, 6])
+
+    def check_forward(self, values, step, expect):
+        pts = bilinear.rotate_forward(step)
+        result = np.array(values)[pts]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def check_backward(self, values, step, expect):
+        pts = bilinear.rotate_backward(step)
+        result = np.array(values)[pts]
         np.testing.assert_array_almost_equal(expect, result)
 
 

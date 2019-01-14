@@ -25,14 +25,35 @@ class BilinearTransform(object):
     :param y: array shapes ([N],) representing multiple positions
     """
     def __init__(self, corners, x, y):
-        self.corners = np.asarray(corners, dtype="d")
-        if np.ndim(corners) == 2:
-            pts = orientation(corners)
+        corners = np.asarray(corners, dtype="d")
+
+        # Reverse/rotate grid cells to be positive oriented
+        rotations = {}
+        if np.ndim(corners) == 3:
+            negative_area = signed_area(corners) < 0
+            # (4, 2, N) -> (N, 4, 2)
+            corners = np.transpose(corners, (2, 0, 1))
+            if np.any(negative_area):
+                corners[negative_area] = corners[negative_area][::-1]
+            indices = lower_left_index(corners)
+            for i in [1, 2, 3]:
+                pts = indices == i
+                if np.any(pts):
+                    rotations[i] = pts
+                    corners[pts] = corners[pts][rotate_forward(i)]
         else:
-            pts = slice(None, None)
+            reversal = signed_area(corners) < 0
+            if reversal:
+                corners = corners[::-1]
+            step = lower_left_index(corners)
+            if step != 0:
+                corners = corners[rotate_forward(step)]
 
         # Calculate alpha, beta coefficients
-        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = self.corners[pts]
+        if np.ndim(corners) == 3:
+            # (N, 4, 2) -> (4, 2, N)
+            corners = np.transpose(corners, (1, 2, 0))
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = corners
         self.alpha = np.array([x1,
                                x2 - x1,
                                x4 - x1,
@@ -42,10 +63,22 @@ class BilinearTransform(object):
                               y4 - y1,
                               y1 - y2 + y3 - y4], dtype="d")
 
+        weights = self._weights(x, y)
+
+        # Undo rotations/reversals
+        if np.ndim(corners) == 3:
+            for step, pts in rotations.iteritems():
+                weights[pts] = weights[pts][rotate_backward(step)]
+            if np.any(negative_area):
+                weights[negative_area] = weights[negative_area][::-1]
+        else:
+            if step != 0:
+                weights = weights[rotate_backward(step)]
+            if reversal:
+                weights = weights[::-1]
+
         # Calculate weights
-        values = self._weights(x, y)
-        self.weights = np.zeros(values.shape, dtype="d")
-        self.weights[pts] = values
+        self.weights = weights
 
     def _weights(self, x, y):
         di, dj = self.to_unit_square(x, y)
@@ -135,19 +168,24 @@ def interpolation_weights(corners, x, y):
     return BilinearTransform(corners, x, y).weights.T
 
 
-def orientation(corners):
-    """Permute/reverse grid cell to be oriented correctly"""
-    if isinstance(corners, list):
-        corners = np.asarray(corners)
-    if signed_area(corners) < 0:
-        pts = np.array([3, 2, 1, 0])
-    else:
-        pts = np.array([0, 1, 2, 3])
-    index = lower_left_index(corners[pts])
-    if index == 0:
-        return pts
-    else:
-        return np.roll(pts, 4 - index)
+def rotate_forward(step):
+    """Clockwise rotation related to grid cell ordering"""
+    return {
+        0: np.array([0, 1, 2, 3]),
+        1: np.array([1, 2, 3, 0]),
+        2: np.array([2, 3, 0, 1]),
+        3: np.array([3, 0, 1, 2]),
+    }[step]
+
+
+def rotate_backward(step):
+    """Anti-clockwise rotation related to grid cell ordering"""
+    return {
+        0: np.array([0, 1, 2, 3]),
+        1: np.array([3, 0, 1, 2]),
+        2: np.array([2, 3, 0, 1]),
+        3: np.array([1, 2, 3, 0]),
+    }[step]
 
 
 def lower_left_index(corners):
@@ -155,8 +193,11 @@ def lower_left_index(corners):
 
     Lower left hand corner is the largest dot product with vector [-1, -1]
     or equivalently the sum of the coordinate times minus 1
+
+    :param corners: array of corners ([N,] 4, 2)
+    :returns: corner index of cell that is most lower-left
     """
-    return np.argmax(-np.sum(corners, axis=1))
+    return np.argmax(-np.sum(corners, axis=-1), axis=-1)
 
 
 def signed_area(corners):
