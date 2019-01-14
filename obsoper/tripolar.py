@@ -57,12 +57,7 @@ class ORCAExtended(object):
                 return i, j, self.weights(vertices, 0., 0.)
 
     def weights(self, vertices, x, y):
-        if self.signed_area(vertices) < 0:
-            vertices = vertices[::-1]
-            weights = bilinear.interpolation_weights(vertices, x, y)
-            return weights[::-1]
-        else:
-            return bilinear.interpolation_weights(vertices, x, y)
+        return bilinear.interpolation_weights(vertices, x, y)
 
     def contains(self, vertices, x, y):
         return cell.Cell(vertices).contains(x, y)
@@ -95,16 +90,6 @@ class ORCAExtended(object):
         y = k * (cos(phi1) * sin(phi) -
                  sin(phi1) * cos(phi) * cos(lam - lam0))
         return x, y
-
-    @staticmethod
-    def signed_area(vertices):
-        """Uses the shoelace formula"""
-        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = vertices
-        return 0.5 * (
-            x1 * y2 - x2 * y1 +
-            x2 * y3 - x3 * y2 +
-            x3 * y4 - x4 * y3
-        )
 
 
 class Tripolar(object):

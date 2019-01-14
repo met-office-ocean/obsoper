@@ -61,20 +61,97 @@ class TestStereographic(unittest.TestCase):
         self.radius_45 = 2 * (np.sqrt(2) - 1)
 
     def test_stereographic_given_zero_ninety(self):
-        self.check(0, 90, 0, 0)
+        self.check(0, 90, (0, 0))
 
     def test_stereographic_given_zero_forty_five(self):
-        self.check(0, 45, 0, -self.radius_45)
+        self.check(0, 45, (0, -self.radius_45))
 
     def test_stereographic_given_one_eighty_forty_five(self):
-        self.check(180, 45, 0, self.radius_45)
+        self.check(180, 45, (0, self.radius_45))
 
     def test_stereographic_given_ninety_forty_five(self):
-        self.check(90, 45, self.radius_45, 0)
+        self.check(90, 45, (self.radius_45, 0))
 
-    def check(self, lon, lat, ex, ey):
+    def test_stereographic_given_vector(self):
+        self.check([90, 180], [45, 45], ([self.radius_45, 0],
+                                         [0, self.radius_45]))
+
+    def check(self, lon, lat, expect):
+        ex, ey = expect
         rx, ry = obsoper.ORCAExtended.stereographic(
             lon,
             lat)
+        np.testing.assert_array_almost_equal(ex, rx)
+        np.testing.assert_array_almost_equal(ey, ry)
+
+
+class TestStereographicCentralLonLat(unittest.TestCase):
+    def test_stereographic_given_central_lon_lat(self):
+        self.check(
+            lon=10,
+            lat=10,
+            central_lon=0,
+            central_lat=0,
+            ex=0.17362783,
+            ey=0.17630632)
+
+    def test_stereographic_given_different_central_lon_lat(self):
+        self.check(
+            lon=10,
+            lat=10,
+            central_lon=10,
+            central_lat=0,
+            ex=0.,
+            ey=0.174977)
+
+    def test_stereographic_given_central_lon_lat_zero_ten(self):
+        self.check(
+            lon=10,
+            lat=10,
+            central_lon=0,
+            central_lat=10,
+            ex=0.17227927,
+            ey=0.00261731)
+
+    def test_stereographic_given_vector_central_lon_lat(self):
+        self.check(
+            lon=10,
+            lat=10,
+            central_lon=[0, 10, 0],
+            central_lat=[0, 0, 10],
+            ex=[0.17362783, 0., 0.17227927],
+            ey=[0.17630632, 0.174977, 0.00261731])
+
+    def test_stereographic_given_vector_lons_lats_and_central_lons_lats(self):
+        lons = np.array([[0, 10, 10],
+                         [1, 10, 10],
+                         [2, 10, 10],
+                         [3, 10, 10]])
+        lats = np.array([[0, 10, 10],
+                         [1, 10, 10],
+                         [2, 10, 10],
+                         [3, 10, 10]])
+        self.assertEqual(lons.shape, (4, 3))
+        self.assertEqual(lats.shape, (4, 3))
+        self.check(
+            lon=lons,
+            lat=lats,
+            central_lon=[0, 10, 0],
+            central_lat=[0, 0, 10],
+            ex=[[0., 0., 0.17227927],
+                [0.01745241, 0., 0.17227927],
+                [0.03489949, 0., 0.17227927],
+                [0.05233591, 0., 0.17227927]],
+            ey=[[0., 0.174977, 0.00261731],
+                [0.01745506, 0.174977, 0.00261731],
+                [0.03492076, 0.174977, 0.00261731],
+                [0.05240773, 0.174977, 0.00261731]])
+
+    def check(self, lon, lat, central_lon, central_lat, ex, ey):
+        rx, ry = obsoper.ORCAExtended.stereographic(
+            lon,
+            lat,
+            central_lon=central_lon,
+            central_lat=central_lat)
         np.testing.assert_array_almost_equal(ex, rx)
         np.testing.assert_array_almost_equal(ey, ry)
