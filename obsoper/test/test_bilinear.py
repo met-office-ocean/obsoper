@@ -104,18 +104,73 @@ class TestBilinearTransform(unittest.TestCase):
 
 
 class TestBilinearWeights(unittest.TestCase):
-    def test_on_edge(self):
-        corners = [[0, 0], [2, 0], [2, 1], [1, 1]]
-        x = 0.1
-        y = 0.1
-        result = bilinear.interpolation_weights(corners, x, y)
-        expect = (0.9, 0, 0, 0.1)
+    """Signed area and vertex ordering assumptions"""
+    @unittest.skip("implementing orientation")
+    def test_vertex_order(self):
+        corners = [
+            [0, 1],
+            [0, 0],
+            [1, 0],
+            [1, 1]
+        ]
+        result = bilinear.interpolation_weights(corners, 0, 0)
+        expect = (0, 1, 0, 0)
         np.testing.assert_array_almost_equal(expect, result)
 
-    def test_signed_area(self):
-        corners = [[0, 0], [1, 0], [1, 1], [0, 1]]
-        result = obsoper.ORCAExtended.signed_area(corners)
-        expect = 1.
+    def test_orientation_given_rotated_cell(self):
+        corners = np.array([
+            [0, 1],
+            [0, 0],
+            [1, 0],
+            [1, 1]
+        ])
+        pts = bilinear.orientation(corners)
+        result = corners[pts]
+        expect = [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+        ]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_orientation_given_reversed_cell(self):
+        corners = np.array([
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [1, 0],
+        ])
+        pts = bilinear.orientation(corners)
+        result = corners[pts]
+        expect = [
+            [0, 0],
+            [1, 0],
+            [1, 1],
+            [0, 1]
+        ]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_lower_left_index_returns_one(self):
+        corners = [
+            [0, 1],
+            [0, 0],
+            [1, 0],
+            [1, 1]
+        ]
+        result = bilinear.lower_left_index(corners)
+        expect = 1
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_lower_left_index_returns_two(self):
+        corners = [
+            [1, 1],
+            [0, 1],
+            [0, 0],
+            [1, 0],
+        ]
+        result = bilinear.lower_left_index(corners)
+        expect = 2
         np.testing.assert_array_almost_equal(expect, result)
 
 

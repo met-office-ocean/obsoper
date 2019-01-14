@@ -15,8 +15,8 @@ class TestORCA025EXTCICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with netCDF4.Dataset(ORCA025EXT_CICE_FILE) as dataset:
-            cls.grid_lons = dataset.variables["TLON"][:]
-            cls.grid_lats = dataset.variables["TLAT"][:]
+            cls.grid_lons = np.asarray(dataset.variables["TLON"][:])
+            cls.grid_lats = np.asarray(dataset.variables["TLAT"][:])
             cls.grid_ice = dataset.variables["aice"][:]
 
     def setUp(self):
@@ -40,8 +40,14 @@ class TestORCA025EXTCICE(unittest.TestCase):
 
     def test_interpolate_southern_ocean(self):
         result = self.interpolator(self.grid_ice[0], [14], [-55])
-        expect = [1]
+        expect = [0.61351594]
         self.assert_masked_array_equal(expect, result)
+
+    def test_search_southern_ocean(self):
+        ri, rj, rw = self.interpolator.search(14, -55)
+        ei, ej, ew = 418, 1204, [0.53151717, 0.46848283, 0, 0]
+        self.assertEqual((ei, ej), (ri, rj))
+        np.testing.assert_array_almost_equal(ew, rw)
 
     def assert_masked_array_equal(self, expect, result):
         expect = np.ma.asarray(expect)

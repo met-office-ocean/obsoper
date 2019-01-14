@@ -26,9 +26,13 @@ class BilinearTransform(object):
     """
     def __init__(self, corners, x, y):
         self.corners = np.asarray(corners, dtype="d")
+        if np.ndim(corners) == 2:
+            pts = orientation(corners)
+        else:
+            pts = slice(None, None)
 
         # Calculate alpha, beta coefficients
-        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = self.corners
+        (x1, y1), (x2, y2), (x3, y3), (x4, y4) = self.corners[pts]
         self.alpha = np.array([x1,
                                x2 - x1,
                                x4 - x1,
@@ -39,7 +43,9 @@ class BilinearTransform(object):
                               y1 - y2 + y3 - y4], dtype="d")
 
         # Calculate weights
-        self.weights = self._weights(x, y)
+        values = self._weights(x, y)
+        self.weights = np.zeros(values.shape, dtype="d")
+        self.weights[pts] = values
 
     def _weights(self, x, y):
         di, dj = self.to_unit_square(x, y)
@@ -127,6 +133,40 @@ def interpolation_weights(corners, x, y):
     if corners.ndim == 3:
         corners = np.transpose(corners, (1, 2, 0))
     return BilinearTransform(corners, x, y).weights.T
+
+
+def orientation(corners):
+    """Permute/reverse grid cell to be oriented correctly"""
+    if isinstance(corners, list):
+        corners = np.asarray(corners)
+    if signed_area(corners) < 0:
+        pts = np.array([3, 2, 1, 0])
+    else:
+        pts = np.array([0, 1, 2, 3])
+    index = lower_left_index(corners[pts])
+    if index == 0:
+        return pts
+    else:
+        return np.roll(pts, 4 - index)
+
+
+def lower_left_index(corners):
+    """Vertex position that represents lower left hand corner
+
+    Lower left hand corner is the largest dot product with vector [-1, -1]
+    or equivalently the sum of the coordinate times minus 1
+    """
+    return np.argmax(-np.sum(corners, axis=1))
+
+
+def signed_area(corners):
+    """Uses the shoelace formula"""
+    (x1, y1), (x2, y2), (x3, y3), (x4, y4) = corners
+    return 0.5 * (
+        x1 * y2 - x2 * y1 +
+        x2 * y3 - x3 * y2 +
+        x3 * y4 - x4 * y3
+    )
 
 
 def quadratic_root(a, b, c):

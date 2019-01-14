@@ -54,7 +54,6 @@ class ORCAExtended(object):
                 central_lat=lat)
             vertices = np.asarray([x, y], dtype=np.double).T
             if self.contains(vertices, 0., 0.):
-                print(i, j, vertices)
                 return i, j, self.weights(vertices, 0., 0.)
 
     def weights(self, vertices, x, y):
