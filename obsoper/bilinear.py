@@ -32,15 +32,15 @@ class BilinearTransform(object):
         if np.ndim(corners) == 3:
             negative_area = signed_area(corners) < 0
             # (4, 2, N) -> (N, 4, 2)
-            corners = np.transpose(corners, (2, 0, 1))
+            corners = corners.transpose((2, 0 ,1))
             if np.any(negative_area):
-                corners[negative_area] = corners[negative_area][::-1]
+                corners[negative_area] = corners[negative_area][:, ::-1]
             indices = lower_left_index(corners)
             for i in [1, 2, 3]:
                 pts = indices == i
                 if np.any(pts):
                     rotations[i] = pts
-                    corners[pts] = corners[pts][rotate_forward(i)]
+                    corners[pts] = corners[pts][:, rotate_forward(i)]
         else:
             reversal = signed_area(corners) < 0
             if reversal:
@@ -67,10 +67,11 @@ class BilinearTransform(object):
 
         # Undo rotations/reversals if any
         if np.ndim(corners) == 3:
+            # Shape (4, N)
             for step, pts in rotations.iteritems():
-                weights[pts] = weights[pts][rotate_backward(step)]
+                weights[:, pts] = weights[:, pts][rotate_backward(step)]
             if np.any(negative_area):
-                weights[negative_area] = weights[negative_area][::-1]
+                weights[:, negative_area] = weights[:, negative_area][::-1]
         else:
             if step != 0:
                 weights = weights[rotate_backward(step)]

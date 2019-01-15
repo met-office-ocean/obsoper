@@ -11,6 +11,39 @@ from . cimport (box,
                 spherical)
 
 
+def contains(vertices, x, y):
+    """Vectorized approach to Cell membership testing
+
+    .. note:: vertices first dimension must equal x, y lengths
+    """
+    vertices = np.asarray(vertices, dtype="d")
+    x = np.asarray(x, dtype="d")
+    y = np.asarray(y, dtype="d")
+    return np.array(cy_contains(vertices, x, y), dtype=np.bool)
+
+
+def contains(vertices, x, y):
+    """Vectorized approach to Cell membership testing
+
+    .. note:: vertices first dimension must equal x, y lengths
+    """
+    vertices = np.asarray(vertices, dtype="d")
+    x = np.asarray(x, dtype="d")
+    y = np.asarray(y, dtype="d")
+    return np.array(cy_contains(vertices, x, y), dtype=np.bool)
+
+
+cdef np.uint8_t[:] cy_contains(
+        double[:, :, :] vertices,
+        double[:] x,
+        double[:] y):
+    cdef Py_ssize_t i
+    cdef np.uint8_t[:] inside = np.zeros(vertices.shape[0], dtype=np.uint8)
+    for i in range(vertices.shape[0]):
+        inside[i] = same_side_test(vertices[i], x[i], y[i])
+    return inside
+
+
 cdef class Cell:
     """Grid cell"""
     def __init__(self, double[:, :] vertices, box.Box bounding_box=None):

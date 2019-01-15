@@ -72,7 +72,93 @@ class ORCAExtended(object):
     def weights(self, vertices, x, y):
         return bilinear.interpolation_weights(vertices, x, y)
 
-    def contains(self, vertices, x, y):
+    def vector_interpolate(self, field, lons, lats):
+        """Vectorised approach to Cartesian/Stereographic interpolation"""
+        if isinstance(lons, list):
+            lons = np.array(lons)
+        if isinstance(lats, list):
+            lats = np.array(lats)
+
+        x, y, z = self.cartesian(lons, lats)
+        eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T, k=12)
+
+        no = len(lons)
+        global_found = np.zeros(len(lons), dtype=bool)
+        global_search_i = np.zeros(no, dtype="i")
+        global_search_j = np.zeros(no, dtype="i")
+        global_weights = np.ma.masked_all((no, 4), dtype="d")
+        for ni in range(12):
+            nni = neighbours[:, ni]
+
+            i, j = self.gi[nni], self.gj[nni]
+
+            nx, ny = self.grid_lons.shape
+            included = (i < (nx - 1)) & (j < (ny - 1))
+
+            mask = ~global_found & included
+
+            search_i = i[mask]
+            search_j = j[mask]
+            search_lons = lons[mask]
+            search_lats = lats[mask]
+
+            lon_lats = self.index(
+                self.grid_lons,
+                self.grid_lats,
+                search_i,
+                search_j)
+
+            corners = np.empty((len(search_lons), 4, 2), dtype="d")
+            for d in range(4):
+                x, y = self.stereographic(
+                    lon_lats[:, d, 0],
+                    lon_lats[:, d, 1],
+                    central_lon=search_lons,
+                    central_lat=search_lats
+                )
+                corners[:, d, 0] = x
+                corners[:, d, 1] = y
+            zeros = np.zeros(len(search_lons))
+            contained = cell.contains(corners, zeros, zeros)
+            if not any(contained):
+                continue
+
+            vertices = corners[contained]
+            weights = bilinear.interpolation_weights(
+                vertices,
+                zeros[contained],
+                zeros[contained])
+
+            pts = np.where(mask)[0][contained]
+            global_found[pts] = contained
+            global_search_i[pts] = search_i[contained]
+            global_search_j[pts] = search_j[contained]
+            global_weights[pts] = weights
+
+        i, j = global_search_i, global_search_j
+        weights = global_weights
+        values = np.ma.asarray([
+            field[i, j],
+            field[i + 1, j],
+            field[i + 1, j + 1],
+            field[i, j + 1],
+        ], dtype="d").T
+        print(weights.max(), values.max())
+        return np.ma.sum(values * weights, axis=1)
+
+    @staticmethod
+    def index(lons, lats, i, j):
+        return np.ma.array([
+            [lons[i, j], lats[i, j]],
+            [lons[i + 1, j], lats[i + 1, j]],
+            [lons[i + 1, j + 1], lats[i + 1, j + 1]],
+            [lons[i, j + 1], lats[i, j + 1]],
+        ]).transpose((2, 0, 1))
+
+    @staticmethod
+    def contains(vertices, x, y):
+        if (np.ndim(vertices) == 3) and (np.ndim(x) == 1):
+            return cell.contains(vertices, x, y)
         return cell.Cell(vertices).contains(x, y)
 
     @staticmethod
