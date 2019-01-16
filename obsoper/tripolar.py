@@ -46,20 +46,18 @@ class ORCA(object):
             corner_lats = self.corners(self.lats, i, j)
             central_lon = (corner_lons.max() + corner_lons.min()) / 2
             central_lat = (corner_lats.max() + corner_lats.min()) / 2
-            cx, cy = ORCAExtended.stereographic(
+            cx, cy = ORCAExtended.gnomonic(
                 corner_lons,
                 corner_lats,
                 central_lon=central_lon,
                 central_lat=central_lat)
-            px, py = ORCAExtended.stereographic(
+            px, py = ORCAExtended.gnomonic(
                 lon,
                 lat,
                 central_lon=central_lon,
                 central_lat=central_lat)
             vertices = np.asarray([cx, cy], dtype=np.double).T
             if cell.Cell(vertices).contains(px, py):
-                print(lon, central_lon)
-                print(lat, central_lat)
                 weights = bilinear.interpolation_weights(vertices, px, py)
                 return np.sum(self.corners(values, i, j) * weights)
 
@@ -246,6 +244,20 @@ class ORCAExtended(object):
         x = k * cos(phi) * sin(lam - lam0)
         y = k * (cos(phi1) * sin(phi) -
                  sin(phi1) * cos(phi) * cos(lam - lam0))
+        return x, y
+
+    @staticmethod
+    def gnomonic(lon, lat,
+            central_lon=0,
+            central_lat=90):
+        """Gnomonic projection through point"""
+        lam, lam0 = deg2rad(lon), deg2rad(central_lon)
+        phi, phi1 = deg2rad(lat), deg2rad(central_lat)
+        d = (sin(phi1) * sin(phi) +
+             cos(phi1) * cos(phi) * cos(lam - lam0))
+        x = (cos(phi) * sin(lam - lam0)) / d
+        y = (cos(phi1) * sin(phi) -
+             sin(phi1) * cos(phi) * cos(lam - lam0)) / d
         return x, y
 
 

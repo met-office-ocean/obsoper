@@ -38,7 +38,7 @@ class TestORCA025(unittest.TestCase):
 
     def check(self, values, lon, lat, expect):
         result = self.interpolator(values, lon, lat)
-        np.testing.assert_array_almost_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result, decimal=4)
 
 
 @unittest.skipIf(not os.path.exists(ORCA025EXT_CICE_FILE), "no ORCA025 CICE file available")
