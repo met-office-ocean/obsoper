@@ -14,6 +14,39 @@ class SearchFailed(Exception):
     pass
 
 
+class ORCA(object):
+    """General purpose ORCA grid interpolator"""
+    def __init__(self, lons, lats):
+        if isinstance(lons, list):
+            lons = np.array(lons, dtype="d")
+        if isinstance(lats, list):
+            lats = np.array(lats, dtype="d")
+        self.lons = lons
+        self.lats = lats
+        nx, ny = self.lons.shape
+        gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
+        self.gi = gi.flatten()
+        self.gj = gj.flatten()
+        x, y, z = ORCAExtended.cartesian(
+            self.lons.flatten(),
+            self.lats.flatten())
+        self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T,
+                                          balanced_tree=False)
+
+    def __call__(self, *args, **kwargs):
+        return self.interpolate(*args, **kwargs)
+
+    def interpolate(self, values, lon, lat):
+        x, y, z = ORCAExtended.cartesian(lon, lat)
+        eps, t = self.tree.query([x, y, z], k=12)
+        for ti in t:
+            i = self.gi[ti]
+            j = self.gj[ti]
+        i = self.gi[t[0]]
+        j = self.gj[t[0]]
+        return values[i, j]
+
+
 class ORCAExtended(object):
     """General purpose extended grid interpolator"""
     def __init__(

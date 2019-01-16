@@ -6,8 +6,39 @@ import numpy as np
 import obsoper
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+ORCA025_FILE = os.path.join(SCRIPT_DIR,
+    "data/orca025_grid.nc")
 ORCA025EXT_CICE_FILE = os.path.join(SCRIPT_DIR,
-                                    "data/prodm_op_gl.cice_20180930_00.-36.nc")
+    "data/prodm_op_gl.cice_20180930_00.-36.nc")
+
+
+class TestORCA025(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        with netCDF4.Dataset(ORCA025_FILE) as dataset:
+            cls.orca025_lons = np.asarray(dataset.variables["nav_lon"][:])
+            cls.orca025_lats = np.asarray(dataset.variables["nav_lat"][:])
+
+    def setUp(self):
+        self.interpolator = obsoper.ORCA(self.orca025_lons, self.orca025_lats)
+
+    def test_interpolator_given_constant(self):
+        lon, lat = 0, 0
+        constant = 42
+        values = np.full(self.orca025_lons.shape, constant)
+        self.check(values, lon, lat, constant)
+
+    def test_interpolator_given_longitude(self):
+        lon, lat = 100, 0
+        self.check(self.orca025_lons, lon, lat, lon)
+
+    def test_interpolator_given_latitude(self):
+        lon, lat = 100, 45
+        self.check(self.orca025_lats, lon, lat, lat)
+
+    def check(self, values, lon, lat, expect):
+        result = self.interpolator(values, lon, lat)
+        np.testing.assert_array_almost_equal(expect, result)
 
 
 @unittest.skipIf(not os.path.exists(ORCA025EXT_CICE_FILE), "no ORCA025 CICE file available")
