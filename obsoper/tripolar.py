@@ -38,13 +38,38 @@ class ORCA(object):
 
     def interpolate(self, values, lon, lat):
         x, y, z = ORCAExtended.cartesian(lon, lat)
-        eps, t = self.tree.query([x, y, z], k=12)
-        for ti in t:
+        eps, indices = self.tree.query([x, y, z], k=12)
+        for ti in indices:
             i = self.gi[ti]
             j = self.gj[ti]
-        i = self.gi[t[0]]
-        j = self.gj[t[0]]
-        return values[i, j]
+            corner_lons = self.corners(self.lons, i, j)
+            corner_lats = self.corners(self.lats, i, j)
+            central_lon = (corner_lons.max() + corner_lons.min()) / 2
+            central_lat = (corner_lats.max() + corner_lats.min()) / 2
+            cx, cy = ORCAExtended.stereographic(
+                corner_lons,
+                corner_lats,
+                central_lon=central_lon,
+                central_lat=central_lat)
+            px, py = ORCAExtended.stereographic(
+                lon,
+                lat,
+                central_lon=central_lon,
+                central_lat=central_lat)
+            vertices = np.asarray([cx, cy], dtype=np.double).T
+            if cell.Cell(vertices).contains(px, py):
+                print(lon, central_lon)
+                print(lat, central_lat)
+                weights = bilinear.interpolation_weights(vertices, px, py)
+                return np.sum(self.corners(values, i, j) * weights)
+
+    @staticmethod
+    def corners(array, i, j, dtype="d"):
+        return np.ma.asarray([
+            array[i, j],
+            array[i + 1, j],
+            array[i + 1, j + 1],
+            array[i, j + 1]], dtype=dtype)
 
 
 class ORCAExtended(object):
