@@ -46,12 +46,12 @@ class ORCA(object):
             corner_lats = self.corners(self.lats, i, j)
             central_lon = (corner_lons.max() + corner_lons.min()) / 2
             central_lat = (corner_lats.max() + corner_lats.min()) / 2
-            cx, cy = ORCAExtended.gnomonic(
+            cx, cy = ORCAExtended.lambert_azimuthal_equal_area(
                 corner_lons,
                 corner_lats,
                 central_lon=central_lon,
                 central_lat=central_lat)
-            px, py = ORCAExtended.gnomonic(
+            px, py = ORCAExtended.lambert_azimuthal_equal_area(
                 lon,
                 lat,
                 central_lon=central_lon,
@@ -258,6 +258,24 @@ class ORCAExtended(object):
         x = (cos(phi) * sin(lam - lam0)) / d
         y = (cos(phi1) * sin(phi) -
              sin(phi1) * cos(phi) * cos(lam - lam0)) / d
+        return x, y
+
+    @staticmethod
+    def lambert_azimuthal_equal_area(
+            lon,
+            lat,
+            central_lon=0,
+            central_lat=90):
+        """Lambert azimuthal equal area projection through point"""
+        lam, lam0 = deg2rad(lon), deg2rad(central_lon)
+        phi, phi1 = deg2rad(lat), deg2rad(central_lat)
+        d = (1 +
+             sin(phi1) * sin(phi) +
+             cos(phi1) * cos(phi) * cos(lam - lam0))
+        k = np.sqrt(2 / d)
+        x = k * cos(phi) * sin(lam - lam0)
+        y = k * (cos(phi1) * sin(phi) -
+                 sin(phi1) * cos(phi) * cos(lam - lam0))
         return x, y
 
 
