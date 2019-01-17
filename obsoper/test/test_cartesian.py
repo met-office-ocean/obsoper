@@ -91,24 +91,6 @@ class TestORCA025EXTCICE(unittest.TestCase):
         expect = [True, True]
         np.testing.assert_array_equal(expect, result)
 
-    def test_index_cells(self):
-        lons = np.array([
-            [0, 0, 0],
-            [1, 1, 1]
-        ])
-        lats = np.array([
-            [0, 0.5, 1],
-            [0, 0.5, 1]
-        ])
-        i = np.array([0])
-        j = np.array([0])
-        result = obsoper.ORCAExtended.index(lons, lats, i, j)
-        expect = [[[0, 0],
-                   [1, 0],
-                   [1, 0.5],
-                   [0, 0.5]]]
-        np.testing.assert_array_almost_equal(expect, result)
-
     def test_vector_interpolate_southern_ocean(self):
         result = self.interpolator.vector_interpolate(self.grid_ice[0], [14], [-55])
         expect = [0.61351594]

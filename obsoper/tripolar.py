@@ -127,8 +127,7 @@ class ORCAExtended(object):
 
     def search(self, lon, lat):
         x, y, z = self.cartesian(lon, lat)
-        k = min(12, len(self.gi))
-        eps, self.i = self.tree.query([x, y, z], k=k)
+        eps, self.i = self.tree.query([x, y, z], k=self.k)
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
@@ -147,6 +146,10 @@ class ORCAExtended(object):
                 return i, j, self.weights(vertices, 0., 0.)
         raise SearchFailed("{} {} not found".format(lon, lat))
 
+    @property
+    def k(self):
+        return min(12, len(self.gi))
+
     def weights(self, vertices, x, y):
         return bilinear.interpolation_weights(vertices, x, y)
 
@@ -158,14 +161,14 @@ class ORCAExtended(object):
             lats = np.array(lats)
 
         x, y, z = self.cartesian(lons, lats)
-        eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T, k=12)
+        eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T,
+                                          k=self.k)
 
-        no = len(lons)
         global_found = np.zeros(len(lons), dtype=bool)
-        global_search_i = np.zeros(no, dtype="i")
-        global_search_j = np.zeros(no, dtype="i")
-        global_weights = np.ma.masked_all((no, 4), dtype="d")
-        for ni in range(12):
+        global_search_i = np.zeros(len(lons), dtype="i")
+        global_search_j = np.zeros(len(lons), dtype="i")
+        global_weights = np.ma.masked_all((len(lons), 4), dtype="d")
+        for ni in range(self.k):
             nni = neighbours[:, ni]
 
             i, j = self.gi[nni], self.gj[nni]
@@ -180,30 +183,25 @@ class ORCAExtended(object):
             search_lons = lons[mask]
             search_lats = lats[mask]
 
-            lon_lats = self.index(
-                self.grid_lons,
-                self.grid_lats,
-                search_i,
-                search_j)
+            corner_lons = self.corners(self.grid_lons, search_i, search_j)
+            corner_lats = self.corners(self.grid_lats, search_i, search_j)
 
             corners = np.empty((len(search_lons), 4, 2), dtype="d")
-            for d in range(4):
+            for ci in range(4):
                 x, y = self.stereographic(
-                    lon_lats[:, d, 0],
-                    lon_lats[:, d, 1],
+                    corner_lons[ci],
+                    corner_lats[ci],
                     central_lon=search_lons,
-                    central_lat=search_lats
-                )
-                corners[:, d, 0] = x
-                corners[:, d, 1] = y
+                    central_lat=search_lats)
+                corners[:, ci, 0] = x
+                corners[:, ci, 1] = y
             zeros = np.zeros(len(search_lons))
             contained = cell.contains(corners, zeros, zeros)
             if not any(contained):
                 continue
 
-            vertices = corners[contained]
             weights = bilinear.interpolation_weights(
-                vertices,
+                corners[contained],
                 zeros[contained],
                 zeros[contained])
 
@@ -215,23 +213,16 @@ class ORCAExtended(object):
 
         i, j = global_search_i, global_search_j
         weights = global_weights
-        values = np.ma.asarray([
-            field[i, j],
-            field[i + 1, j],
-            field[i + 1, j + 1],
-            field[i, j + 1],
-        ], dtype="d").T
-        print(weights.max(), values.max())
-        return np.ma.sum(values * weights, axis=1)
+        values = self.corners(field, i, j)
+        return np.ma.sum(values.T * weights, axis=1)
 
     @staticmethod
-    def index(lons, lats, i, j):
-        return np.ma.array([
-            [lons[i, j], lats[i, j]],
-            [lons[i + 1, j], lats[i + 1, j]],
-            [lons[i + 1, j + 1], lats[i + 1, j + 1]],
-            [lons[i, j + 1], lats[i, j + 1]],
-        ]).transpose((2, 0, 1))
+    def corners(array, i, j, dtype="d"):
+        return np.ma.asarray([
+            array[i, j],
+            array[i + 1, j],
+            array[i + 1, j + 1],
+            array[i, j + 1]], dtype=dtype)
 
     @staticmethod
     def contains(vertices, x, y):
