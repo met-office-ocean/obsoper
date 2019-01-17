@@ -1,9 +1,13 @@
 # pylint: disable=missing-docstring, invalid-name
 import unittest
 import os
-import netCDF4
 import numpy as np
 import obsoper
+try:
+    import netCDF4
+except ImportError:
+    netCDF4 = None
+
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 ORCA025_FILE = os.path.join(SCRIPT_DIR,
@@ -12,6 +16,8 @@ ORCA025EXT_CICE_FILE = os.path.join(SCRIPT_DIR,
     "data/prodm_op_gl.cice_20180930_00.-36.nc")
 
 
+@unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025_FILE),
+                 "Skip ORCA025 tests")
 class TestORCA025(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -41,7 +47,8 @@ class TestORCA025(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result, decimal=4)
 
 
-@unittest.skipIf(not os.path.exists(ORCA025EXT_CICE_FILE), "no ORCA025 CICE file available")
+@unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025EXT_CICE_FILE),
+                 "Skip ORCA025ext CICE tests")
 class TestORCA025EXTCICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

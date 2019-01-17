@@ -9,7 +9,10 @@ from obsoper.corners import (
     correct_corners,
     mask_corners)
 from pkg_resources import parse_version
-import netCDF4
+try:
+    import netCDF4
+except ImportError:
+    netCDF4 = None
 
 
 class SearchFailed(Exception):
