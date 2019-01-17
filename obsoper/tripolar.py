@@ -110,6 +110,9 @@ class ORCAExtended(object):
         return self.interpolate(*args)
 
     def interpolate(self, field, lons, lats):
+        return self.vector_interpolate(field, lons, lats)
+
+    def serial_interpolate(self, field, lons, lats):
         result = np.ma.masked_all(len(lons), dtype=np.double)
         for io in range(len(lons)):
             try:
@@ -215,8 +218,14 @@ class ORCAExtended(object):
 
         i, j = global_search_i, global_search_j
         weights = global_weights
-        values = self.corners(field, i, j)
-        return np.ma.sum(values.T * weights, axis=1)
+        values = self.corners(field, i, j).T
+
+        # Mask locations with fewer than 4 surrounding points
+        if isinstance(values, np.ma.masked_array):
+            if isinstance(values.mask, np.ndarray):
+               values.mask[values.mask.any(axis=1)] = True
+
+        return np.ma.sum(values * weights, axis=1)
 
     @staticmethod
     def corners(array, i, j, dtype="d"):
