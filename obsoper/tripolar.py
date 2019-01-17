@@ -8,6 +8,7 @@ from obsoper.corners import (
     select_field,
     correct_corners,
     mask_corners)
+from pkg_resources import parse_version
 
 
 class SearchFailed(Exception):
@@ -30,8 +31,14 @@ class ORCA(object):
         x, y, z = ORCAExtended.cartesian(
             self.lons.flatten(),
             self.lats.flatten())
-        self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T,
-                                          balanced_tree=False)
+        self.tree = self._kdtree(np.array([x, y, z]).T)
+
+    @staticmethod
+    def _kdtree(points):
+        if parse_version(scipy.__version__) >= parse_version("0.16.0"):
+            return scipy.spatial.cKDTree(points, balanced_tree=False)
+        else:
+            return scipy.spatial.cKDTree(points)
 
     def __call__(self, *args, **kwargs):
         return self.interpolate(*args, **kwargs)
