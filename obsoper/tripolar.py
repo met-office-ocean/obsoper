@@ -187,14 +187,13 @@ class ORCAExtended(object):
             corner_lats = self.corners(self.grid_lats, search_i, search_j)
 
             corners = np.empty((len(search_lons), 4, 2), dtype="d")
-            for ci in range(4):
-                x, y = self.stereographic(
-                    corner_lons[ci],
-                    corner_lats[ci],
-                    central_lon=search_lons,
-                    central_lat=search_lats)
-                corners[:, ci, 0] = x
-                corners[:, ci, 1] = y
+            x, y = self.stereographic(
+                corner_lons,
+                corner_lats,
+                central_lon=search_lons,
+                central_lat=search_lats)
+            corners[:, :, 0] = x.T
+            corners[:, :, 1] = y.T
             zeros = np.zeros(len(search_lons))
             contained = cell.contains(corners, zeros, zeros)
             if not any(contained):
