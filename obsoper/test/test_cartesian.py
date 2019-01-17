@@ -125,6 +125,37 @@ class TestORCA025EXTCICE(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect.compressed(),
                                              result.compressed())
 
+class TestORCAExtendedUnitSquare(unittest.TestCase):
+    def test_unit_square(self):
+        lons, lats = np.meshgrid(
+            np.array([0, 1], dtype="d"),
+            np.array([0, 1], dtype="d")
+        )
+        operator = obsoper.ORCAExtended.unmasked(lons, lats)
+        result = operator.interpolate(lons, [0.5], [0.5])
+        expect = [0.5]
+        np.testing.assert_array_almost_equal(expect, result)
+
+    def test_interpolate_given_masked_corner_returns_masked(self):
+        lons, lats = np.meshgrid(
+            np.array([0, 1], dtype="d"),
+            np.array([0, 1], dtype="d")
+        )
+        values = np.ma.masked_array(
+            [[1, 2], [3, 4]],
+            mask=[[False, False], [False, True]],
+            dtype="d")
+        operator = obsoper.ORCAExtended.unmasked(lons, lats)
+        result = operator.interpolate(values, [0.5], [0.5])
+        expect = np.ma.masked_all(1)
+        self.assert_masked_array_equal(expect, result)
+
+    def assert_masked_array_equal(self, expect, result):
+        expect = np.ma.asarray(expect)
+        self.assertEqual(expect.shape, result.shape)
+        np.testing.assert_array_almost_equal(expect.compressed(),
+                                             result.compressed())
+
 
 class TestStereographic(unittest.TestCase):
     def setUp(self):

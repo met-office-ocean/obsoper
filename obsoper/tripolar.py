@@ -9,6 +9,7 @@ from obsoper.corners import (
     correct_corners,
     mask_corners)
 from pkg_resources import parse_version
+import netCDF4
 
 
 class SearchFailed(Exception):
@@ -33,6 +34,14 @@ class ORCA(object):
             self.lats.flatten())
         self.tree = self._kdtree(np.array([x, y, z]).T)
 
+    @classmethod
+    def load(cls, path, lon="nav_lon", lat="nav_lat"):
+        """Helper to load interpolator from file"""
+        with netCDF4.Dataset(path) as dataset:
+            lons = dataset.variables[lon][:]
+            lats = dataset.variables[lat][:]
+            return cls(lons, lats)
+
     @staticmethod
     def _kdtree(points):
         if parse_version(scipy.__version__) >= parse_version("0.16.0"):
@@ -51,18 +60,12 @@ class ORCA(object):
             j = self.gj[ti]
             corner_lons = self.corners(self.lons, i, j)
             corner_lats = self.corners(self.lats, i, j)
-            central_lon = (corner_lons.max() + corner_lons.min()) / 2
-            central_lat = (corner_lats.max() + corner_lats.min()) / 2
-            cx, cy = ORCAExtended.lambert_azimuthal_equal_area(
+            cx, cy = ORCAExtended.gnomonic(
                 corner_lons,
                 corner_lats,
-                central_lon=central_lon,
-                central_lat=central_lat)
-            px, py = ORCAExtended.lambert_azimuthal_equal_area(
-                lon,
-                lat,
-                central_lon=central_lon,
-                central_lat=central_lat)
+                central_lon=lon,
+                central_lat=lat)
+            px, py = 0., 0.
             vertices = np.asarray([cx, cy], dtype=np.double).T
             if cell.Cell(vertices).contains(px, py):
                 weights = bilinear.interpolation_weights(vertices, px, py)
@@ -96,6 +99,10 @@ class ORCAExtended(object):
         x, y, z = self.cartesian(glons, glats)
         self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T)
 
+    @classmethod
+    def unmasked(cls, lons, lats):
+        return cls(lons, lats, False)
+
     def __call__(self, *args):
         return self.interpolate(*args)
 
@@ -108,12 +115,20 @@ class ORCAExtended(object):
                 continue
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
-            result[io] = np.sum(weights * field[pts])
+            values = field[pts]
+
+            # Skip points not surrounded by four corners
+            if isinstance(values, np.ma.masked_array):
+                if values.mask.any():
+                    continue
+
+            result[io] = np.sum(weights * values)
         return result
 
     def search(self, lon, lat):
         x, y, z = self.cartesian(lon, lat)
-        eps, self.i = self.tree.query([x, y, z], k=12)
+        k = min(12, len(self.gi))
+        eps, self.i = self.tree.query([x, y, z], k=k)
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
