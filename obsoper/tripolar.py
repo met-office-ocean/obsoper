@@ -138,8 +138,8 @@ class ORCAExtended(object):
             pts = (i + np.array([0, 1, 1, 0]),
                    j + np.array([0, 0, 1, 1]))
             try:
-                lons = self.grid_lons[pts]
-                lats = self.grid_lats[pts]
+                lons = np.asarray(self.grid_lons[pts], dtype="d")
+                lats = np.asarray(self.grid_lats[pts], dtype="d")
             except IndexError:
                 continue
             x, y = self.stereographic(
@@ -149,6 +149,7 @@ class ORCAExtended(object):
                 central_lat=lat)
             vertices = np.asarray([x, y], dtype=np.double).T
             if self.contains(vertices, 0., 0.):
+                print("serial lons", lons)
                 return i, j, self.weights(vertices, 0., 0.)
         raise SearchFailed("{} {} not found".format(lon, lat))
 
@@ -162,9 +163,9 @@ class ORCAExtended(object):
     def vector_interpolate(self, field, lons, lats):
         """Vectorised approach to Cartesian/Stereographic interpolation"""
         if isinstance(lons, list):
-            lons = np.array(lons)
+            lons = np.array(lons, dtype="d")
         if isinstance(lats, list):
-            lats = np.array(lats)
+            lats = np.array(lats, dtype="d")
 
         # Check field broadcastable to model grid
         shape = self.grid_lons.shape

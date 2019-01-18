@@ -61,6 +61,18 @@ class TestCellContains(unittest.TestCase):
         result = grid_cell.contains(x, y)
         self.assertEqual(expect, result)
 
+    def test_cell_contains_given_point_on_line_defined_by_edge(self):
+        """should reject points on line outside edge"""
+        vertices = np.array([[
+            [0, -2],
+            [0, -1],
+            [1, -1],
+            [1, -2]]], dtype="d")
+        zeros = np.array([0.], dtype="d")
+        result = cell.contains(vertices, zeros, zeros)
+        expect = [False]
+        self.assertEqual(expect, result)
+
 
 class TestCellFromPositions(unittest.TestCase):
     def test_from_positions_given_regular_cell(self):

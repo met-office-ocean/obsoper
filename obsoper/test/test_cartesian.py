@@ -83,7 +83,7 @@ class TestORCA025EXTCICE(unittest.TestCase):
 
     def test_search_southern_ocean(self):
         ri, rj, rw = self.operator.search(14, -55)
-        ei, ej, ew = 418, 1204, [0.53151717, 0.46848283, 0, 0]
+        ei, ej, ew = 418, 1204, [0.531521, 0.468479, 0, 0]
         self.assertEqual((ei, ej), (ri, rj))
         np.testing.assert_array_almost_equal(ew, rw)
 
@@ -108,41 +108,18 @@ class TestORCA025EXTCICE(unittest.TestCase):
         expect = [0]
         np.testing.assert_array_almost_equal(expect, result)
 
-    def test_interpolate_near_southern_ocean_crease(self):
-        def f(lons, lats):
-            return lons - lats
-        lons = np.array([-67.97979798, -69.6969697 , -71.41414141,
-                         -73.13131313, -74.84848485])
-        lats = np.array([120.,  120.,  120.,  120.,  120.])
-        result = self.operator.vector_interpolate(
-            f(self.grid_lons, self.grid_lats),
-            lons,
-            lats)
-        expect = np.ma.masked_all(5)
-        self.assert_masked_array_equal(expect, result)
-
+    @unittest.skip("exhaustive test")
     def test_serial_and_vector_algorithms_agree(self):
         lons, lats = np.meshgrid(
-            np.linspace(0, 360, 100),
-            np.linspace(-90, 90, 100)
+            np.linspace(0, 360, 200),
+            np.linspace(-90, 90, 200)
         )
         lons, lats = lons.flatten(), lats.flatten()
         _, ni, nj = self.grid_ice.shape
-        field = np.ones((ni, nj), dtype="d")
+        field = self.grid_lats
         result = self.operator.vector_interpolate(field, lons, lats)
         expect = self.operator.serial_interpolate(field, lons, lats)
         self.assert_masked_array_equal(expect, result)
-
-    def test_cell_contains_given_point_on_line_defined_by_edge(self):
-        vertices = np.array([[
-            [0, -2],
-            [0, -1],
-            [1, -1],
-            [1, -2]]], dtype="d")
-        zeros = np.array([0.], dtype="d")
-        result = obsoper.cell.contains(vertices, zeros, zeros)
-        expect = [False]
-        self.assertEqual(expect, result)
 
     def assert_masked_array_equal(self, expect, result):
         expect = np.ma.asarray(expect)
