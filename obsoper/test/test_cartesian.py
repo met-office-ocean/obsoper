@@ -58,7 +58,7 @@ class TestORCA025EXTCICE(unittest.TestCase):
             cls.grid_ice = dataset.variables["aice"][:]
 
     def setUp(self):
-        self.interpolator = obsoper.ORCAExtended(
+        self.operator = obsoper.ORCAExtended(
             self.grid_lons,
             self.grid_lats,
             self.grid_ice.mask)
@@ -66,23 +66,23 @@ class TestORCA025EXTCICE(unittest.TestCase):
     def test_search(self):
         lon = -9.9305896759
         lat = -44.4005584717
-        ri, rj, rw = self.interpolator.search(lon, lat)
+        ri, rj, rw = self.operator.search(lon, lat)
         ei, ej, ew = 484, 1108, [0.44, 0.27, 0.1, 0.17]
         self.assertEqual((ei, ej), (ri, rj))
         np.testing.assert_array_almost_equal(ew, rw, decimal=2)
 
     def test_interpolate_equator(self):
-        result = self.interpolator(self.grid_ice[0], [0], [0])
+        result = self.operator(self.grid_ice[0], [0], [0])
         expect = [0]
         self.assert_masked_array_equal(expect, result)
 
     def test_interpolate_southern_ocean(self):
-        result = self.interpolator(self.grid_ice[0], [14], [-55])
+        result = self.operator(self.grid_ice[0], [14], [-55])
         expect = [0.61351594]
         self.assert_masked_array_equal(expect, result)
 
     def test_search_southern_ocean(self):
-        ri, rj, rw = self.interpolator.search(14, -55)
+        ri, rj, rw = self.operator.search(14, -55)
         ei, ej, ew = 418, 1204, [0.53151717, 0.46848283, 0, 0]
         self.assertEqual((ei, ej), (ri, rj))
         np.testing.assert_array_almost_equal(ew, rw)
@@ -99,12 +99,12 @@ class TestORCA025EXTCICE(unittest.TestCase):
         np.testing.assert_array_equal(expect, result)
 
     def test_vector_interpolate_southern_ocean(self):
-        result = self.interpolator.vector_interpolate(self.grid_ice[0], [14], [-55])
+        result = self.operator.vector_interpolate(self.grid_ice[0], [14], [-55])
         expect = [0.61351594]
         np.testing.assert_array_almost_equal(expect, result)
 
     def test_vector_interpolate_equator(self):
-        result = self.interpolator.vector_interpolate(self.grid_ice[0], [0], [0])
+        result = self.operator.vector_interpolate(self.grid_ice[0], [0], [0])
         expect = [0]
         np.testing.assert_array_almost_equal(expect, result)
 
@@ -114,12 +114,35 @@ class TestORCA025EXTCICE(unittest.TestCase):
         lons = np.array([-67.97979798, -69.6969697 , -71.41414141,
                          -73.13131313, -74.84848485])
         lats = np.array([120.,  120.,  120.,  120.,  120.])
-        result = self.interpolator.vector_interpolate(
+        result = self.operator.vector_interpolate(
             f(self.grid_lons, self.grid_lats),
             lons,
             lats)
         expect = np.ma.masked_all(5)
         self.assert_masked_array_equal(expect, result)
+
+    def test_serial_and_vector_algorithms_agree(self):
+        lons, lats = np.meshgrid(
+            np.linspace(0, 360, 100),
+            np.linspace(-90, 90, 100)
+        )
+        lons, lats = lons.flatten(), lats.flatten()
+        _, ni, nj = self.grid_ice.shape
+        field = np.ones((ni, nj), dtype="d")
+        result = self.operator.vector_interpolate(field, lons, lats)
+        expect = self.operator.serial_interpolate(field, lons, lats)
+        self.assert_masked_array_equal(expect, result)
+
+    def test_cell_contains_given_point_on_line_defined_by_edge(self):
+        vertices = np.array([[
+            [0, -2],
+            [0, -1],
+            [1, -1],
+            [1, -2]]], dtype="d")
+        zeros = np.array([0.], dtype="d")
+        result = obsoper.cell.contains(vertices, zeros, zeros)
+        expect = [False]
+        self.assertEqual(expect, result)
 
     def assert_masked_array_equal(self, expect, result):
         expect = np.ma.asarray(expect)

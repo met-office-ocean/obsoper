@@ -119,6 +119,7 @@ cpdef bint same_side_test(double[:, :] vertices, double x, double y):
     """
     cdef double x1, y1, x2, y2, current, previous
     cdef int ipoint, npoints
+    cdef double xmin, xmax, ymin, ymax
 
     npoints = vertices.shape[0]
 
@@ -133,8 +134,20 @@ cpdef bint same_side_test(double[:, :] vertices, double x, double y):
                               x2, y2,
                               x, y)
         if (current == 0):
-            # Points on boundary are considered part of the polygon
-            return True
+            # Point on line defined by boundary is included
+            # if it lies between the corner points
+            if (x1 < x2):
+                xmin, xmax = x1, x2
+            else:
+                xmin, xmax = x2, x1
+            if (y1 < y2):
+                ymin, ymax = y1, y2
+            else:
+                ymin, ymax = y2, y1
+            return ((x >= xmin) and
+                    (x <= xmax) and
+                    (y >= ymin) and
+                    (y <= ymax))
 
         if (previous * current) < 0:
             return False

@@ -166,6 +166,11 @@ class ORCAExtended(object):
         if isinstance(lats, list):
             lats = np.array(lats)
 
+        # Check field broadcastable to model grid
+        shape = self.grid_lons.shape
+        message = "field shape '{}' != '{}'".format(field.shape, shape)
+        assert field.shape == shape, message
+
         x, y, z = self.cartesian(lons, lats)
         eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T,
                                           k=self.k)
@@ -200,7 +205,7 @@ class ORCAExtended(object):
                 central_lat=search_lats)
             corners[:, :, 0] = x.T
             corners[:, :, 1] = y.T
-            zeros = np.zeros(len(search_lons))
+            zeros = np.zeros(len(search_lons), dtype="d")
             contained = cell.contains(corners, zeros, zeros)
             if not any(contained):
                 continue
