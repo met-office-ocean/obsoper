@@ -48,7 +48,7 @@ class TestTripolar(unittest.TestCase):
                                    self.observed_latitudes)
         result = fixture.interpolate(self.constant_field)
         expect = np.array([self.constant])
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result)
 
 
 @unittest.skip("consider removing these tests")
