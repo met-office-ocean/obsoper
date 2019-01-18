@@ -19,31 +19,31 @@ class ORCAExtended(object):
     """General purpose extended grid interpolator"""
     def __init__(
             self,
-            lons,
-            lats,
+            grid_lons,
+            grid_lats,
             mask=None):
-        nx, ny = lons.shape
-        self.grid_lons = lons
-        self.grid_lats = lats
+        self.grid_lons = self.cast_array(grid_lons)
+        self.grid_lats = self.cast_array(grid_lats)
+        ni, nj = self.grid_lons.shape
+        gi, gj = np.meshgrid(np.arange(ni), np.arange(nj), indexing="ij")
         if mask is None:
-            if isinstance(lons, list):
-                lons = np.array(lons, dtype="d")
-            if isinstance(lats, list):
-                lats = np.array(lats, dtype="d")
-            gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
             self.gi = gi.flatten()
             self.gj = gj.flatten()
-            x, y, z = ORCAExtended.cartesian(
-                lons.flatten(),
-                lats.flatten())
+            glons = self.grid_lons.flatten()
+            glats = self.grid_lats.flatten()
         else:
-            glons = np.ma.masked_array(lons, mask).compressed()
-            glats = np.ma.masked_array(lats, mask).compressed()
-            gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
             self.gi = np.ma.masked_array(gi, mask).compressed()
             self.gj = np.ma.masked_array(gj, mask).compressed()
-            x, y, z = self.cartesian(glons, glats)
+            glons = np.ma.masked_array(self.grid_lons, mask).compressed()
+            glats = np.ma.masked_array(self.grid_lats, mask).compressed()
+        x, y, z = self.cartesian(glons, glats)
         self.tree = self._kdtree(np.array([x, y, z]).T)
+
+    @staticmethod
+    def cast_array(values):
+        if isinstance(values, list):
+            return np.array(values, dtype="d")
+        return values
 
     @staticmethod
     def _kdtree(points):
