@@ -36,7 +36,7 @@ from .version import __version__
 from .core import (Operator,
                    ObservationOperator)
 from .window import TimeWindow
-from .tripolar import Tripolar, ORCAExtended, ORCA
+from .tripolar import Tripolar, ORCAExtended
 from .vertical import Section
 from .orca import (remove_halo,
                    north_fold)

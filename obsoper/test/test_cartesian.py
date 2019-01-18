@@ -26,7 +26,9 @@ class TestORCA025(unittest.TestCase):
             cls.orca025_lats = np.asarray(dataset.variables["nav_lat"][:])
 
     def setUp(self):
-        self.interpolator = obsoper.ORCA(self.orca025_lons, self.orca025_lats)
+        self.interpolator = obsoper.ORCAExtended(
+            self.orca025_lons,
+            self.orca025_lats)
 
     def test_interpolator_given_constant(self):
         lon, lat = 0, 0
@@ -41,6 +43,16 @@ class TestORCA025(unittest.TestCase):
     def test_interpolator_given_latitude(self):
         lon, lat = 100, 45
         self.check(self.orca025_lats, lon, lat, lat)
+
+    def test_interpolate_3d(self):
+        no = 3  # Observations
+        nk = 10  # Levels
+        ni, nj = self.orca025_lons.shape
+        values = np.ones((ni, nj, nk), dtype="d")
+        lons, lats = np.arange(no), np.arange(no)
+        result = self.interpolator(values, lons, lats)
+        expect = np.ones((nk, no))
+        np.testing.assert_array_almost_equal(expect, result)
 
     def check(self, values, lon, lat, expect):
         result = self.interpolator(values, lon, lat)
@@ -134,7 +146,7 @@ class TestORCAExtendedUnitSquare(unittest.TestCase):
             np.array([0, 1], dtype="d"),
             np.array([0, 1], dtype="d")
         )
-        operator = obsoper.ORCAExtended.unmasked(lons, lats)
+        operator = obsoper.ORCAExtended(lons, lats)
         result = operator.interpolate(lons, [0.5], [0.5])
         expect = [0.5]
         np.testing.assert_array_almost_equal(expect, result)
@@ -148,7 +160,7 @@ class TestORCAExtendedUnitSquare(unittest.TestCase):
             [[1, 2], [3, 4]],
             mask=[[False, False], [False, True]],
             dtype="d")
-        operator = obsoper.ORCAExtended.unmasked(lons, lats)
+        operator = obsoper.ORCAExtended(lons, lats)
         result = operator.interpolate(values, [0.5], [0.5])
         expect = np.ma.masked_all(1)
         self.assert_masked_array_equal(expect, result)
@@ -162,7 +174,7 @@ class TestORCAExtendedUnitSquare(unittest.TestCase):
             [[1, 2], [3, 4]],
             mask=[[False, False], [False, True]],
             dtype="d")
-        operator = obsoper.ORCAExtended.unmasked(lons, lats)
+        operator = obsoper.ORCAExtended(lons, lats)
         result = operator.vector_interpolate(values, [0.5], [0.5])
         expect = np.ma.masked_all(1)
         self.assert_masked_array_equal(expect, result)

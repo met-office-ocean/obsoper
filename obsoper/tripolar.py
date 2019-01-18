@@ -9,41 +9,41 @@ from obsoper.corners import (
     correct_corners,
     mask_corners)
 from pkg_resources import parse_version
-try:
-    import netCDF4
-except ImportError:
-    netCDF4 = None
 
 
 class SearchFailed(Exception):
     pass
 
 
-class ORCA(object):
-    """General purpose ORCA grid interpolator"""
-    def __init__(self, lons, lats):
-        if isinstance(lons, list):
-            lons = np.array(lons, dtype="d")
-        if isinstance(lats, list):
-            lats = np.array(lats, dtype="d")
-        self.lons = lons
-        self.lats = lats
-        nx, ny = self.lons.shape
-        gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
-        self.gi = gi.flatten()
-        self.gj = gj.flatten()
-        x, y, z = ORCAExtended.cartesian(
-            self.lons.flatten(),
-            self.lats.flatten())
+class ORCAExtended(object):
+    """General purpose extended grid interpolator"""
+    def __init__(
+            self,
+            lons,
+            lats,
+            mask=None):
+        nx, ny = lons.shape
+        self.grid_lons = lons
+        self.grid_lats = lats
+        if mask is None:
+            if isinstance(lons, list):
+                lons = np.array(lons, dtype="d")
+            if isinstance(lats, list):
+                lats = np.array(lats, dtype="d")
+            gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
+            self.gi = gi.flatten()
+            self.gj = gj.flatten()
+            x, y, z = ORCAExtended.cartesian(
+                lons.flatten(),
+                lats.flatten())
+        else:
+            glons = np.ma.masked_array(lons, mask).compressed()
+            glats = np.ma.masked_array(lats, mask).compressed()
+            gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
+            self.gi = np.ma.masked_array(gi, mask).compressed()
+            self.gj = np.ma.masked_array(gj, mask).compressed()
+            x, y, z = self.cartesian(glons, glats)
         self.tree = self._kdtree(np.array([x, y, z]).T)
-
-    @classmethod
-    def load(cls, path, lon="nav_lon", lat="nav_lat"):
-        """Helper to load interpolator from file"""
-        with netCDF4.Dataset(path) as dataset:
-            lons = dataset.variables[lon][:]
-            lats = dataset.variables[lat][:]
-            return cls(lons, lats)
 
     @staticmethod
     def _kdtree(points):
@@ -52,64 +52,14 @@ class ORCA(object):
         else:
             return scipy.spatial.cKDTree(points)
 
-    def __call__(self, *args, **kwargs):
-        return self.interpolate(*args, **kwargs)
-
-    def interpolate(self, values, lon, lat):
-        x, y, z = ORCAExtended.cartesian(lon, lat)
-        eps, indices = self.tree.query([x, y, z], k=12)
-        for ti in indices:
-            i = self.gi[ti]
-            j = self.gj[ti]
-            corner_lons = self.corners(self.lons, i, j)
-            corner_lats = self.corners(self.lats, i, j)
-            cx, cy = ORCAExtended.gnomonic(
-                corner_lons,
-                corner_lats,
-                central_lon=lon,
-                central_lat=lat)
-            px, py = 0., 0.
-            vertices = np.asarray([cx, cy], dtype=np.double).T
-            if cell.Cell(vertices).contains(px, py):
-                weights = bilinear.interpolation_weights(vertices, px, py)
-                return np.sum(self.corners(values, i, j) * weights)
-
-    @staticmethod
-    def corners(array, i, j, dtype="d"):
-        return np.ma.asarray([
-            array[i, j],
-            array[i + 1, j],
-            array[i + 1, j + 1],
-            array[i, j + 1]], dtype=dtype)
-
-
-class ORCAExtended(object):
-    """General purpose extended grid interpolator"""
-    def __init__(
-            self,
-            grid_lons,
-            grid_lats,
-            grid_mask):
-        self.grid_lons = grid_lons
-        self.grid_lats = grid_lats
-        mask = grid_mask
-        nx, ny = grid_lons.shape
-        glons = np.ma.masked_array(grid_lons, mask).compressed()
-        glats = np.ma.masked_array(grid_lats, mask).compressed()
-        gi, gj = np.meshgrid(np.arange(nx), np.arange(ny), indexing="ij")
-        self.gi = np.ma.masked_array(gi, mask).compressed()
-        self.gj = np.ma.masked_array(gj, mask).compressed()
-        x, y, z = self.cartesian(glons, glats)
-        self.tree = scipy.spatial.cKDTree(np.array([x, y, z]).T)
-
-    @classmethod
-    def unmasked(cls, lons, lats):
-        return cls(lons, lats, False)
-
     def __call__(self, *args):
         return self.interpolate(*args)
 
     def interpolate(self, field, lons, lats):
+        if np.isscalar(lons):
+            lons = np.array([lons], dtype="d")
+        if np.isscalar(lats):
+            lats = np.array([lats], dtype="d")
         return self.vector_interpolate(field, lons, lats)
 
     def serial_interpolate(self, field, lons, lats):
@@ -149,7 +99,6 @@ class ORCAExtended(object):
                 central_lat=lat)
             vertices = np.asarray([x, y], dtype=np.double).T
             if self.contains(vertices, 0., 0.):
-                print("serial lons", lons)
                 return i, j, self.weights(vertices, 0., 0.)
         raise SearchFailed("{} {} not found".format(lon, lat))
 
@@ -166,11 +115,6 @@ class ORCAExtended(object):
             lons = np.array(lons, dtype="d")
         if isinstance(lats, list):
             lats = np.array(lats, dtype="d")
-
-        # Check field broadcastable to model grid
-        shape = self.grid_lons.shape
-        message = "field shape '{}' != '{}'".format(field.shape, shape)
-        assert field.shape == shape, message
 
         x, y, z = self.cartesian(lons, lats)
         eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T,
@@ -217,7 +161,7 @@ class ORCAExtended(object):
                 zeros[contained])
 
             pts = np.where(mask)[0][contained]
-            global_found[pts] = contained
+            global_found[pts] = True
             global_search_i[pts] = search_i[contained]
             global_search_j[pts] = search_j[contained]
             global_weights[pts] = weights
@@ -229,9 +173,8 @@ class ORCAExtended(object):
         # Mask locations with fewer than 4 surrounding points
         if isinstance(values, np.ma.masked_array):
             if isinstance(values.mask, np.ndarray):
-               values.mask[values.mask.any(axis=1)] = True
-
-        return np.ma.sum(values * weights, axis=1)
+               values.mask[values.mask.any(axis=-1)] = True
+        return np.ma.sum(values * weights, axis=-1)
 
     @staticmethod
     def corners(array, i, j, dtype="d"):
