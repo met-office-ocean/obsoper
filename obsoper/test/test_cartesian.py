@@ -65,6 +65,45 @@ class TestMaskedGrid(unittest.TestCase):
         np.testing.assert_array_almost_equal(elats, rlats)
 
 
+class TestCorners(unittest.TestCase):
+    def setUp(self):
+        # Chosen to be ordered such that
+        # (i, j), (i+1, j), (i+1, j+1), (i, j+1) --> 0, 1, 2, 3
+        self.values = np.array([[0, 3],
+                                [1, 2]])
+
+    def test_fixed_corners(self):
+        i, j = 0, 0
+        result = obsoper.fixed_corners(self.values, i, j)
+        expect = [0, 1, 2, 3]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_fixed_beyond_right_edge_raises_indexerror(self):
+        i, j = 1, 0
+        with self.assertRaises(IndexError):
+            obsoper.fixed_corners(self.values, i, j)
+
+    def test_cyclic_beyond_right_edge_returns_cycled_rows(self):
+        i, j = 1, 0
+        result = obsoper.cyclic_corners(self.values, i, j)
+        expect = [1, 0, 3, 2]
+        np.testing.assert_array_equal(expect, result)
+
+    def test_valid_cyclic_index_returns_true(self):
+        ni, nj = 2, 2
+        i, j = 3, 0
+        result = obsoper.cyclic_corners_valid(ni, nj, i, j)
+        expect = True
+        np.testing.assert_array_equal(expect, result)
+
+    def test_valid_cyclic_index_returns_false(self):
+        ni, nj = 2, 2
+        i, j = 0, 2
+        result = obsoper.cyclic_corners_valid(ni, nj, i, j)
+        expect = False
+        np.testing.assert_array_equal(expect, result)
+
+
 @unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025_FILE),
                  "Skip ORCA025 tests")
 class TestCartesianAzimuthalORCA025(unittest.TestCase):

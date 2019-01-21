@@ -19,6 +19,12 @@ __all__ = [
 ]
 
 
+def export(obj):
+    if obj.__name__ not in __all__:
+        __all__.append(obj.__name__)
+    return obj
+
+
 class SearchFailed(Exception):
     pass
 
@@ -64,6 +70,41 @@ class MaskedGrid(object):
             np.ma.masked_array(gj, self.mask).compressed())
 
 
+@export
+def cyclic_corners(array, i, j):
+    """Apply cyclic boundary indexing"""
+    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+    ni = array.shape[0]
+    return np.ma.asarray([
+        array[i % ni, j],
+        array[(i + 1) % ni, j],
+        array[(i + 1) % ni, j + 1],
+        array[i % ni, j + 1]], dtype="d")
+
+
+@export
+def cyclic_corners_valid(ni, nj, i, j):
+    j = np.asarray(j, dtype="i")
+    return j < (nj - 1)
+
+
+@export
+def fixed_corners(array, i, j):
+    """Apply fixed boundary indexing"""
+    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+    return np.ma.asarray([
+        array[i, j],
+        array[i + 1, j],
+        array[i + 1, j + 1],
+        array[i, j + 1]], dtype="d")
+
+
+@export
+def fixed_corners_valid(ni, nj, i, j):
+    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+    return (i < (ni - 1)) & (j < (nj - 1))
+
+
 
 class CartesianAzimuthal(object):
     """General purpose Cartesian/Azimuthal projection interpolator
@@ -79,7 +120,11 @@ class CartesianAzimuthal(object):
             self,
             grid_lons,
             grid_lats,
-            mask=None):
+            mask=None,
+            corners=fixed_corners,
+            valid_corners=fixed_corners_valid):
+        self.corners = corners
+        self.valid_corners = valid_corners
         if mask is None:
             self.grid = Grid(grid_lons, grid_lats)
         else:
@@ -182,7 +227,7 @@ class CartesianAzimuthal(object):
             i, j = self.gi[nni], self.gj[nni]
 
             nx, ny = self.grid_lons.shape
-            included = (i < (nx - 1)) & (j < (ny - 1))
+            included = self.valid_corners(nx, ny, i, j)
 
             mask = ~global_found & included
 
@@ -227,14 +272,6 @@ class CartesianAzimuthal(object):
             if isinstance(values.mask, np.ndarray):
                values.mask[values.mask.any(axis=-1)] = True
         return np.ma.sum(values * weights, axis=-1)
-
-    @staticmethod
-    def corners(array, i, j, dtype="d"):
-        return np.ma.asarray([
-            array[i, j],
-            array[i + 1, j],
-            array[i + 1, j + 1],
-            array[i, j + 1]], dtype=dtype)
 
     @staticmethod
     def contains(vertices, x, y):
@@ -430,7 +467,11 @@ class Tripolar(object):
 
         grid_longitudes = self.to_360(grid_longitudes)
         observed_longitudes = self.to_360(observed_longitudes)
-        self._operator = CartesianAzimuthal(grid_longitudes, grid_latitudes)
+        self._operator = CartesianAzimuthal(
+            grid_longitudes,
+            grid_latitudes,
+            corners=cyclic_corners,
+            valid_corners=cyclic_corners_valid)
         self._lons = observed_longitudes
         self._lats = observed_latitudes
 
