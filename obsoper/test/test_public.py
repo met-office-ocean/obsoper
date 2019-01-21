@@ -51,7 +51,6 @@ class TestTripolar(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result)
 
 
-@unittest.skip("consider removing these tests")
 class TestORCA025(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -72,7 +71,7 @@ class TestORCA025(unittest.TestCase):
                                    lats)
         result = fixture.interpolate(self.constant_field)
         expect = np.array([self.constant])
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result)
 
     def test_radial_algorithm_exhaustion(self):
         lons, lats = [-9.9305896759], [-44.4005584717]
@@ -82,10 +81,9 @@ class TestORCA025(unittest.TestCase):
                                    lats)
         result = fixture.interpolate(self.constant_field)
         expect = np.array([self.constant])
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result)
 
 
-@unittest.skip("implementing simpler algorithm")
 class TestORCA025CICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -106,7 +104,7 @@ class TestORCA025CICE(unittest.TestCase):
                                    lats)
         result = fixture.interpolate(self.constant_field)
         expect = np.array([self.constant])
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result)
 
     def test_radial_algorithm_exhaustion(self):
         lons, lats = [-9.9305896759], [-44.4005584717]
@@ -116,7 +114,7 @@ class TestORCA025CICE(unittest.TestCase):
                                    lats)
         result = fixture.interpolate(self.constant_field)
         expect = np.array([self.constant])
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result)
 
 
 

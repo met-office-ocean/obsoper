@@ -547,45 +547,6 @@ class TestIsWest(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result)
 
 
-@unittest.skip("major refactoring")
-class TestInterpolateDateline(unittest.TestCase):
-    def setUp(self):
-        self.corners = np.array([(179, 10),
-                                 (-179, 10),
-                                 (-179, 20),
-                                 (179, 20)])
-        self.corner_values = [1, 2, 3, 4]
-
-    def test_interpolate_points_inside_cell_west_of_180th_meridian(self):
-        self.check_dateline_interpolate(longitudes=[179.5],
-                                        latitudes=[10],
-                                        expect=[1.25])
-
-    def test_interpolate_points_inside_cell_east_of_180th_meridian(self):
-        self.check_dateline_interpolate(longitudes=[-179.5],
-                                        latitudes=[10],
-                                        expect=[1.75])
-
-    def test_interpolate_points_inside_cell_east_and_west(self):
-        self.check_dateline_interpolate(longitudes=[-179.5, 179.5],
-                                        latitudes=[10, 10],
-                                        expect=[1.75, 1.25])
-
-    def check_dateline_interpolate(self, longitudes, latitudes, expect):
-        result = horizontal.dateline_interpolate(self.corners,
-                                                 self.corner_values,
-                                                 longitudes,
-                                                 latitudes)
-        self.assertMaskedArrayAlmostEqual(expect, result)
-
-    def assertMaskedArrayAlmostEqual(self, expect, result):
-        expect, result = np.ma.asarray(expect), np.ma.asarray(result)
-        self.assertEqual(expect.shape,
-                         result.shape)
-        np.testing.assert_array_almost_equal(expect.compressed(),
-                                             result.compressed())
-
-
 class TestUnitSquare(unittest.TestCase):
     def setUp(self):
         self.empty = []
