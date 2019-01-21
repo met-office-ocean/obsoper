@@ -16,9 +16,58 @@ ORCA025EXT_CICE_FILE = os.path.join(SCRIPT_DIR,
     "data/prodm_op_gl.cice_20180930_00.-36.nc")
 
 
+class TestGrid(unittest.TestCase):
+    def setUp(self):
+        self.shape = (2, 2)
+        lons, lats = [[5, 5], [6, 6]], [[2, 3], [2, 3]]
+        self.grid = obsoper.Grid(lons, lats)
+
+    def test_shape(self):
+        result = self.grid.shape
+        expect = self.shape
+        self.assertEqual(expect, result)
+
+    def test_flatten(self):
+        rlons, rlats = self.grid.flatten()
+        elons, elats = [5, 5, 6, 6], [2, 3, 2, 3]
+        np.testing.assert_array_almost_equal(elons, rlons)
+        np.testing.assert_array_almost_equal(elats, rlats)
+
+    def test_flat_index(self):
+        rlons, rlats = self.grid.flat_index()
+        elons, elats = [0, 0, 1, 1], [0, 1, 0, 1]
+        np.testing.assert_array_almost_equal(elons, rlons)
+        np.testing.assert_array_almost_equal(elats, rlats)
+
+
+class TestMaskedGrid(unittest.TestCase):
+    def setUp(self):
+        self.shape = (2, 2)
+        lons, lats = [[7, 7], [9, 9]], [[1, 3], [1, 3]]
+        mask = [[True, False], [False, False]]
+        self.grid = obsoper.MaskedGrid(lons, lats, mask)
+
+    def test_shape(self):
+        result = self.grid.shape
+        expect = self.shape
+        self.assertEqual(expect, result)
+
+    def test_flatten(self):
+        rlons, rlats = self.grid.flatten()
+        elons, elats = [7, 9, 9], [3, 1, 3]
+        np.testing.assert_array_almost_equal(elons, rlons)
+        np.testing.assert_array_almost_equal(elats, rlats)
+
+    def test_flat_index(self):
+        rlons, rlats = self.grid.flat_index()
+        elons, elats = [0, 1, 1], [1, 0, 1]
+        np.testing.assert_array_almost_equal(elons, rlons)
+        np.testing.assert_array_almost_equal(elats, rlats)
+
+
 @unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025_FILE),
                  "Skip ORCA025 tests")
-class TestORCA025(unittest.TestCase):
+class TestCartesianAzimuthalORCA025(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with netCDF4.Dataset(ORCA025_FILE) as dataset:
@@ -26,7 +75,7 @@ class TestORCA025(unittest.TestCase):
             cls.orca025_lats = np.asarray(dataset.variables["nav_lat"][:])
 
     def setUp(self):
-        self.interpolator = obsoper.ORCAExtended(
+        self.interpolator = obsoper.CartesianAzimuthal(
             self.orca025_lons,
             self.orca025_lats)
 
@@ -61,7 +110,7 @@ class TestORCA025(unittest.TestCase):
 
 @unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025EXT_CICE_FILE),
                  "Skip ORCA025ext CICE tests")
-class TestORCA025EXTCICE(unittest.TestCase):
+class TestCartesianAzimuthalORCA025EXTCICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with netCDF4.Dataset(ORCA025EXT_CICE_FILE) as dataset:
@@ -70,7 +119,7 @@ class TestORCA025EXTCICE(unittest.TestCase):
             cls.grid_ice = dataset.variables["aice"][:]
 
     def setUp(self):
-        self.operator = obsoper.ORCAExtended(
+        self.operator = obsoper.CartesianAzimuthal(
             self.grid_lons,
             self.grid_lats,
             self.grid_ice.mask)
@@ -106,7 +155,7 @@ class TestORCA025EXTCICE(unittest.TestCase):
         ], dtype="d")
         x = np.array([0, 2], dtype="d")
         y = np.array([0, 0], dtype="d")
-        result = obsoper.ORCAExtended.contains(vertices, x, y)
+        result = obsoper.CartesianAzimuthal.contains(vertices, x, y)
         expect = [True, True]
         np.testing.assert_array_equal(expect, result)
 
@@ -140,13 +189,13 @@ class TestORCA025EXTCICE(unittest.TestCase):
                                              result.compressed())
 
 
-class TestORCAExtendedUnitSquare(unittest.TestCase):
+class TestCartesianAzimuthalUnitSquare(unittest.TestCase):
     def test_unit_square(self):
         lons, lats = np.meshgrid(
             np.array([0, 1], dtype="d"),
             np.array([0, 1], dtype="d")
         )
-        operator = obsoper.ORCAExtended(lons, lats)
+        operator = obsoper.CartesianAzimuthal(lons, lats)
         result = operator.interpolate(lons, [0.5], [0.5])
         expect = [0.5]
         np.testing.assert_array_almost_equal(expect, result)
@@ -160,7 +209,7 @@ class TestORCAExtendedUnitSquare(unittest.TestCase):
             [[1, 2], [3, 4]],
             mask=[[False, False], [False, True]],
             dtype="d")
-        operator = obsoper.ORCAExtended(lons, lats)
+        operator = obsoper.CartesianAzimuthal(lons, lats)
         result = operator.interpolate(values, [0.5], [0.5])
         expect = np.ma.masked_all(1)
         self.assert_masked_array_equal(expect, result)
@@ -174,7 +223,7 @@ class TestORCAExtendedUnitSquare(unittest.TestCase):
             [[1, 2], [3, 4]],
             mask=[[False, False], [False, True]],
             dtype="d")
-        operator = obsoper.ORCAExtended(lons, lats)
+        operator = obsoper.CartesianAzimuthal(lons, lats)
         result = operator.vector_interpolate(values, [0.5], [0.5])
         expect = np.ma.masked_all(1)
         self.assert_masked_array_equal(expect, result)
@@ -208,7 +257,7 @@ class TestStereographic(unittest.TestCase):
 
     def check(self, lon, lat, expect):
         ex, ey = expect
-        rx, ry = obsoper.ORCAExtended.stereographic(
+        rx, ry = obsoper.CartesianAzimuthal.stereographic(
             lon,
             lat)
         np.testing.assert_array_almost_equal(ex, rx)
@@ -278,7 +327,7 @@ class TestStereographicCentralLonLat(unittest.TestCase):
                 [0.05240773, 0.174977, 0.00261731]])
 
     def check(self, lon, lat, central_lon, central_lat, ex, ey):
-        rx, ry = obsoper.ORCAExtended.stereographic(
+        rx, ry = obsoper.CartesianAzimuthal.stereographic(
             lon,
             lat,
             central_lon=central_lon,

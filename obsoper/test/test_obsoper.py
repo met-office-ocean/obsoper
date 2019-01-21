@@ -33,7 +33,7 @@ class TestOperator(unittest.TestCase):
                                    layout="tripolar")
         result = fixture.interpolate(self.analysis)
         expect = self.counterparts
-        np.testing.assert_array_equal(expect, result)
+        np.testing.assert_array_almost_equal(expect, result, decimal=4)
 
     def test_interpolate_given_regular_grid(self):
         fixture = obsoper.Operator([100, 200],
