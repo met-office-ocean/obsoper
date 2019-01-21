@@ -74,32 +74,32 @@ class TestCorners(unittest.TestCase):
 
     def test_fixed_corners(self):
         i, j = 0, 0
-        result = obsoper.fixed_corners(self.values, i, j)
+        result = obsoper.Fixed.corners(self.values, i, j)
         expect = [0, 1, 2, 3]
         np.testing.assert_array_equal(expect, result)
 
     def test_fixed_beyond_right_edge_raises_indexerror(self):
         i, j = 1, 0
         with self.assertRaises(IndexError):
-            obsoper.fixed_corners(self.values, i, j)
+            obsoper.Fixed.corners(self.values, i, j)
 
     def test_cyclic_beyond_right_edge_returns_cycled_rows(self):
         i, j = 1, 0
-        result = obsoper.cyclic_corners(self.values, i, j)
+        result = obsoper.Cyclic.corners(self.values, i, j)
         expect = [1, 0, 3, 2]
         np.testing.assert_array_equal(expect, result)
 
     def test_valid_cyclic_index_returns_true(self):
         ni, nj = 2, 2
         i, j = 3, 0
-        result = obsoper.cyclic_corners_valid(ni, nj, i, j)
+        result = obsoper.Cyclic.valid(ni, nj, i, j)
         expect = True
         np.testing.assert_array_equal(expect, result)
 
     def test_valid_cyclic_index_returns_false(self):
         ni, nj = 2, 2
         i, j = 0, 2
-        result = obsoper.cyclic_corners_valid(ni, nj, i, j)
+        result = obsoper.Cyclic.valid(ni, nj, i, j)
         expect = False
         np.testing.assert_array_equal(expect, result)
 
@@ -266,6 +266,20 @@ class TestCartesianAzimuthalUnitSquare(unittest.TestCase):
         result = operator.vector_interpolate(values, [0.5], [0.5])
         expect = np.ma.masked_all(1)
         self.assert_masked_array_equal(expect, result)
+
+    def test_train_interpolator_on_observed_positions(self):
+        grid_lons, grid_lats = np.meshgrid(
+            np.array([0, 1], dtype="d"),
+            np.array([0, 1], dtype="d")
+        )
+        obs_lons, obs_lats = [0.1], [0.1]
+        field = np.array([[0, 2],
+                          [1, 3]], dtype="d")
+        operator = obsoper.CartesianAzimuthal(grid_lons, grid_lats)
+        interpolator = operator.train(obs_lons, obs_lats)
+        result = interpolator(field)
+        expect = [0.299993146]
+        np.testing.assert_array_almost_equal(expect, result)
 
     def assert_masked_array_equal(self, expect, result):
         expect = np.ma.asarray(expect)

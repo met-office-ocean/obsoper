@@ -9,6 +9,7 @@ from obsoper.corners import (
     correct_corners,
     mask_corners)
 from pkg_resources import parse_version
+from functools import partial
 
 
 __all__ = [
@@ -71,38 +72,50 @@ class MaskedGrid(object):
 
 
 @export
-def cyclic_corners(array, i, j):
-    """Apply cyclic boundary indexing"""
-    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
-    ni = array.shape[0]
-    return np.ma.asarray([
-        array[i % ni, j],
-        array[(i + 1) % ni, j],
-        array[(i + 1) % ni, j + 1],
-        array[i % ni, j + 1]], dtype="d")
+class Fixed(object):
+    """Fixed grid with no cyclic dimensions"""
+    def __call__(self, array, i, j):
+        return self.corners(array, i, j)
+
+    @staticmethod
+    def corners(array, i, j):
+        """Apply fixed boundary indexing"""
+        i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+        return np.ma.asarray([
+            array[i, j],
+            array[i + 1, j],
+            array[i + 1, j + 1],
+            array[i, j + 1]], dtype="d")
+
+    @staticmethod
+    def valid(ni, nj, i, j):
+        """Decide if index relates to four corners or not"""
+        i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+        return (i < (ni - 1)) & (j < (nj - 1))
 
 
 @export
-def cyclic_corners_valid(ni, nj, i, j):
-    j = np.asarray(j, dtype="i")
-    return j < (nj - 1)
+class Cyclic(object):
+    """Cyclic corners in the i-th dimension"""
+    def __call__(self, array, i, j):
+        return self.corners(array, i, j)
 
+    @staticmethod
+    def corners(array, i, j):
+        """Apply cyclic boundary indexing"""
+        i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
+        ni = array.shape[0]
+        return np.ma.asarray([
+            array[i % ni, j],
+            array[(i + 1) % ni, j],
+            array[(i + 1) % ni, j + 1],
+            array[i % ni, j + 1]], dtype="d")
 
-@export
-def fixed_corners(array, i, j):
-    """Apply fixed boundary indexing"""
-    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
-    return np.ma.asarray([
-        array[i, j],
-        array[i + 1, j],
-        array[i + 1, j + 1],
-        array[i, j + 1]], dtype="d")
-
-
-@export
-def fixed_corners_valid(ni, nj, i, j):
-    i, j = np.asarray(i, dtype="i"), np.asarray(j, dtype="i")
-    return (i < (ni - 1)) & (j < (nj - 1))
+    @staticmethod
+    def valid(ni, nj, i, j):
+        """Decide if index relates to four corners or not"""
+        j = np.asarray(j, dtype="i")
+        return j < (nj - 1)
 
 
 
@@ -121,10 +134,13 @@ class CartesianAzimuthal(object):
             grid_lons,
             grid_lats,
             mask=None,
-            corners=fixed_corners,
-            valid_corners=fixed_corners_valid):
+            corners=None,
+            projection="stereographic"):
+        if corners is None:
+            corners = Fixed()
         self.corners = corners
-        self.valid_corners = valid_corners
+        self.projection = projection
+        grid_lons = self.to_360(grid_lons)
         if mask is None:
             self.grid = Grid(grid_lons, grid_lats)
         else:
@@ -133,6 +149,21 @@ class CartesianAzimuthal(object):
         self.gi, self.gj = self.grid.flat_index()
         x, y, z = self.cartesian(glons, glats)
         self.tree = self._kdtree(np.array([x, y, z]).T)
+
+    @staticmethod
+    def to_360(lons):
+        # Correct from -180, 180 to 0, 360
+        if np.isscalar(lons):
+            if lons < 0:
+                return lons + 360.
+            else:
+                return lons
+        if isinstance(lons, np.ma.masked_array):
+            lons = np.ma.copy(lons)
+        else:
+            lons = np.copy(lons)
+        lons[lons < 0] += 360.
+        return lons
 
     @property
     def grid_lons(self):
@@ -179,6 +210,7 @@ class CartesianAzimuthal(object):
         return result
 
     def search(self, lon, lat):
+        lon = self.to_360(lon)
         x, y, z = self.cartesian(lon, lat)
         eps, self.i = self.tree.query([x, y, z], k=self.k)
         for i, j in zip(self.gi[self.i], self.gj[self.i]):
@@ -189,30 +221,39 @@ class CartesianAzimuthal(object):
                 lats = np.asarray(self.grid_lats[pts], dtype="d")
             except IndexError:
                 continue
-            x, y = self.stereographic(
+            x, y = self.projection_method(
                 lons,
                 lats,
                 central_lon=lon,
                 central_lat=lat)
             vertices = np.asarray([x, y], dtype=np.double).T
             if self.contains(vertices, 0., 0.):
-                return i, j, self.weights(vertices, 0., 0.)
+                weights = bilinear.interpolation_weights(vertices, 0., 0.)
+                return i, j, weights
         raise SearchFailed("{} {} not found".format(lon, lat))
 
     @property
     def k(self):
         return min(12, len(self.gi))
 
-    def weights(self, vertices, x, y):
-        return bilinear.interpolation_weights(vertices, x, y)
+    def train(self, lons, lats):
+        """Define interpolator with indices and weights"""
+        i, j, weights = self.ij_weights(lons, lats)
+        return partial(self._interpolate, i, j, weights)
 
     def vector_interpolate(self, field, lons, lats):
         """Vectorised approach to Cartesian/Stereographic interpolation"""
+        i, j, weights = self.ij_weights(lons, lats)
+        return self._interpolate(i, j, weights, field)
+
+    def ij_weights(self, lons, lats):
+        """Indices and interpolation weights related to positions"""
         if isinstance(lons, list):
             lons = np.array(lons, dtype="d")
         if isinstance(lats, list):
             lats = np.array(lats, dtype="d")
 
+        lons = self.to_360(lons)
         x, y, z = self.cartesian(lons, lats)
         eps, neighbours = self.tree.query(np.array([x, y, z], dtype="d").T,
                                           k=self.k)
@@ -227,7 +268,7 @@ class CartesianAzimuthal(object):
             i, j = self.gi[nni], self.gj[nni]
 
             nx, ny = self.grid_lons.shape
-            included = self.valid_corners(nx, ny, i, j)
+            included = self.corners.valid(nx, ny, i, j)
 
             mask = ~global_found & included
 
@@ -240,7 +281,7 @@ class CartesianAzimuthal(object):
             corner_lats = self.corners(self.grid_lats, search_i, search_j)
 
             corners = np.empty((len(search_lons), 4, 2), dtype="d")
-            x, y = self.stereographic(
+            x, y = self.projection_method(
                 corner_lons,
                 corner_lats,
                 central_lon=search_lons,
@@ -262,9 +303,9 @@ class CartesianAzimuthal(object):
             global_search_i[pts] = search_i[contained]
             global_search_j[pts] = search_j[contained]
             global_weights[pts] = weights
+        return global_search_i, global_search_j, global_weights
 
-        i, j = global_search_i, global_search_j
-        weights = global_weights
+    def _interpolate(self, i, j, weights, field):
         values = self.corners(field, i, j).T
 
         # Mask locations with fewer than 4 surrounding points
@@ -287,6 +328,11 @@ class CartesianAzimuthal(object):
         y = np.cos(lat) * np.sin(lon)
         x = np.cos(lat) * np.cos(lon)
         return x, y, z
+
+    @property
+    def projection_method(self):
+        method = self.projection.lower().replace(" ", "_")
+        return getattr(self, method)
 
     @staticmethod
     def stereographic(lon, lat,
@@ -338,6 +384,20 @@ class CartesianAzimuthal(object):
         x = k * cos(phi) * sin(lam - lam0)
         y = k * (cos(phi1) * sin(phi) -
                  sin(phi1) * cos(phi) * cos(lam - lam0))
+        return x, y
+
+    @staticmethod
+    def orthographic(
+            lon,
+            lat,
+            central_lon=0,
+            central_lat=90):
+        """Orthographic projection through point"""
+        lam, lam0 = deg2rad(lon), deg2rad(central_lon)
+        phi, phi1 = deg2rad(lat), deg2rad(central_lat)
+        x = cos(phi) * sin(lam - lam0)
+        y = (cos(phi1) * sin(phi) -
+             sin(phi1) * cos(phi) * cos(lam - lam0))
         return x, y
 
 
@@ -471,25 +531,13 @@ class Tripolar(object):
             grid_longitudes = orca.remove_halo(grid_longitudes)
             grid_latitudes = orca.remove_halo(grid_latitudes)
 
-        grid_longitudes = self.to_360(grid_longitudes)
-        observed_longitudes = self.to_360(observed_longitudes)
         self._operator = CartesianAzimuthal(
             grid_longitudes,
             grid_latitudes,
-            corners=cyclic_corners,
-            valid_corners=cyclic_corners_valid)
-        self._lons = observed_longitudes
-        self._lats = observed_latitudes
-
-    @staticmethod
-    def to_360(lons):
-        # Correct from -180, 180 to 0, 360
-        if isinstance(lons, np.ma.masked_array):
-            lons = np.ma.copy(lons)
-        else:
-            lons = np.copy(lons)
-        lons[lons < 0] += 360.
-        return lons
+            corners=Cyclic())
+        self._interpolator = self._operator.train(
+            observed_longitudes,
+            observed_latitudes)
 
     def interpolate(self, field):
         """Perform vectorised interpolation to observed positions
@@ -505,7 +553,7 @@ class Tripolar(object):
         if self.has_halo:
             field = orca.remove_halo(field)
 
-        result = self._operator(field, self._lons, self._lats)
+        result = self._interpolator(field)
         if result.ndim == 2:
             return result.T
         else:
