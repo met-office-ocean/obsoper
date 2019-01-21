@@ -84,6 +84,8 @@ class TestORCA025(unittest.TestCase):
         np.testing.assert_array_almost_equal(expect, result)
 
 
+@unittest.skipIf(netCDF4 is None or not os.path.exists(ORCA025_CICE_FILE),
+                 "Skip missing netCDF4 or file")
 class TestORCA025CICE(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
