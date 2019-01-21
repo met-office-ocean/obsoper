@@ -459,6 +459,12 @@ class Tripolar(object):
                  observed_longitudes,
                  observed_latitudes,
                  has_halo=False):
+        # Cast positions as doubles
+        observed_longitudes = np.asarray(observed_longitudes, dtype="d")
+        observed_latitudes = np.asarray(observed_latitudes, dtype="d")
+        grid_longitudes = np.asarray(grid_longitudes, dtype="d")
+        grid_latitudes = np.asarray(grid_latitudes, dtype="d")
+
         # Screen grid cells inside halo
         self.has_halo = has_halo
         if self.has_halo:
