@@ -60,6 +60,32 @@ class TestOperator(unittest.TestCase):
             obsoper.Operator(None, None, None, None, layout="not a layout")
 
 
+class TestIncompatibleGrids(unittest.TestCase):
+    def setUp(self):
+        self.obs_shape = 7
+        self.grid_shape = 3, 3
+        self.different_grid_shape = 5, 5
+
+    def test_interpolate_given_incompatible_shape_raises_exception(self):
+        operator = obsoper.Operator(
+            np.zeros(self.grid_shape),
+            np.zeros(self.grid_shape),
+            np.zeros(self.obs_shape),
+            np.zeros(self.obs_shape))
+        with self.assertRaises(exceptions.IncompatibleGrid):
+            operator.interpolate(np.zeros(self.different_grid_shape))
+
+    def test_interpolate_tripolar_given_incompatible_shape_raises_exception(self):
+        operator = obsoper.Operator(
+            np.zeros(self.grid_shape),
+            np.zeros(self.grid_shape),
+            np.zeros(self.obs_shape),
+            np.zeros(self.obs_shape),
+            layout="tripolar")
+        with self.assertRaises(exceptions.IncompatibleGrid):
+            operator.interpolate(np.zeros(self.different_grid_shape))
+
+
 class TestOperatorRegularGrid(unittest.TestCase):
     def setUp(self):
         self.grid_lons = np.array([0, 1])

@@ -6,6 +6,10 @@ Collection of custom exceptions used throughout the package.
 """
 
 
+class IncompatibleGrid(Exception):
+    """Indicate grids are not compatible for interpolation purposes"""
+
+
 class SearchFailed(Exception):
     """Indicate grid search failure"""
 

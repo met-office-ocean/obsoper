@@ -3,6 +3,7 @@ import scipy.spatial
 import numpy as np
 from numpy import sin, cos, deg2rad
 from obsoper import (grid, bilinear, orca, cell)
+from obsoper.exceptions import IncompatibleGrid
 from obsoper.corners import (
     select_corners,
     select_field,
@@ -525,6 +526,9 @@ class Tripolar(object):
         grid_longitudes = np.asarray(grid_longitudes, dtype="d")
         grid_latitudes = np.asarray(grid_latitudes, dtype="d")
 
+        # Cache grid shape for validation purposes
+        self.grid_shape = np.shape(grid_longitudes)
+
         # Screen grid cells inside halo
         self.has_halo = has_halo
         if self.has_halo:
@@ -549,6 +553,7 @@ class Tripolar(object):
         :returns: array shaped (N, [K]) of interpolated field values
                   where N represents the number of observed positions
         """
+        self.validate(field)
         field = np.ma.asarray(field)
         if self.has_halo:
             field = orca.remove_halo(field)
@@ -558,3 +563,9 @@ class Tripolar(object):
             return result.T
         else:
             return result
+
+    def validate(self, field):
+        if np.shape(field)[:2] != self.grid_shape:
+            msg = "field shape {} incompatible with {}".format(
+                np.shape(field), self.grid_shape)
+            raise IncompatibleGrid(msg)

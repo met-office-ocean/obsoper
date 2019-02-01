@@ -17,7 +17,8 @@ import numpy as np
 from . import (grid,
                bilinear,
                domain,
-               orca)
+               orca,
+               exceptions)
 from obsoper.corners import (
     select_corners,
     select_field,
@@ -63,6 +64,7 @@ class Horizontal(object):
         observed_latitudes = np.asarray(observed_latitudes, dtype="d")
         grid_longitudes = np.asarray(grid_longitudes, dtype="d")
         grid_latitudes = np.asarray(grid_latitudes, dtype="d")
+        self.grid_shape = np.shape(grid_longitudes)
         self.n_observations = len(observed_longitudes)
 
         # Detect observations inside domain
@@ -106,6 +108,7 @@ class Horizontal(object):
         :returns: array shaped (N, [K]) of interpolated field values
                   where N represents the number of observed positions
         """
+        self.validate(field)
         field = np.ma.asarray(field)
 
         # Interpolate field to observed positions
@@ -129,6 +132,12 @@ class Horizontal(object):
             result[self.included] = bilinear.interpolate(corner_values,
                                                          self.weights).T
         return result
+
+    def validate(self, field):
+        if np.shape(field)[:2] != self.grid_shape:
+            message = "field shape {} incompatible with {}".format(
+                np.shape(field), self.grid_shape)
+            raise exceptions.IncompatibleGrid(message)
 
 
 class Regional(Horizontal):
@@ -184,6 +193,8 @@ class Regular(object):
         if grid_latitudes.ndim == 2:
             grid_latitudes = grid_latitudes[0, :]
 
+        self.grid_shape = (len(grid_longitudes), len(grid_latitudes))
+
         self.grid = grid.Regular2DGrid(grid_longitudes,
                                        grid_latitudes)
 
@@ -196,6 +207,7 @@ class Regular(object):
         :returns: either 1D vector or 2D section of field in
                   observation space
         """
+        self.validate(field)
         field = np.ma.asarray(field)
 
         # Detect observations inside grid
@@ -223,6 +235,12 @@ class Regular(object):
         if field.ndim == 2:
             return (len(positions),)
         return (len(positions), field.shape[2])
+
+    def validate(self, field):
+        if np.shape(field)[:2] != self.grid_shape:
+            message = "field shape {} incompatible with {}".format(
+                np.shape(field), self.grid_shape)
+            raise exceptions.IncompatibleGrid(message)
 
 
 class UnitSquare(object):
