@@ -137,7 +137,7 @@ class TestCartesianAzimuthalORCA025(unittest.TestCase):
         nk = 10  # Levels
         ni, nj = self.orca025_lons.shape
         values = np.ones((ni, nj, nk), dtype="d")
-        lons, lats = np.arange(no), np.arange(no)
+        lons, lats = np.arange(no, dtype="d"), np.arange(no, dtype="d")
         result = self.interpolator(values, lons, lats)
         expect = np.ones((nk, no))
         np.testing.assert_array_almost_equal(expect, result)
